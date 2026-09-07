@@ -1,25 +1,18 @@
 /* =========================================================
    SETU INVESTIGATION WORKSPACE
    Main dashboard controller
+
+   Features:
+   - Case loading
+   - Risk metrics
+   - Priority queue
+   - Entity Intelligence
+   - Network Explorer
+   - Evidence Integrity
+   - Pipeline execution
+   - Robust dynamic click handling
    ========================================================= */
 
-   function openEntity(entity) {
-  const id = String(entity);
-
-  console.log("Opening entity intelligence:", id);
-
-  const tab = document.querySelector('.tab[data-view="entity"]');
-
-  if (tab) {
-    tab.click();
-  } else {
-    console.error("Entity Intelligence tab not found.");
-  }
-
-  if (typeof renderEntity === "function") {
-    renderEntity(id);
-  }
-}
 
 /* =========================================================
    STATE
@@ -29,11 +22,14 @@ const state = {
   scores: [],
   links: [],
   edges: [],
+
   manifest: {},
   case: {},
+
   notes: [],
   reviews: {},
   audit: [],
+
   report_available: false,
 
   network: {
@@ -51,7 +47,9 @@ let activeTier = "ALL";
    DOM HELPER
    ========================================================= */
 
-const $ = (id) => document.getElementById(id);
+function $(id) {
+  return document.getElementById(id);
+}
 
 
 /* =========================================================
@@ -61,12 +59,15 @@ const $ = (id) => document.getElementById(id);
 function toast(message) {
   const el = $("toast");
 
-  if (!el) return;
+  if (!el) {
+    console.log(message);
+    return;
+  }
 
   el.textContent = message;
   el.classList.add("show");
 
-  setTimeout(() => {
+  window.setTimeout(() => {
     el.classList.remove("show");
   }, 3400);
 }
@@ -96,6 +97,11 @@ function formatNumber(value) {
 }
 
 
+function arrayOrEmpty(value) {
+  return Array.isArray(value) ? value : [];
+}
+
+
 /* =========================================================
    DATA NORMALIZATION
    ========================================================= */
@@ -107,7 +113,7 @@ function getEntityId(row) {
     row?.entity_id ??
     row?.id ??
     ""
-  );
+  ).trim();
 }
 
 
@@ -139,8 +145,13 @@ function getRisk(row) {
 
   const score = getScore(row);
 
-  if (score >= 70) return "HIGH";
-  if (score >= 40) return "MEDIUM";
+  if (score >= 70) {
+    return "HIGH";
+  }
+
+  if (score >= 40) {
+    return "MEDIUM";
+  }
 
   return "LOW";
 }
@@ -152,7 +163,7 @@ function getSender(edge) {
     edge?.source ??
     edge?.from ??
     ""
-  );
+  ).trim();
 }
 
 
@@ -162,7 +173,7 @@ function getReceiver(edge) {
     edge?.target ??
     edge?.to ??
     ""
-  );
+  ).trim();
 }
 
 
@@ -177,7 +188,7 @@ function getAmount(edge) {
 
 
 function getTimestamp(edge) {
-  return (
+  return String(
     edge?.timestamp ??
     edge?.datetime ??
     edge?.time ??
@@ -202,7 +213,11 @@ function hasSignal(value) {
 }
 
 
-function reasons(row) {
+function getSignals(row) {
+  if (!row) {
+    return [];
+  }
+
   const signals = [
     ["shared_device", "Shared device"],
     ["multi_hop_routing", "Multi-hop routing"],
@@ -210,13 +225,20 @@ function reasons(row) {
     ["high_in_degree", "High in-degree"]
   ];
 
-  const active = signals
-    .filter(([key]) => hasSignal(row?.[key]))
-    .map(([, label]) => label);
+  return signals.filter(([key]) => hasSignal(row[key]));
+}
 
-  return active.length
-    ? active.join(" · ")
-    : "No explainable signal";
+
+function reasons(row) {
+  const active = getSignals(row);
+
+  if (!active.length) {
+    return "No explainable signal";
+  }
+
+  return active
+    .map(([, label]) => label)
+    .join(" · ");
 }
 
 
@@ -225,7 +247,7 @@ function reasons(row) {
    ========================================================= */
 
 function transactionStats() {
-  const edges = state.edges || [];
+  const edges = arrayOrEmpty(state.edges);
 
   let total = 0;
 
@@ -241,12 +263,12 @@ function transactionStats() {
 
 
 /* =========================================================
-   TOP METRICS
+   METRICS
    ========================================================= */
 
 function renderMetrics() {
-  const scores = state.scores || [];
-  const links = state.links || [];
+  const scores = arrayOrEmpty(state.scores);
+  const links = arrayOrEmpty(state.links);
 
   const high = scores.filter(
     row => getRisk(row) === "HIGH"
@@ -266,23 +288,19 @@ function renderMetrics() {
   const transferCount = $("transfer-count");
 
   if (entityCount) {
-    entityCount.textContent =
-      scores.length || "—";
+    entityCount.textContent = scores.length || "—";
   }
 
   if (highCount) {
-    highCount.textContent =
-      high || "—";
+    highCount.textContent = high || "—";
   }
 
   if (mediumCount) {
-    mediumCount.textContent =
-      medium || "—";
+    mediumCount.textContent = medium || "—";
   }
 
   if (linkCount) {
-    linkCount.textContent =
-      links.length || "—";
+    linkCount.textContent = links.length || "—";
   }
 
   if (transactionValue) {
@@ -300,7 +318,7 @@ function renderMetrics() {
 
 
 /* =========================================================
-   STATUS CARD
+   STATUS
    ========================================================= */
 
 function renderStatus() {
@@ -344,29 +362,17 @@ function renderRiskDistribution() {
     row => getRisk(row) === "LOW"
   ).length;
 
-  const total =
-    high + medium + low;
+  const total = high + medium + low;
 
-  const highLabel =
-    $("risk-high-label");
+  const highLabel = $("risk-high-label");
+  const mediumLabel = $("risk-medium-label");
+  const lowLabel = $("risk-low-label");
 
-  const mediumLabel =
-    $("risk-medium-label");
+  const highBar = $("risk-high-bar");
+  const mediumBar = $("risk-medium-bar");
+  const lowBar = $("risk-low-bar");
 
-  const lowLabel =
-    $("risk-low-label");
-
-  const highBar =
-    $("risk-high-bar");
-
-  const mediumBar =
-    $("risk-medium-bar");
-
-  const lowBar =
-    $("risk-low-bar");
-
-  const percentage =
-    $("risk-percentage");
+  const percentage = $("risk-percentage");
 
   if (highLabel) {
     highLabel.textContent = high;
@@ -442,7 +448,9 @@ function renderHealth() {
   checks.forEach(check => {
     const el = $(check.id);
 
-    if (!el) return;
+    if (!el) {
+      return;
+    }
 
     el.classList.toggle(
       "ready",
@@ -462,7 +470,10 @@ function renderHealth() {
 function renderTable() {
   const table = $("risk-table");
 
-  if (!table) return;
+  if (!table) {
+    console.warn("SETU: #risk-table not found.");
+    return;
+  }
 
   const search =
     ($("entity-search")?.value || "")
@@ -477,7 +488,8 @@ function renderTable() {
       getRisk(row);
 
     const matchesSearch =
-      !search || entity.includes(search);
+      !search ||
+      entity.includes(search);
 
     const matchesTier =
       activeTier === "ALL" ||
@@ -492,7 +504,8 @@ function renderTable() {
 
   rows.sort(
     (a, b) =>
-      getScore(b) - getScore(a)
+      getScore(b) -
+      getScore(a)
   );
 
   if (!rows.length) {
@@ -507,152 +520,70 @@ function renderTable() {
     return;
   }
 
-  table.innerHTML = rows.map(row => {
-    const entity =
-      getEntityId(row);
+  table.innerHTML =
+    rows.map(row => {
+      const entity =
+        getEntityId(row);
 
-    const score =
-      getScore(row);
+      const score =
+        getScore(row);
 
-    const risk =
-      getRisk(row);
+      const risk =
+        getRisk(row);
 
-    return `
-      <tr
-        class="flagged-entity-row"
-        data-entity-row="${escapeHtml(entity)}"
-        title="Click to inspect ${escapeHtml(entity)}"
-      >
+      return `
+        <tr
+          class="flagged-entity-row"
+          data-entity-row="${escapeHtml(entity)}"
+          title="Click to inspect ${escapeHtml(entity)}"
+        >
 
-        <td class="mono">
-          <button
-            type="button"
-            class="entity-link"
-            data-open-entity="${escapeHtml(entity)}"
-          >
-            ${escapeHtml(entity)}
-          </button>
-        </td>
+          <td class="mono">
 
-        <td class="score">
-          ${score}
-          <small>/100</small>
-        </td>
+            <button
+              type="button"
+              class="entity-link"
+              data-open-entity="${escapeHtml(entity)}"
+            >
+              ${escapeHtml(entity)}
+            </button>
 
-        <td>
-          <span class="pill ${risk}">
-            ${risk}
-          </span>
-        </td>
+          </td>
 
-        <td class="signals">
-          ${escapeHtml(reasons(row))}
-        </td>
+          <td class="score">
+            ${score}
+            <small>/100</small>
+          </td>
 
-        <td>
-          <button
-            type="button"
-            class="small-action"
-            data-trace-entity="${escapeHtml(entity)}"
-          >
-            Trace
-          </button>
-        </td>
+          <td>
+            <span class="pill ${risk}">
+              ${risk}
+            </span>
+          </td>
 
-        <td>
-          <span class="row-arrow">→</span>
-        </td>
+          <td class="signals">
+            ${escapeHtml(reasons(row))}
+          </td>
 
-      </tr>
-    `;
-  }).join("");
+          <td>
+            <button
+              type="button"
+              class="small-action"
+              data-trace-entity="${escapeHtml(entity)}"
+            >
+              Trace
+            </button>
+          </td>
 
-  /*
-   * Entity name click
-   */
-  table
-    .querySelectorAll("[data-open-entity]")
-    .forEach(button => {
+          <td>
+            <span class="row-arrow">
+              →
+            </span>
+          </td>
 
-      button.addEventListener(
-        "click",
-        event => {
-
-          event.stopPropagation();
-
-          const entity =
-            button.dataset.openEntity;
-
-          console.log(
-            "Opening entity:",
-            entity
-          );
-
-          openEntity(entity);
-        }
-      );
-
-    });
-
-
-  /*
-   * Trace button
-   */
-  table
-    .querySelectorAll("[data-trace-entity]")
-    .forEach(button => {
-
-      button.addEventListener(
-        "click",
-        event => {
-
-          event.stopPropagation();
-
-          openNetworkEntity(
-            button.dataset.traceEntity
-          );
-
-        }
-      );
-
-    });
-
-
-  /*
-   * Entire row click
-   */
-  table
-    .querySelectorAll("[data-entity-row]")
-    .forEach(row => {
-
-      row.addEventListener(
-        "click",
-        event => {
-
-          /*
-           * Don't trigger the row handler
-           * when clicking one of its buttons.
-           */
-          if (
-            event.target.closest("button")
-          ) {
-            return;
-          }
-
-          const entity =
-            row.dataset.entityRow;
-
-          console.log(
-            "Opening flagged entity:",
-            entity
-          );
-
-          openEntity(entity);
-
-        }
-      );
-
-    });
+        </tr>
+      `;
+    }).join("");
 }
 
 
@@ -660,24 +591,106 @@ function renderTable() {
    ENTITY INTELLIGENCE
    ========================================================= */
 
-function openEntity(entity) {
-  const id = String(entity);
+/*
+   THIS IS THE ONLY openEntity() FUNCTION.
 
-  const tab =
-    document.querySelector(
-      '[data-view="entity"]'
+   Clicking:
+   - Entity ID
+   - Flagged row
+   - "Open entity intelligence"
+   - Connected entity
+
+   can all reach this function.
+*/
+
+function openEntity(entity) {
+  const id =
+    String(entity || "").trim();
+
+  if (!id) {
+    console.warn(
+      "SETU: openEntity called without an entity."
     );
 
-  if (tab) {
-    tab.click();
+    return;
   }
 
+  console.log(
+    "SETU: Opening entity intelligence:",
+    id
+  );
+
+  const entityView =
+    $("entity");
+
+  if (!entityView) {
+    console.error(
+      "SETU: #entity view was not found."
+    );
+
+    toast(
+      "Entity Intelligence view is missing."
+    );
+
+    return;
+  }
+
+  /*
+     Activate Entity Intelligence tab.
+  */
+
+  document
+    .querySelectorAll(".tab")
+    .forEach(tab => {
+      tab.classList.toggle(
+        "active",
+        tab.dataset.view === "entity"
+      );
+    });
+
+  /*
+     Activate Entity Intelligence view.
+  */
+
+  document
+    .querySelectorAll(".view")
+    .forEach(view => {
+      view.classList.toggle(
+        "active",
+        view.id === "entity"
+      );
+    });
+
+  /*
+     Render entity.
+  */
+
   renderEntity(id);
+
+  /*
+     Scroll to the entity view.
+  */
+
+  window.setTimeout(() => {
+    entityView.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  }, 50);
 }
 
 
+/* =========================================================
+   RENDER ENTITY
+   ========================================================= */
+
 function renderEntity(entity) {
-  const id = String(entity);
+  const id =
+    String(entity || "").trim();
+
+  if (!id) {
+    return;
+  }
 
   const scoreRow =
     state.scores.find(
@@ -774,28 +787,36 @@ function renderEntity(entity) {
 
   if (subtitle) {
     subtitle.textContent =
-      "Detailed risk and relationship analysis.";
+      scoreRow
+        ? "Detailed risk and relationship analysis."
+        : "No scored risk profile is available for this entity.";
   }
 
   if (scoreEl) {
     scoreEl.textContent =
-      score || "0";
+      score;
   }
 
   if (tierEl) {
-    tierEl.textContent = risk;
+    tierEl.textContent =
+      risk;
+
     tierEl.className =
       `pill ${risk}`;
   }
 
   if (incomingEl) {
     incomingEl.textContent =
-      formatCurrency(incomingTotal);
+      formatCurrency(
+        incomingTotal
+      );
   }
 
   if (outgoingEl) {
     outgoingEl.textContent =
-      formatCurrency(outgoingTotal);
+      formatCurrency(
+        outgoingTotal
+      );
   }
 
   if (connectionsEl) {
@@ -808,12 +829,15 @@ function renderEntity(entity) {
       `${incoming.length + outgoing.length} EVENTS`;
   }
 
-  renderEntitySignals(scoreRow);
+  renderEntitySignals(
+    scoreRow
+  );
+
   renderEntityConnections(
     Array.from(connected)
   );
+
   renderEntityTimeline(
-    id,
     incoming,
     outgoing
   );
@@ -828,7 +852,9 @@ function renderEntitySignals(row) {
   const container =
     $("entity-signals");
 
-  if (!container) return;
+  if (!container) {
+    return;
+  }
 
   if (!row) {
     container.innerHTML = `
@@ -840,18 +866,8 @@ function renderEntitySignals(row) {
     return;
   }
 
-  const signals = [
-    ["shared_device", "Shared device"],
-    ["multi_hop_routing", "Multi-hop routing"],
-    ["high_velocity_fanout", "Rapid fan-out"],
-    ["high_in_degree", "High in-degree"]
-  ];
-
   const active =
-    signals.filter(
-      ([key]) =>
-        hasSignal(row[key])
-    );
+    getSignals(row);
 
   if (!active.length) {
     container.innerHTML = `
@@ -867,8 +883,15 @@ function renderEntitySignals(row) {
     active.map(
       ([, label]) => `
         <div class="signal-row">
-          <span class="signal-dot"></span>
-          <span>${escapeHtml(label)}</span>
+
+          <span
+            class="signal-dot"
+          ></span>
+
+          <span>
+            ${escapeHtml(label)}
+          </span>
+
         </div>
       `
     ).join("");
@@ -883,7 +906,9 @@ function renderEntityConnections(nodes) {
   const container =
     $("entity-connections-list");
 
-  if (!container) return;
+  if (!container) {
+    return;
+  }
 
   if (!nodes.length) {
     container.innerHTML = `
@@ -896,38 +921,26 @@ function renderEntityConnections(nodes) {
   }
 
   container.innerHTML =
-    nodes.map(node => `
-      <button
-        type="button"
-        class="connection-item"
-        data-connection="${escapeHtml(node)}"
-      >
-        <span>
-          ${escapeHtml(node)}
-        </span>
+    nodes
+      .slice(0, 50)
+      .map(node => `
+        <button
+          type="button"
+          class="connection-item"
+          data-connection="${escapeHtml(node)}"
+        >
 
-        <span>
-          →
-        </span>
-      </button>
-    `).join("");
+          <span>
+            ${escapeHtml(node)}
+          </span>
 
-  container
-    .querySelectorAll("[data-connection]")
-    .forEach(button => {
+          <span>
+            →
+          </span>
 
-      button.addEventListener(
-        "click",
-        () => {
-
-          renderEntity(
-            button.dataset.connection
-          );
-
-        }
-      );
-
-    });
+        </button>
+      `)
+      .join("");
 }
 
 
@@ -936,16 +949,18 @@ function renderEntityConnections(nodes) {
    ========================================================= */
 
 function renderEntityTimeline(
-  entity,
   incoming,
   outgoing
 ) {
   const container =
     $("entity-timeline");
 
-  if (!container) return;
+  if (!container) {
+    return;
+  }
 
   const events = [
+
     ...incoming.map(edge => ({
       direction: "IN",
       other: getSender(edge),
@@ -959,14 +974,14 @@ function renderEntityTimeline(
       amount: getAmount(edge),
       time: getTimestamp(edge)
     }))
+
   ];
 
   events.sort(
     (a, b) =>
-      String(b.time)
-        .localeCompare(
-          String(a.time)
-        )
+      String(b.time).localeCompare(
+        String(a.time)
+      )
   );
 
   if (!events.length) {
@@ -980,8 +995,9 @@ function renderEntityTimeline(
   }
 
   container.innerHTML =
-    events.slice(0, 50).map(
-      event => `
+    events
+      .slice(0, 50)
+      .map(event => `
         <div class="timeline-item">
 
           <div
@@ -1001,37 +1017,42 @@ function renderEntityTimeline(
           <div class="timeline-content">
 
             <strong>
+
               ${
                 event.direction === "IN"
                   ? "Received from"
                   : "Sent to"
               }
-              ${escapeHtml(event.other)}
+
+              ${escapeHtml(
+                event.other
+              )}
+
             </strong>
 
             <span>
-              ${formatCurrency(event.amount)}
+              ${formatCurrency(
+                event.amount
+              )}
             </span>
 
             <small>
-              ${
-                escapeHtml(
-                  event.time ||
-                  "Timestamp unavailable"
-                )
-              }
+              ${escapeHtml(
+                event.time ||
+                "Timestamp unavailable"
+              )}
             </small>
 
           </div>
 
         </div>
-      `
-    ).join("");
+      `)
+      .join("");
 }
 
 
 /* =========================================================
-   NETWORK — ENTITY COLLECTION
+   NETWORK
    ========================================================= */
 
 function getNetworkEntities() {
@@ -1039,11 +1060,12 @@ function getNetworkEntities() {
     new Map();
 
   state.scores.forEach(row => {
-
     const id =
       getEntityId(row);
 
-    if (!id) return;
+    if (!id) {
+      return;
+    }
 
     map.set(id, {
       id,
@@ -1051,41 +1073,41 @@ function getNetworkEntities() {
       risk: getRisk(row),
       row
     });
-
   });
 
   state.edges.forEach(edge => {
-
     const sender =
       getSender(edge);
 
     const receiver =
       getReceiver(edge);
 
-    [sender, receiver]
-      .forEach(id => {
+    [sender, receiver].forEach(id => {
 
-        if (!id) return;
+      if (!id) {
+        return;
+      }
 
-        if (!map.has(id)) {
-          map.set(id, {
-            id,
-            score: 0,
-            risk: "LOW",
-            row: null
-          });
-        }
+      if (!map.has(id)) {
+        map.set(id, {
+          id,
+          score: 0,
+          risk: "LOW",
+          row: null
+        });
+      }
 
-      });
-
+    });
   });
 
-  return Array.from(map.values());
+  return Array.from(
+    map.values()
+  );
 }
 
 
 /* =========================================================
-   NETWORK — ADJACENCY
+   NETWORK ADJACENCY
    ========================================================= */
 
 function buildAdjacency() {
@@ -1093,7 +1115,6 @@ function buildAdjacency() {
     new Map();
 
   state.edges.forEach(edge => {
-
     const sender =
       getSender(edge);
 
@@ -1125,7 +1146,6 @@ function buildAdjacency() {
     graph
       .get(receiver)
       .add(sender);
-
   });
 
   return graph;
@@ -1133,7 +1153,7 @@ function buildAdjacency() {
 
 
 /* =========================================================
-   NETWORK — HOPS
+   NETWORK HOPS
    ========================================================= */
 
 function getNodesWithinHops(
@@ -1176,8 +1196,9 @@ function getNodesWithinHops(
     }
 
     const neighbors =
-      graph.get(current.node) ||
-      new Set();
+      graph.get(
+        current.node
+      ) || new Set();
 
     neighbors.forEach(
       neighbor => {
@@ -1203,7 +1224,7 @@ function getNodesWithinHops(
 
 
 /* =========================================================
-   NETWORK — FILTERING
+   NETWORK FILTER
    ========================================================= */
 
 function getFilteredNetworkEntities() {
@@ -1211,12 +1232,15 @@ function getFilteredNetworkEntities() {
     getNetworkEntities();
 
   const search =
-    state.network.search
+    String(
+      state.network.search || ""
+    )
       .trim()
       .toLowerCase();
 
   const risk =
     state.network.risk;
+
 
   if (search) {
     entities =
@@ -1228,6 +1252,7 @@ function getFilteredNetworkEntities() {
       );
   }
 
+
   if (risk !== "ALL") {
     entities =
       entities.filter(
@@ -1235,6 +1260,7 @@ function getFilteredNetworkEntities() {
           entity.risk === risk
       );
   }
+
 
   if (
     state.network.selected &&
@@ -1249,25 +1275,30 @@ function getFilteredNetworkEntities() {
     entities =
       entities.filter(
         entity =>
-          allowed.has(entity.id)
+          allowed.has(
+            entity.id
+          )
       );
   }
+
 
   return entities;
 }
 
 
 /* =========================================================
-   NETWORK — SIDEBAR
+   NETWORK LIST
    ========================================================= */
 
 function renderNetworkList() {
   const container =
     $("network-list");
 
-  if (!container) return;
+  if (!container) {
+    return;
+  }
 
-  const entities =
+  let entities =
     getFilteredNetworkEntities();
 
   const count =
@@ -1319,37 +1350,20 @@ function renderNetworkList() {
 
       </button>
     `).join("");
-
-  container
-    .querySelectorAll(
-      "[data-network-node]"
-    )
-    .forEach(button => {
-
-      button.addEventListener(
-        "click",
-        () => {
-
-          selectNetworkNode(
-            button.dataset.networkNode
-          );
-
-        }
-      );
-
-    });
 }
 
 
 /* =========================================================
-   NETWORK — NODE DETAIL
+   NETWORK NODE DETAIL
    ========================================================= */
 
 function renderNodeDetail(entityId) {
   const container =
     $("node-detail");
 
-  if (!container) return;
+  if (!container) {
+    return;
+  }
 
   if (!entityId) {
     container.innerHTML = `
@@ -1370,11 +1384,13 @@ function renderNodeDetail(entityId) {
     return;
   }
 
+  const id =
+    String(entityId);
+
   const scoreRow =
     state.scores.find(
       row =>
-        getEntityId(row) ===
-        entityId
+        getEntityId(row) === id
     );
 
   const score =
@@ -1390,15 +1406,13 @@ function renderNodeDetail(entityId) {
   const incoming =
     state.edges.filter(
       edge =>
-        getReceiver(edge) ===
-        entityId
+        getReceiver(edge) === id
     );
 
   const outgoing =
     state.edges.filter(
       edge =>
-        getSender(edge) ===
-        entityId
+        getSender(edge) === id
     );
 
   const incomingTotal =
@@ -1419,47 +1433,65 @@ function renderNodeDetail(entityId) {
     new Set();
 
   incoming.forEach(edge => {
-    connected.add(
-      getSender(edge)
-    );
+    const sender =
+      getSender(edge);
+
+    if (sender) {
+      connected.add(sender);
+    }
   });
 
   outgoing.forEach(edge => {
-    connected.add(
-      getReceiver(edge)
-    );
+    const receiver =
+      getReceiver(edge);
+
+    if (receiver) {
+      connected.add(receiver);
+    }
   });
 
-  connected.delete(entityId);
+  connected.delete(id);
+
+  const signalRows =
+    scoreRow
+      ? getSignals(scoreRow)
+      : [];
 
   const signalHtml =
-    scoreRow
-      ? reasons(scoreRow)
-          .split(" · ")
-          .map(reason => `
-            <div class="signal-row">
-              <span class="signal-dot"></span>
-              <span>
-                ${escapeHtml(reason)}
-              </span>
-            </div>
-          `)
+    signalRows.length
+      ? signalRows
+          .map(
+            ([, label]) => `
+              <div class="signal-row">
+
+                <span
+                  class="signal-dot"
+                ></span>
+
+                <span>
+                  ${escapeHtml(label)}
+                </span>
+
+              </div>
+            `
+          )
           .join("")
       : `
-        <p class="empty">
-          No risk signals available.
-        </p>
-      `;
+          <p class="empty">
+            No major risk signals detected.
+          </p>
+        `;
 
   const connectionHtml =
     Array.from(connected)
-      .slice(0, 15)
+      .slice(0, 20)
       .map(node => `
         <button
           type="button"
           class="connection-item"
           data-node-connection="${escapeHtml(node)}"
         >
+
           <span>
             ${escapeHtml(node)}
           </span>
@@ -1467,6 +1499,7 @@ function renderNodeDetail(entityId) {
           <span>
             →
           </span>
+
         </button>
       `)
       .join("");
@@ -1489,19 +1522,16 @@ function renderNodeDetail(entityId) {
         <div>
 
           <h3 class="mono">
-            ${escapeHtml(entityId)}
+            ${escapeHtml(id)}
           </h3>
 
-          <span
-            class="pill ${risk}"
-          >
+          <span class="pill ${risk}">
             ${risk}
           </span>
 
         </div>
 
       </div>
-
 
       <div class="node-detail-score">
 
@@ -1514,7 +1544,6 @@ function renderNodeDetail(entityId) {
         </strong>
 
       </div>
-
 
       <div class="node-detail-stats">
 
@@ -1548,7 +1577,6 @@ function renderNodeDetail(entityId) {
 
       </div>
 
-
       <div class="node-detail-section">
 
         <span class="eyebrow">
@@ -1561,7 +1589,6 @@ function renderNodeDetail(entityId) {
 
       </div>
 
-
       <div class="node-detail-section">
 
         <span class="eyebrow">
@@ -1569,6 +1596,7 @@ function renderNodeDetail(entityId) {
         </span>
 
         <div class="node-connections">
+
           ${
             connectionHtml ||
             `
@@ -1577,68 +1605,35 @@ function renderNodeDetail(entityId) {
               </p>
             `
           }
+
         </div>
 
       </div>
 
-
       <button
         type="button"
         class="primary node-trace-button"
-        data-open-entity="${escapeHtml(entityId)}"
+        data-open-entity="${escapeHtml(id)}"
       >
         Open entity intelligence
       </button>
 
     </div>
   `;
-
-  container
-    .querySelectorAll(
-      "[data-node-connection]"
-    )
-    .forEach(button => {
-
-      button.addEventListener(
-        "click",
-        () => {
-
-          selectNetworkNode(
-            button.dataset.nodeConnection
-          );
-
-        }
-      );
-
-    });
-
-  const openEntityButton =
-    container.querySelector(
-      "[data-open-entity]"
-    );
-
-  if (openEntityButton) {
-
-    openEntityButton.addEventListener(
-      "click",
-      () => {
-        openEntity(entityId);
-      }
-    );
-
-  }
 }
 
 
 /* =========================================================
-   NETWORK — GRAPH
+   NETWORK GRAPH
    ========================================================= */
 
 function renderGraph() {
   const graph =
     $("graph");
 
-  if (!graph) return;
+  if (!graph) {
+    return;
+  }
 
   const entities =
     getFilteredNetworkEntities();
@@ -1666,34 +1661,17 @@ function renderGraph() {
     return;
   }
 
-  const entityIds =
-    new Set(
-      entities.map(
-        entity => entity.id
-      )
+  const width =
+    Math.max(
+      graph.clientWidth || 700,
+      500
     );
 
-  const edges =
-    state.edges.filter(edge => {
-
-      const sender =
-        getSender(edge);
-
-      const receiver =
-        getReceiver(edge);
-
-      return (
-        entityIds.has(sender) &&
-        entityIds.has(receiver)
-      );
-
-    });
-
-  const width =
-    graph.clientWidth || 700;
-
   const height =
-    graph.clientHeight || 620;
+    Math.max(
+      graph.clientHeight || 620,
+      500
+    );
 
   const centerX =
     width / 2;
@@ -1701,13 +1679,21 @@ function renderGraph() {
   const centerY =
     height / 2;
 
-  const positions = {};
+  const selected =
+    state.network.selected;
+
+  const entityIds =
+    new Set(
+      entities.map(
+        entity => entity.id
+      )
+    );
+
+  const positions =
+    new Map();
 
   let ordered =
     [...entities];
-
-  const selected =
-    state.network.selected;
 
   if (
     selected &&
@@ -1739,23 +1725,30 @@ function renderGraph() {
         entity.id === selected
       ) {
 
-        positions[entity.id] = {
-          x: centerX,
-          y: centerY
-        };
+        positions.set(
+          entity.id,
+          {
+            x: centerX,
+            y: centerY
+          }
+        );
 
         return;
       }
 
-      const offset =
-        selected &&
-        entityIds.has(selected)
+      const hasSelected =
+        Boolean(
+          selected &&
+          entityIds.has(selected)
+        );
+
+      const indexOffset =
+        hasSelected
           ? index - 1
           : index;
 
       const count =
-        selected &&
-        entityIds.has(selected)
+        hasSelected
           ? Math.max(
               ordered.length - 1,
               1
@@ -1766,29 +1759,48 @@ function renderGraph() {
             );
 
       const angle =
-        (Math.PI * 2 * offset) /
+        (Math.PI * 2 * indexOffset) /
           count -
         Math.PI / 2;
 
-      positions[entity.id] = {
-        x:
-          centerX +
-          Math.cos(angle) *
+      positions.set(
+        entity.id,
+        {
+          x:
+            centerX +
+            Math.cos(angle) *
             radius,
 
-        y:
-          centerY +
-          Math.sin(angle) *
+          y:
+            centerY +
+            Math.sin(angle) *
             radius
-      };
-
+        }
+      );
     }
   );
 
 
-  /* -------------------------------------------------------
-     SVG
-     ------------------------------------------------------- */
+  /*
+     Only draw edges whose nodes
+     are visible.
+  */
+
+  const edges =
+    state.edges.filter(edge => {
+
+      const sender =
+        getSender(edge);
+
+      const receiver =
+        getReceiver(edge);
+
+      return (
+        entityIds.has(sender) &&
+        entityIds.has(receiver)
+      );
+    });
+
 
   let svg = `
     <svg
@@ -1797,32 +1809,35 @@ function renderGraph() {
       height="100%"
       viewBox="0 0 ${width} ${height}"
       preserveAspectRatio="xMidYMid meet"
+      xmlns="http://www.w3.org/2000/svg"
     >
 
       <defs>
 
         <marker
-          id="network-arrow"
+          id="setu-network-arrow"
           viewBox="0 0 10 10"
           refX="9"
           refY="5"
           markerWidth="7"
           markerHeight="7"
-          orient="auto"
+          orient="auto-start-reverse"
         >
+
           <path
             d="M 0 0 L 10 5 L 0 10 z"
             fill="currentColor"
           />
+
         </marker>
 
       </defs>
   `;
 
 
-  /* -------------------------------------------------------
+  /*
      EDGES
-     ------------------------------------------------------- */
+  */
 
   edges.forEach(edge => {
 
@@ -1833,24 +1848,23 @@ function renderGraph() {
       getReceiver(edge);
 
     const from =
-      positions[sender];
+      positions.get(sender);
 
     const to =
-      positions[receiver];
+      positions.get(receiver);
 
-    if (!from || !to) return;
+    if (!from || !to) {
+      return;
+    }
 
-    const selectedEdge =
+    const highlighted =
       selected === sender ||
       selected === receiver;
-
-    const amount =
-      getAmount(edge);
 
     svg += `
       <g
         class="network-edge ${
-          selectedEdge
+          highlighted
             ? "selected"
             : ""
         }"
@@ -1861,7 +1875,7 @@ function renderGraph() {
           y1="${from.y}"
           x2="${to.x}"
           y2="${to.y}"
-          marker-end="url(#network-arrow)"
+          marker-end="url(#setu-network-arrow)"
         />
 
         <text
@@ -1869,89 +1883,90 @@ function renderGraph() {
           y="${(from.y + to.y) / 2 - 8}"
           text-anchor="middle"
         >
-          ${formatCurrency(amount)}
+          ${formatCurrency(
+            getAmount(edge)
+          )}
         </text>
 
       </g>
     `;
-
   });
 
 
-  /* -------------------------------------------------------
+  /*
      NODES
-     ------------------------------------------------------- */
+  */
 
   entities.forEach(entity => {
 
     const position =
-      positions[entity.id];
+      positions.get(entity.id);
 
-    if (!position) return;
+    if (!position) {
+      return;
+    }
 
-    const isSelected =
+    const selectedNode =
       selected === entity.id;
 
-    const isConnected =
-      selected &&
-      state.edges.some(edge => {
+    const connectedNode =
+      Boolean(
+        selected &&
+        state.edges.some(edge => {
 
-        const sender =
-          getSender(edge);
+          const sender =
+            getSender(edge);
 
-        const receiver =
-          getReceiver(edge);
+          const receiver =
+            getReceiver(edge);
 
-        return (
-          (
-            sender === selected &&
-            receiver === entity.id
-          ) ||
-          (
-            receiver === selected &&
-            sender === entity.id
-          )
-        );
-
-      });
+          return (
+            (
+              sender === selected &&
+              receiver === entity.id
+            ) ||
+            (
+              receiver === selected &&
+              sender === entity.id
+            )
+          );
+        })
+      );
 
     const classes = [
       "network-node",
       entity.risk.toLowerCase(),
-      isSelected
+      selectedNode
         ? "selected"
         : "",
-      isConnected
+      connectedNode
         ? "connected"
         : ""
-    ].join(" ");
+    ]
+      .filter(Boolean)
+      .join(" ");
 
     svg += `
       <g
         class="${classes}"
         data-network-graph-node="${escapeHtml(entity.id)}"
-        transform="
-          translate(
-            ${position.x},
-            ${position.y}
-          )
-        "
+        transform="translate(${position.x}, ${position.y})"
       >
 
         <circle
           class="network-node-glow"
-          r="${isSelected ? 30 : 24}"
+          r="${selectedNode ? 30 : 24}"
         />
 
         <circle
           class="network-node-circle"
-          r="${isSelected ? 22 : 17}"
+          r="${selectedNode ? 22 : 17}"
         />
 
         <text
           class="network-node-label"
           x="0"
-          y="${isSelected ? 39 : 33}"
+          y="${selectedNode ? 39 : 33}"
           text-anchor="middle"
         >
           ${escapeHtml(entity.id)}
@@ -1960,7 +1975,7 @@ function renderGraph() {
         <text
           class="network-node-score"
           x="0"
-          y="${isSelected ? 54 : 48}"
+          y="${selectedNode ? 54 : 48}"
           text-anchor="middle"
         >
           ${entity.score}
@@ -1968,8 +1983,8 @@ function renderGraph() {
 
       </g>
     `;
-
   });
+
 
   svg += `
     </svg>
@@ -1977,69 +1992,55 @@ function renderGraph() {
 
   graph.innerHTML =
     svg;
-
-  graph
-    .querySelectorAll(
-      "[data-network-graph-node]"
-    )
-    .forEach(node => {
-
-      node.addEventListener(
-        "click",
-        () => {
-
-          selectNetworkNode(
-            node.dataset.networkGraphNode
-          );
-
-        }
-      );
-
-    });
 }
 
 
 /* =========================================================
-   NETWORK — NODE SELECTION
+   NETWORK NODE SELECTION
    ========================================================= */
 
 function selectNetworkNode(entityId) {
+  const id =
+    String(entityId || "").trim();
 
-  state.network.selected =
-    String(entityId);
-
-  renderNetworkList();
-  renderGraph();
-  renderNodeDetail(
-    state.network.selected
-  );
-}
-
-
-function openNetworkEntity(entityId) {
-
-  const tab =
-    document.querySelector(
-      '[data-view="network"]'
-    );
-
-  if (tab) {
-    tab.click();
+  if (!id) {
+    return;
   }
 
   state.network.selected =
-    String(entityId);
+    id;
 
   renderNetworkList();
   renderGraph();
-  renderNodeDetail(
-    state.network.selected
-  );
+  renderNodeDetail(id);
 }
 
 
 /* =========================================================
-   NETWORK — CONTROLS
+   OPEN NETWORK ENTITY
+   ========================================================= */
+
+function openNetworkEntity(entityId) {
+  const id =
+    String(entityId || "").trim();
+
+  if (!id) {
+    return;
+  }
+
+  activateView("network");
+
+  state.network.selected =
+    id;
+
+  renderNetworkList();
+  renderGraph();
+  renderNodeDetail(id);
+}
+
+
+/* =========================================================
+   NETWORK CONTROLS
    ========================================================= */
 
 function setupNetworkControls() {
@@ -2140,7 +2141,7 @@ function setupNetworkControls() {
         renderNodeDetail(null);
 
         toast(
-          "Network view reset"
+          "Network view reset."
         );
 
       }
@@ -2150,9 +2151,14 @@ function setupNetworkControls() {
 }
 
 
+/* =========================================================
+   RENDER NETWORK
+   ========================================================= */
+
 function renderNetwork() {
   renderNetworkList();
   renderGraph();
+
   renderNodeDetail(
     state.network.selected
   );
@@ -2171,12 +2177,14 @@ function renderIntegrity() {
   const links =
     $("links");
 
+
   if (manifest) {
 
     const entries =
       Object.entries(
         state.manifest || {}
       );
+
 
     if (!entries.length) {
 
@@ -2189,46 +2197,50 @@ function renderIntegrity() {
     } else {
 
       manifest.innerHTML =
-        entries.map(
-          ([name, value]) => {
+        entries
+          .map(
+            ([name, value]) => {
 
-            const hash =
-              typeof value === "object"
-                ? value.sha256
-                : value;
+              const hash =
+                typeof value === "object"
+                  ? value?.sha256
+                  : value;
 
-            const size =
-              typeof value === "object"
-                ? value.size_bytes
-                : 0;
+              const size =
+                typeof value === "object"
+                  ? value?.size_bytes
+                  : 0;
 
-            return `
-              <article class="hash-card">
+              return `
+                <article
+                  class="hash-card"
+                >
 
-                <span class="eyebrow">
-                  SOURCE ARTIFACT
-                </span>
+                  <span class="eyebrow">
+                    SOURCE ARTIFACT
+                  </span>
 
-                <strong>
-                  ${escapeHtml(name)}
-                </strong>
+                  <strong>
+                    ${escapeHtml(name)}
+                  </strong>
 
-                <code>
-                  ${escapeHtml(
-                    hash || "Hash unavailable"
-                  )}
-                </code>
+                  <code>
+                    ${escapeHtml(
+                      hash ||
+                      "Hash unavailable"
+                    )}
+                  </code>
 
-                <small>
-                  ${formatNumber(size)}
-                  bytes · SHA-256 verified at intake
-                </small>
+                  <small>
+                    ${formatNumber(size)}
+                    bytes · SHA-256 verified at intake
+                  </small>
 
-              </article>
-            `;
-
-          }
-        ).join("");
+                </article>
+              `;
+            }
+          )
+          .join("");
 
     }
 
@@ -2248,29 +2260,36 @@ function renderIntegrity() {
     } else {
 
       links.innerHTML =
-        state.links.map(link => `
-          <div class="link-row">
+        state.links
+          .map(
+            link => `
+              <div class="link-row">
 
-            ${escapeHtml(
-              link.entity_a || ""
-            )}
+                ${escapeHtml(
+                  link.entity_a ||
+                  ""
+                )}
 
-            ↔
+                ↔
 
-            ${escapeHtml(
-              link.entity_b || ""
-            )}
+                ${escapeHtml(
+                  link.entity_b ||
+                  ""
+                )}
 
-            <br>
+                <br>
 
-            <span class="signals">
-              ${escapeHtml(
-                link.evidence || ""
-              )}
-            </span>
+                <span class="signals">
+                  ${escapeHtml(
+                    link.evidence ||
+                    ""
+                  )}
+                </span>
 
-          </div>
-        `).join("");
+              </div>
+            `
+          )
+          .join("");
 
     }
 
@@ -2279,25 +2298,29 @@ function renderIntegrity() {
 
 
 /* =========================================================
-   CASE DATA
+   APPLY CASE DATA
    ========================================================= */
 
 function applyCaseData(data) {
 
+  if (!data) {
+    return;
+  }
+
   state.scores =
-    Array.isArray(data.scores)
-      ? data.scores
-      : [];
+    arrayOrEmpty(
+      data.scores
+    );
 
   state.links =
-    Array.isArray(data.links)
-      ? data.links
-      : [];
+    arrayOrEmpty(
+      data.links
+    );
 
   state.edges =
-    Array.isArray(data.edges)
-      ? data.edges
-      : [];
+    arrayOrEmpty(
+      data.edges
+    );
 
   state.manifest =
     data.manifest || {};
@@ -2306,17 +2329,17 @@ function applyCaseData(data) {
     data.case || {};
 
   state.notes =
-    Array.isArray(data.notes)
-      ? data.notes
-      : [];
+    arrayOrEmpty(
+      data.notes
+    );
 
   state.reviews =
     data.reviews || {};
 
   state.audit =
-    Array.isArray(data.audit)
-      ? data.audit
-      : [];
+    arrayOrEmpty(
+      data.audit
+    );
 
   state.report_available =
     Boolean(
@@ -2344,6 +2367,7 @@ function render() {
   renderNetwork();
 
   renderIntegrity();
+
 
   const brief =
     $("brief-link");
@@ -2375,6 +2399,7 @@ async function load() {
         }
       );
 
+
     if (!response.ok) {
 
       throw new Error(
@@ -2383,12 +2408,33 @@ async function load() {
 
     }
 
+
     const data =
       await response.json();
 
-    applyCaseData(data);
+
+    applyCaseData(
+      data
+    );
+
 
     render();
+
+
+    console.log(
+      "SETU: Investigation data loaded.",
+      {
+        entities:
+          state.scores.length,
+
+        links:
+          state.links.length,
+
+        transfers:
+          state.edges.length
+      }
+    );
+
 
   } catch (error) {
 
@@ -2402,6 +2448,80 @@ async function load() {
     );
 
   }
+
+}
+
+
+/* =========================================================
+   VIEW NAVIGATION
+   ========================================================= */
+
+function activateView(viewName) {
+
+  const target =
+    String(viewName || "").trim();
+
+  if (!target) {
+    return;
+  }
+
+
+  const targetView =
+    $(target);
+
+  if (!targetView) {
+
+    console.error(
+      `SETU: View #${target} does not exist.`
+    );
+
+    return;
+
+  }
+
+
+  document
+    .querySelectorAll(".tab")
+    .forEach(tab => {
+
+      tab.classList.toggle(
+        "active",
+        tab.dataset.view === target
+      );
+
+    });
+
+
+  document
+    .querySelectorAll(".view")
+    .forEach(view => {
+
+      view.classList.toggle(
+        "active",
+        view.id === target
+      );
+
+    });
+
+
+  if (target === "network") {
+
+    window.setTimeout(
+      () => {
+        renderNetwork();
+      },
+      50
+    );
+
+  }
+
+
+  if (target === "integrity") {
+
+    renderIntegrity();
+
+  }
+
 }
 
 
@@ -2412,9 +2532,7 @@ async function load() {
 function setupTabs() {
 
   document
-    .querySelectorAll(
-      ".tab"
-    )
+    .querySelectorAll(".tab")
     .forEach(button => {
 
       button.addEventListener(
@@ -2428,49 +2546,15 @@ function setupTabs() {
             return;
           }
 
-          document
-            .querySelectorAll(
-              ".tab"
-            )
-            .forEach(tab => {
-
-              tab.classList.toggle(
-                "active",
-                tab === button
-              );
-
-            });
-
-          document
-            .querySelectorAll(
-              ".view"
-            )
-            .forEach(view => {
-
-              view.classList.toggle(
-                "active",
-                view.id === target
-              );
-
-            });
-
-          if (
-            target === "network"
-          ) {
-
-            setTimeout(
-              () => {
-                renderGraph();
-              },
-              50
-            );
-
-          }
+          activateView(
+            target
+          );
 
         }
       );
 
     });
+
 }
 
 
@@ -2481,9 +2565,7 @@ function setupTabs() {
 function setupRiskFilters() {
 
   document
-    .querySelectorAll(
-      ".filter"
-    )
+    .querySelectorAll(".filter")
     .forEach(button => {
 
       button.addEventListener(
@@ -2491,13 +2573,14 @@ function setupRiskFilters() {
         () => {
 
           activeTier =
-            button.dataset.tier ||
-            "ALL";
+            String(
+              button.dataset.tier ||
+              "ALL"
+            ).toUpperCase();
+
 
           document
-            .querySelectorAll(
-              ".filter"
-            )
+            .querySelectorAll(".filter")
             .forEach(item => {
 
               item.classList.toggle(
@@ -2507,12 +2590,14 @@ function setupRiskFilters() {
 
             });
 
+
           renderTable();
 
         }
       );
 
     });
+
 }
 
 
@@ -2525,7 +2610,9 @@ function setupEntitySearch() {
   const search =
     $("entity-search");
 
-  if (!search) return;
+  if (!search) {
+    return;
+  }
 
   search.addEventListener(
     "input",
@@ -2533,6 +2620,274 @@ function setupEntitySearch() {
       renderTable();
     }
   );
+
+}
+
+
+/* =========================================================
+   GLOBAL CLICK HANDLER
+   ========================================================= */
+
+/*
+   IMPORTANT:
+
+   The risk table is generated dynamically with
+   innerHTML.
+
+   Therefore we DO NOT attach click listeners
+   directly to the generated rows.
+
+   We listen once on document and determine
+   what was clicked.
+
+   This prevents the flagged entity button
+   from becoming unresponsive after filtering
+   or re-rendering.
+*/
+
+function setupGlobalClicks() {
+
+  document.addEventListener(
+    "click",
+    event => {
+
+
+      /* -----------------------------------------------------
+         ENTITY BUTTON
+         ----------------------------------------------------- */
+
+      const entityButton =
+        event.target.closest(
+          "[data-open-entity]"
+        );
+
+
+      if (entityButton) {
+
+        event.preventDefault();
+        event.stopPropagation();
+
+
+        const entity =
+          entityButton.getAttribute(
+            "data-open-entity"
+          );
+
+
+        console.log(
+          "SETU: Entity clicked:",
+          entity
+        );
+
+
+        openEntity(
+          entity
+        );
+
+
+        return;
+
+      }
+
+
+      /* -----------------------------------------------------
+         ENTITY ROW
+         ----------------------------------------------------- */
+
+      const entityRow =
+        event.target.closest(
+          "[data-entity-row]"
+        );
+
+
+      if (
+        entityRow &&
+        !event.target.closest("button")
+      ) {
+
+        event.preventDefault();
+
+
+        const entity =
+          entityRow.getAttribute(
+            "data-entity-row"
+          );
+
+
+        console.log(
+          "SETU: Entity row clicked:",
+          entity
+        );
+
+
+        openEntity(
+          entity
+        );
+
+
+        return;
+
+      }
+
+
+      /* -----------------------------------------------------
+         TRACE BUTTON
+         ----------------------------------------------------- */
+
+      const traceButton =
+        event.target.closest(
+          "[data-trace-entity]"
+        );
+
+
+      if (traceButton) {
+
+        event.preventDefault();
+        event.stopPropagation();
+
+
+        const entity =
+          traceButton.getAttribute(
+            "data-trace-entity"
+          );
+
+
+        openNetworkEntity(
+          entity
+        );
+
+
+        return;
+
+      }
+
+
+      /* -----------------------------------------------------
+         ENTITY CONNECTION
+         ----------------------------------------------------- */
+
+      const connectionButton =
+        event.target.closest(
+          "[data-connection]"
+        );
+
+
+      if (connectionButton) {
+
+        event.preventDefault();
+
+
+        const entity =
+          connectionButton.getAttribute(
+            "data-connection"
+          );
+
+
+        renderEntity(
+          entity
+        );
+
+
+        return;
+
+      }
+
+
+      /* -----------------------------------------------------
+         NETWORK LIST NODE
+         ----------------------------------------------------- */
+
+      const networkNode =
+        event.target.closest(
+          "[data-network-node]"
+        );
+
+
+      if (networkNode) {
+
+        event.preventDefault();
+
+
+        const entity =
+          networkNode.getAttribute(
+            "data-network-node"
+          );
+
+
+        selectNetworkNode(
+          entity
+        );
+
+
+        return;
+
+      }
+
+
+      /* -----------------------------------------------------
+         NETWORK GRAPH NODE
+         ----------------------------------------------------- */
+
+      const graphNode =
+        event.target.closest(
+          "[data-network-graph-node]"
+        );
+
+
+      if (graphNode) {
+
+        event.preventDefault();
+
+
+        const entity =
+          graphNode.getAttribute(
+            "data-network-graph-node"
+          );
+
+
+        selectNetworkNode(
+          entity
+        );
+
+
+        return;
+
+      }
+
+
+      /* -----------------------------------------------------
+         NETWORK DETAIL CONNECTION
+         ----------------------------------------------------- */
+
+      const nodeConnection =
+        event.target.closest(
+          "[data-node-connection]"
+        );
+
+
+      if (nodeConnection) {
+
+        event.preventDefault();
+
+
+        const entity =
+          nodeConnection.getAttribute(
+            "data-node-connection"
+          );
+
+
+        selectNetworkNode(
+          entity
+        );
+
+
+        return;
+
+      }
+
+    }
+  );
+
 }
 
 
@@ -2545,16 +2900,31 @@ function setupPipeline() {
   const button =
     $("run-pipeline");
 
-  if (!button) return;
+  if (!button) {
+    return;
+  }
+
 
   button.addEventListener(
     "click",
     async () => {
 
-      button.disabled = true;
+      if (button.disabled) {
+        return;
+      }
 
-      button.textContent =
+
+      button.disabled =
+        true;
+
+
+      const originalHtml =
+        button.innerHTML;
+
+
+      button.innerHTML =
         "Correlating evidence…";
+
 
       try {
 
@@ -2566,83 +2936,126 @@ function setupPipeline() {
             }
           );
 
+
         if (!response.ok) {
 
           let message =
             "Pipeline failed.";
+
 
           try {
 
             const errorData =
               await response.json();
 
+
+            const detail =
+              errorData?.detail;
+
+
             if (
-              errorData?.detail
+              typeof detail ===
+              "string"
             ) {
 
-              if (
-                typeof errorData.detail ===
-                "string"
-              ) {
+              message =
+                detail;
 
-                message =
-                  errorData.detail;
+            } else if (
+              detail?.error
+            ) {
 
-              } else if (
-                errorData.detail.error
-              ) {
+              message =
+                detail.step
+                  ? `${detail.step}: ${detail.error}`
+                  : detail.error;
 
-                message =
-                  `${errorData.detail.step}: ${errorData.detail.error}`;
+            } else if (
+              detail?.step
+            ) {
 
-              } else if (
-                errorData.detail.step
-              ) {
-
-                message =
-                  `Pipeline failed at ${errorData.detail.step}`;
-
-              }
+              message =
+                `Pipeline failed at ${detail.step}`;
 
             }
 
           } catch (_) {
-            /* Ignore JSON parsing errors */
+
+            /*
+               Response was not JSON.
+            */
+
           }
+
 
           throw new Error(
             message
           );
+
         }
 
+
         await load();
+
 
         toast(
           "Investigation ready — evidence correlated successfully."
         );
 
+
       } catch (error) {
 
         console.error(
-          "Pipeline error:",
+          "SETU pipeline error:",
           error
         );
+
 
         toast(
           `Could not run pipeline: ${error.message}`
         );
 
+
       } finally {
 
-        button.disabled = false;
+        button.disabled =
+          false;
 
         button.innerHTML =
-          "Run investigation <span>→</span>";
+          originalHtml ||
+          "Run investigation →";
 
       }
 
     }
   );
+
+}
+
+
+/* =========================================================
+   KEYBOARD SHORTCUTS
+   ========================================================= */
+
+function setupKeyboardShortcuts() {
+
+  document.addEventListener(
+    "keydown",
+    event => {
+
+      if (
+        event.key === "Escape"
+      ) {
+
+        activateView(
+          "overview"
+        );
+
+      }
+
+    }
+  );
+
 }
 
 
@@ -2650,7 +3063,12 @@ function setupPipeline() {
    INITIALIZATION
    ========================================================= */
 
-function init() {
+function initSETU() {
+
+  console.log(
+    "SETU: Initializing investigation workspace..."
+  );
+
 
   setupTabs();
 
@@ -2660,7 +3078,12 @@ function init() {
 
   setupNetworkControls();
 
+  setupGlobalClicks();
+
   setupPipeline();
+
+  setupKeyboardShortcuts();
+
 
   load();
 
@@ -2668,7 +3091,7 @@ function init() {
 
 
 /* =========================================================
-   START APPLICATION
+   START
    ========================================================= */
 
 if (
@@ -2678,11 +3101,11 @@ if (
 
   document.addEventListener(
     "DOMContentLoaded",
-    init
+    initSETU
   );
 
 } else {
 
-  init();
+  initSETU();
 
 }
