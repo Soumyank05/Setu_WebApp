@@ -1794,3 +1794,462 @@ tbody tr:hover {
   }
 
 }
+
+/* =========================================================
+   NETWORK EXPLORER — PHASE 2
+   ========================================================= */
+
+.network-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+
+.network-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 260px;
+  flex: 1;
+  max-width: 380px;
+  padding: 10px 13px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--muted);
+}
+
+.network-search span {
+  font-size: 18px;
+}
+
+.network-search input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+}
+
+.network-search input::placeholder {
+  color: var(--muted);
+}
+
+.network-select {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel);
+}
+
+.network-select span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.network-select select {
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.network-select option {
+  background: #111827;
+  color: #fff;
+}
+
+.network-reset {
+  white-space: nowrap;
+}
+
+
+/* =========================================================
+   NETWORK LAYOUT
+   ========================================================= */
+
+.network-layout {
+  display: grid;
+  grid-template-columns: 230px minmax(0, 1fr) 280px;
+  min-height: 620px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--panel);
+}
+
+.network-sidebar {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border-right: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.network-sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.network-sidebar-header .eyebrow {
+  margin: 0;
+}
+
+.panel-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 24px;
+  padding: 0 7px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .04);
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+
+/* =========================================================
+   ENTITY LIST
+   ========================================================= */
+
+.network-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.network-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.network-list::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,.12);
+  border-radius: 999px;
+}
+
+.network-list-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  margin-bottom: 4px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  transition: .18s ease;
+}
+
+.network-list-item:hover {
+  background: rgba(255,255,255,.045);
+  border-color: var(--border);
+}
+
+.network-list-item.active {
+  background: rgba(255,255,255,.07);
+  border-color: rgba(255,255,255,.14);
+}
+
+.network-list-item .entity-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.network-list-item .entity-score {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+
+/* =========================================================
+   RISK DOTS
+   ========================================================= */
+
+.risk-dot {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 8px;
+  border-radius: 50%;
+}
+
+.risk-dot.high {
+  background: #ef4444;
+  box-shadow: 0 0 8px rgba(239, 68, 68, .45);
+}
+
+.risk-dot.medium {
+  background: #f59e0b;
+  box-shadow: 0 0 8px rgba(245, 158, 11, .4);
+}
+
+.risk-dot.low {
+  background: #22c55e;
+  box-shadow: 0 0 8px rgba(34, 197, 94, .35);
+}
+
+
+/* =========================================================
+   GRAPH CONTAINER
+   ========================================================= */
+
+.graph-container {
+  position: relative;
+  min-width: 0;
+  min-height: 620px;
+  background:
+    radial-gradient(
+      circle at center,
+      rgba(255,255,255,.025),
+      transparent 55%
+    );
+}
+
+.graph {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 620px;
+  overflow: hidden;
+}
+
+
+/* =========================================================
+   GRAPH EMPTY STATE
+   ========================================================= */
+
+.graph-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 40px;
+  text-align: center;
+}
+
+.graph-empty-icon {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  margin-bottom: 16px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: rgba(255,255,255,.035);
+  color: var(--muted);
+  font-size: 28px;
+}
+
+.graph-empty strong {
+  margin-bottom: 6px;
+  font-size: 15px;
+}
+
+.graph-empty p {
+  max-width: 340px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+
+/* =========================================================
+   GRAPH LEGEND
+   ========================================================= */
+
+.graph-legend {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: rgba(10, 15, 25, .88);
+  backdrop-filter: blur(10px);
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.legend-title {
+  color: var(--text);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .08em;
+}
+
+.legend-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 5px;
+  border-radius: 50%;
+}
+
+.legend-dot.high {
+  background: #ef4444;
+}
+
+.legend-dot.medium {
+  background: #f59e0b;
+}
+
+.legend-dot.low {
+  background: #22c55e;
+}
+
+.legend-divider {
+  width: 1px;
+  height: 16px;
+  background: var(--border);
+}
+
+
+/* =========================================================
+   NODE DETAIL
+   ========================================================= */
+
+.node-detail {
+  min-width: 0;
+  border-left: 1px solid var(--border);
+  background: rgba(255,255,255,.015);
+  overflow-y: auto;
+}
+
+.node-detail-empty {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 30px;
+  text-align: center;
+}
+
+.node-detail-empty .eyebrow {
+  margin-bottom: 18px;
+}
+
+.node-detail-icon {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  margin-bottom: 15px;
+  border: 1px solid var(--border);
+  border-radius: 15px;
+  background: rgba(255,255,255,.035);
+  color: var(--muted);
+  font-size: 24px;
+}
+
+.node-detail-empty h3 {
+  margin: 0 0 8px;
+  font-size: 16px;
+}
+
+.node-detail-empty p {
+  max-width: 210px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+
+/* =========================================================
+   RESPONSIVE NETWORK
+   ========================================================= */
+
+@media (max-width: 1100px) {
+
+  .network-layout {
+    grid-template-columns: 200px minmax(0, 1fr);
+  }
+
+  .node-detail {
+    display: none;
+  }
+
+}
+
+@media (max-width: 760px) {
+
+  .network-controls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .network-search {
+    max-width: none;
+    width: 100%;
+  }
+
+  .network-select {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .network-select select {
+    flex: 1;
+    text-align: right;
+  }
+
+  .network-reset {
+    width: 100%;
+  }
+
+  .network-layout {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .network-sidebar {
+    max-height: 220px;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .graph-container,
+  .graph {
+    min-height: 500px;
+  }
+
+  .graph-legend {
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+}
