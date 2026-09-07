@@ -3,6 +3,23 @@
    Main dashboard controller
    ========================================================= */
 
+   function openEntity(entity) {
+  const id = String(entity);
+
+  console.log("Opening entity intelligence:", id);
+
+  const tab = document.querySelector('.tab[data-view="entity"]');
+
+  if (tab) {
+    tab.click();
+  } else {
+    console.error("Entity Intelligence tab not found.");
+  }
+
+  if (typeof renderEntity === "function") {
+    renderEntity(id);
+  }
+}
 
 /* =========================================================
    STATE
@@ -443,8 +460,7 @@ function renderHealth() {
    ========================================================= */
 
 function renderTable() {
-  const table =
-    $("risk-table");
+  const table = $("risk-table");
 
   if (!table) return;
 
@@ -453,30 +469,26 @@ function renderTable() {
       .trim()
       .toLowerCase();
 
-  let rows =
-    state.scores.filter(row => {
+  let rows = state.scores.filter(row => {
+    const entity =
+      getEntityId(row).toLowerCase();
 
-      const entity =
-        getEntityId(row)
-          .toLowerCase();
+    const risk =
+      getRisk(row);
 
-      const risk =
-        getRisk(row);
+    const matchesSearch =
+      !search || entity.includes(search);
 
-      const matchesSearch =
-        !search ||
-        entity.includes(search);
+    const matchesTier =
+      activeTier === "ALL" ||
+      risk === activeTier;
 
-      const matchesTier =
-        activeTier === "ALL" ||
-        risk === activeTier;
-
-      return (
-        matchesSearch &&
-        matchesTier &&
-        risk !== "LOW"
-      );
-    });
+    return (
+      matchesSearch &&
+      matchesTier &&
+      risk !== "LOW"
+    );
+  });
 
   rows.sort(
     (a, b) =>
@@ -486,10 +498,7 @@ function renderTable() {
   if (!rows.length) {
     table.innerHTML = `
       <tr>
-        <td
-          colspan="6"
-          class="empty"
-        >
+        <td colspan="6" class="empty">
           No matching priority entities.
         </td>
       </tr>
@@ -498,89 +507,148 @@ function renderTable() {
     return;
   }
 
-  table.innerHTML =
-    rows.map(row => {
+  table.innerHTML = rows.map(row => {
+    const entity =
+      getEntityId(row);
 
-      const entity =
-        escapeHtml(
-          getEntityId(row)
-        );
+    const score =
+      getScore(row);
 
-      const score =
-        getScore(row);
+    const risk =
+      getRisk(row);
 
-      const risk =
-        getRisk(row);
+    return `
+      <tr
+        class="flagged-entity-row"
+        data-entity-row="${escapeHtml(entity)}"
+        title="Click to inspect ${escapeHtml(entity)}"
+      >
 
-      return `
-        <tr>
+        <td class="mono">
+          <button
+            type="button"
+            class="entity-link"
+            data-open-entity="${escapeHtml(entity)}"
+          >
+            ${escapeHtml(entity)}
+          </button>
+        </td>
 
-          <td class="mono">
-            <button
-              type="button"
-              class="entity-link"
-              data-open-entity="${entity}"
-            >
-              ${entity}
-            </button>
-          </td>
+        <td class="score">
+          ${score}
+          <small>/100</small>
+        </td>
 
-          <td class="score">
-            ${score}
-            <small>/100</small>
-          </td>
+        <td>
+          <span class="pill ${risk}">
+            ${risk}
+          </span>
+        </td>
 
-          <td>
-            <span class="pill ${risk}">
-              ${risk}
-            </span>
-          </td>
+        <td class="signals">
+          ${escapeHtml(reasons(row))}
+        </td>
 
-          <td class="signals">
-            ${escapeHtml(reasons(row))}
-          </td>
+        <td>
+          <button
+            type="button"
+            class="small-action"
+            data-trace-entity="${escapeHtml(entity)}"
+          >
+            Trace
+          </button>
+        </td>
 
-          <td>
-            <button
-              type="button"
-              class="small-action"
-              data-trace-entity="${entity}"
-            >
-              Trace
-            </button>
-          </td>
+        <td>
+          <span class="row-arrow">→</span>
+        </td>
 
-          <td></td>
+      </tr>
+    `;
+  }).join("");
 
-        </tr>
-      `;
-    }).join("");
-
+  /*
+   * Entity name click
+   */
   table
     .querySelectorAll("[data-open-entity]")
     .forEach(button => {
 
       button.addEventListener(
         "click",
-        () => {
-          openEntity(
-            button.dataset.openEntity
+        event => {
+
+          event.stopPropagation();
+
+          const entity =
+            button.dataset.openEntity;
+
+          console.log(
+            "Opening entity:",
+            entity
           );
+
+          openEntity(entity);
         }
       );
 
     });
 
+
+  /*
+   * Trace button
+   */
   table
     .querySelectorAll("[data-trace-entity]")
     .forEach(button => {
 
       button.addEventListener(
         "click",
-        () => {
+        event => {
+
+          event.stopPropagation();
+
           openNetworkEntity(
             button.dataset.traceEntity
           );
+
+        }
+      );
+
+    });
+
+
+  /*
+   * Entire row click
+   */
+  table
+    .querySelectorAll("[data-entity-row]")
+    .forEach(row => {
+
+      row.addEventListener(
+        "click",
+        event => {
+
+          /*
+           * Don't trigger the row handler
+           * when clicking one of its buttons.
+           */
+          if (
+            event.target.closest("button")
+          ) {
+            return;
+          }
+
+          const entity =
+            row.dataset.entityRow;
+
+          console.log(
+            "Opening flagged entity:",
+            entity
+          );
+
+          openEntity(entity);
+
         }
       );
 
