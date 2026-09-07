@@ -1,40 +1,1110 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>SETU · Investigation Workspace</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/static/styles.css" />
-    <link rel="stylesheet" href="/static/casework.css" />
-  </head>
-  <body>
-    <main class="shell">
-      <header class="topbar">
-        <div class="brand"><span class="bridge">⌁</span><div><strong>SETU</strong><small>Digital evidence correlation</small></div></div>
-        <div class="case-ref"><span class="pulse"></span> CASE REF · SETU-DEMO-001</div>
-        <button id="run-pipeline" class="primary">Run new investigation <span>→</span></button>
-      </header>
-      <section class="hero">
-        <div><p class="eyebrow">INVESTIGATION WORKSPACE</p><h1>Turn fragmented evidence<br />into a traceable story.</h1><p class="lede">Correlate telecom, payment, and ownership records to surface mule-account patterns—then act on explainable evidence.</p></div>
-        <div class="hero-card"><span>CASE STATUS</span><strong id="status">Awaiting evidence</strong><p id="status-detail">Run a new investigation to create a synthetic evidence case.</p></div>
-      </section>
-      <section class="metrics" id="metrics">
-        <article><span>Entities scanned</span><strong id="entity-count">—</strong></article><article><span>High risk</span><strong id="high-count" class="danger">—</strong></article><article><span>Medium risk</span><strong id="medium-count" class="warning">—</strong></article><article><span>Device links</span><strong id="link-count">—</strong></article>
-      </section>
-      <nav class="tabs" aria-label="Investigation views"><button class="tab active" data-view="overview">Overview</button><button class="tab" data-view="network">Network explorer</button><button class="tab" data-view="integrity">Evidence integrity</button><button class="tab" data-view="casework">Casework</button></nav>
-      <section id="overview" class="view active">
-        <div class="section-heading"><div><p class="eyebrow">PRIORITY QUEUE</p><h2>Flagged entities</h2></div><label class="search"><span>⌕</span><input id="entity-search" placeholder="Search phone or handle" /></label></div>
-        <div class="risk-controls"><button class="filter active" data-tier="ALL">All</button><button class="filter" data-tier="HIGH">High risk</button><button class="filter" data-tier="MEDIUM">Medium risk</button></div>
-        <div class="table-wrap"><table><thead><tr><th>Entity</th><th>Risk score</th><th>Tier</th><th>Evidence signals</th><th>Human review</th></tr></thead><tbody id="risk-table"><tr><td colspan="5" class="empty">No case data loaded.</td></tr></tbody></table></div>
-        <div class="actions"><div><p class="eyebrow">BRIEFING PACK</p><h2>Investigation-ready summary</h2><p>Download a PDF containing integrity hashes, flagged entities, and next actions.</p></div><a id="brief-link" class="outline disabled" href="/api/brief">Download brief ↓</a></div>
-      </section>
-      <section id="network" class="view"><div class="section-heading"><div><p class="eyebrow">MONEY FLOW</p><h2>Network explorer</h2></div><p class="hint">Select an entity to trace its connected transfers.</p></div><div class="network-layout"><aside id="network-list" class="network-list"></aside><div id="graph" class="graph"><p class="empty">Run the pipeline to explore the graph.</p></div><aside id="node-detail" class="node-detail"><p class="eyebrow">SELECT A NODE</p><h3>Trace a connection</h3><p>Choose an entity to inspect its incoming and outgoing movement.</p></aside></div></section>
-      <section id="integrity" class="view"><div class="section-heading"><div><p class="eyebrow">CHAIN OF CUSTODY</p><h2>Evidence integrity</h2></div><p class="hint">Each raw artifact is SHA-256 hashed at intake.</p></div><div id="manifest" class="manifest"></div><div class="links-panel"><h3>Resolved entity links</h3><div id="links"></div></div></section>
-      <section id="casework" class="view"><div class="section-heading"><div><p class="eyebrow">OFFICER WORKFLOW</p><h2>Case intake &amp; review</h2></div><p class="hint">Local prototype: retain and deploy only under approved Cyber Cell controls.</p></div><div class="case-grid"><form id="case-form" class="panel"><h3>Case registration</h3><label>Case reference<input name="case_reference" required placeholder="IND-CC-2026-001" /></label><label>Case title<input name="title" required placeholder="UPI fraud investigation" /></label><label>Investigating officer<input name="officer" required placeholder="Name and designation" /></label><label>Unit<input name="unit" required value="Indore Cyber Cell" /></label><label>Incident date<input name="incident_date" type="date" /></label><label>Jurisdiction<input name="jurisdiction" required value="Indore" /></label><button class="primary" type="submit">Save case details</button></form><div class="panel"><h3>Evidence intake</h3><p class="hint">Only CSV evidence is accepted. The app validates fields before it stages a file for hashing and correlation.</p><form id="evidence-form"><label>Artifact type<select name="artifact"><option value="telecom">Telecom CDR</option><option value="upi">UPI settlement log</option><option value="kyc">KYC ownership map</option></select></label><label>CSV evidence file<input name="file" type="file" accept=".csv,text/csv" required /></label><button class="outline" type="submit">Stage evidence file</button></form><hr/><h3>Analyst note</h3><form id="note-form"><label>Author<input name="author" required placeholder="Officer name" /></label><label>Note<textarea name="text" required placeholder="Record a corroborated observation, request, or follow-up."></textarea></label><button class="outline" type="submit">Add case note</button></form></div></div><div class="review-panel panel"><h3>Finding review</h3><p class="hint">Risk scores are triage signals. A human reviewer must record the basis before escalation or clearance.</p><form id="review-form"><label>Entity<select id="review-node" name="node" required></select></label><label>Disposition<select name="disposition"><option value="pending">Pending review</option><option value="reviewed">Reviewed</option><option value="escalate">Escalate for supervisory review</option><option value="cleared">Cleared after review</option></select></label><label>Reviewer<input name="reviewer" required placeholder="Reviewer name" /></label><label>Rationale<textarea name="rationale" required placeholder="State the corroborating evidence and next step."></textarea></label><button class="primary" type="submit">Record human review</button></form></div><div class="audit-panel panel"><h3>Recent audit trail</h3><div id="audit"></div></div></section>
-    </main>
-    <div id="toast" role="status"></div><script src="/static/app.js"></script><script src="/static/casework.js"></script>
-  </body>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <title>SETU · Investigation Workspace</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="/static/styles.css" />
+  <link rel="stylesheet" href="/static/casework.css" />
+</head>
+
+<body>
+
+<main class="shell">
+
+  <!-- TOP BAR -->
+  <header class="topbar">
+
+    <div class="brand">
+      <span class="bridge">⌁</span>
+
+      <div>
+        <strong>SETU</strong>
+        <small>Digital evidence correlation</small>
+      </div>
+    </div>
+
+    <div class="topbar-center">
+      <span class="pulse"></span>
+      <span>INVESTIGATION SYSTEM</span>
+    </div>
+
+    <div class="topbar-actions">
+      <div class="case-ref">
+        CASE REF · SETU-DEMO-001
+      </div>
+
+      <button id="run-pipeline" class="primary">
+        Run investigation <span>→</span>
+      </button>
+    </div>
+
+  </header>
+
+
+  <!-- HERO -->
+  <section class="hero">
+
+    <div class="hero-copy">
+
+      <p class="eyebrow">INVESTIGATION COMMAND CENTER</p>
+
+      <h1>
+        Turn fragmented evidence
+        <span>into a traceable story.</span>
+      </h1>
+
+      <p class="lede">
+        Correlate telecom, payment and ownership records to surface
+        suspicious entities, connected transaction flows and
+        explainable risk signals.
+      </p>
+
+      <div class="hero-actions">
+
+        <button
+          class="primary hero-primary"
+          onclick="document.querySelector('[data-view=network]').click()"
+        >
+          Explore network
+          <span>↗</span>
+        </button>
+
+        <button
+          class="hero-secondary"
+          onclick="document.querySelector('[data-view=casework]').click()"
+        >
+          Open casework
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <div class="hero-card">
+
+      <div class="hero-card-top">
+        <span>CASE STATUS</span>
+        <span class="status-dot"></span>
+      </div>
+
+      <strong id="status">
+        Awaiting evidence
+      </strong>
+
+      <p id="status-detail">
+        Run a new investigation to create a synthetic evidence case.
+      </p>
+
+      <div class="hero-progress">
+        <div id="case-progress"></div>
+      </div>
+
+      <small id="progress-label">
+        Investigation not started
+      </small>
+
+    </div>
+
+  </section>
+
+
+  <!-- KPI CARDS -->
+  <section class="metrics" id="metrics">
+
+    <article class="metric-card">
+      <div class="metric-icon">◎</div>
+
+      <div>
+        <span>Entities scanned</span>
+        <strong id="entity-count">—</strong>
+      </div>
+    </article>
+
+
+    <article class="metric-card danger-card">
+      <div class="metric-icon">!</div>
+
+      <div>
+        <span>High risk</span>
+        <strong id="high-count" class="danger">—</strong>
+      </div>
+    </article>
+
+
+    <article class="metric-card warning-card">
+      <div class="metric-icon">△</div>
+
+      <div>
+        <span>Medium risk</span>
+        <strong id="medium-count" class="warning">—</strong>
+      </div>
+    </article>
+
+
+    <article class="metric-card">
+      <div class="metric-icon">⌁</div>
+
+      <div>
+        <span>Entity links</span>
+        <strong id="link-count">—</strong>
+      </div>
+    </article>
+
+
+    <article class="metric-card transaction-card">
+      <div class="metric-icon">₹</div>
+
+      <div>
+        <span>Transaction value</span>
+        <strong id="transaction-value">—</strong>
+      </div>
+    </article>
+
+
+    <article class="metric-card">
+      <div class="metric-icon">↗</div>
+
+      <div>
+        <span>Transfers analyzed</span>
+        <strong id="transfer-count">—</strong>
+      </div>
+    </article>
+
+  </section>
+ 
+
+  <!-- NAVIGATION -->
+  <nav class="tabs" aria-label="Investigation views">
+
+    <button class="tab active" data-view="overview">
+      Overview
+    </button>
+
+    <button class="tab" data-view="entity">
+      Entity intelligence
+    </button>
+
+    <button class="tab" data-view="network">
+      Network explorer
+    </button>
+
+    <button class="tab" data-view="integrity">
+      Evidence integrity
+    </button>
+
+    <button class="tab" data-view="casework">
+      Casework
+    </button>
+
+  </nav>
+
+
+  <!-- ========================= -->
+  <!-- OVERVIEW -->
+  <!-- ========================= -->
+
+  <section id="overview" class="view active">
+
+    <div class="dashboard-grid">
+
+      <!-- RISK DISTRIBUTION -->
+      <article class="dashboard-panel risk-panel">
+
+        <div class="panel-heading">
+
+          <div>
+            <p class="eyebrow">RISK DISTRIBUTION</p>
+            <h2>Investigation profile</h2>
+          </div>
+
+          <span class="panel-badge">
+            LIVE
+          </span>
+
+        </div>
+
+        <div class="risk-summary">
+
+          <div class="risk-ring">
+            <div>
+              <strong id="risk-percentage">—</strong>
+              <span>high risk</span>
+            </div>
+          </div>
+
+          <div class="risk-bars">
+
+            <div class="risk-bar-row">
+              <div>
+                <span>High</span>
+                <strong id="risk-high-label">0</strong>
+              </div>
+
+              <div class="bar">
+                <i id="risk-high-bar"></i>
+              </div>
+            </div>
+
+
+            <div class="risk-bar-row">
+              <div>
+                <span>Medium</span>
+                <strong id="risk-medium-label">0</strong>
+              </div>
+
+              <div class="bar">
+                <i id="risk-medium-bar"></i>
+              </div>
+            </div>
+
+
+            <div class="risk-bar-row">
+              <div>
+                <span>Low</span>
+                <strong id="risk-low-label">0</strong>
+              </div>
+
+              <div class="bar">
+                <i id="risk-low-bar"></i>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </article>
+
+
+      <!-- INVESTIGATION HEALTH -->
+      <article class="dashboard-panel health-panel">
+
+        <div class="panel-heading">
+
+          <div>
+            <p class="eyebrow">SYSTEM HEALTH</p>
+            <h2>Investigation readiness</h2>
+          </div>
+
+        </div>
+
+
+        <div class="health-list">
+
+          <div class="health-item">
+            <span class="health-status" id="health-data"></span>
+
+            <div>
+              <strong>Evidence loaded</strong>
+              <small>Source artifacts available</small>
+            </div>
+          </div>
+
+
+          <div class="health-item">
+            <span class="health-status" id="health-links"></span>
+
+            <div>
+              <strong>Entity resolution</strong>
+              <small>Cross-source links detected</small>
+            </div>
+          </div>
+
+
+          <div class="health-item">
+            <span class="health-status" id="health-network"></span>
+
+            <div>
+              <strong>Network generated</strong>
+              <small>Transaction relationships mapped</small>
+            </div>
+          </div>
+
+
+          <div class="health-item">
+            <span class="health-status" id="health-report"></span>
+
+            <div>
+              <strong>Brief available</strong>
+              <small>Investigation report generated</small>
+            </div>
+          </div>
+
+        </div>
+
+      </article>
+
+    </div>
+
+
+    <!-- PRIORITY QUEUE -->
+
+    <div class="section-heading priority-heading">
+
+      <div>
+        <p class="eyebrow">PRIORITY QUEUE</p>
+        <h2>Flagged entities</h2>
+      </div>
+
+      <label class="search">
+        <span>⌕</span>
+        <input
+          id="entity-search"
+          placeholder="Search entity..."
+        />
+      </label>
+
+    </div>
+
+
+    <div class="risk-controls">
+
+      <button class="filter active" data-tier="ALL">
+        All
+      </button>
+
+      <button class="filter" data-tier="HIGH">
+        High risk
+      </button>
+
+      <button class="filter" data-tier="MEDIUM">
+        Medium risk
+      </button>
+
+    </div>
+
+
+    <div class="table-wrap">
+
+      <table>
+
+        <thead>
+
+          <tr>
+            <th>ENTITY</th>
+            <th>RISK SCORE</th>
+            <th>TIER</th>
+            <th>EVIDENCE SIGNALS</th>
+            <th>REVIEW</th>
+            <th></th>
+          </tr>
+
+        </thead>
+
+        <tbody id="risk-table">
+
+          <tr>
+            <td colspan="6" class="empty">
+              No case data loaded.
+            </td>
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+
+    <!-- QUICK ACTIONS -->
+
+    <section class="quick-actions">
+
+      <div>
+        <p class="eyebrow">INVESTIGATOR TOOLS</p>
+        <h2>Continue your investigation</h2>
+        <p>
+          Jump directly into the tools used to trace entities,
+          validate evidence or document findings.
+        </p>
+      </div>
+
+
+      <div class="quick-action-buttons">
+
+        <button
+          class="quick-action"
+          onclick="document.querySelector('[data-view=network]').click()"
+        >
+          <span>⌁</span>
+          <div>
+            <strong>Network explorer</strong>
+            <small>Trace money movement</small>
+          </div>
+        </button>
+
+
+        <button
+          class="quick-action"
+          onclick="document.querySelector('[data-view=integrity]').click()"
+        >
+          <span>✓</span>
+          <div>
+            <strong>Evidence integrity</strong>
+            <small>Verify source artifacts</small>
+          </div>
+        </button>
+
+
+        <button
+          class="quick-action"
+          onclick="document.querySelector('[data-view=casework]').click()"
+        >
+          <span>□</span>
+          <div>
+            <strong>Casework</strong>
+            <small>Review findings</small>
+          </div>
+        </button>
+
+
+        <a
+          id="brief-link"
+          class="quick-action"
+          href="/api/brief"
+        >
+          <span>↓</span>
+          <div>
+            <strong>Investigation brief</strong>
+            <small>Download PDF report</small>
+          </div>
+        </a>
+
+      </div>
+
+    </section>
+
+  </section>
+
+  <!-- ========================= -->
+<!-- ENTITY INTELLIGENCE -->
+<!-- ========================= -->
+
+<section id="entity" class="view">
+
+  <div class="entity-header">
+
+    <div>
+
+      <p class="eyebrow">
+        ENTITY INTELLIGENCE
+      </p>
+
+      <h2 id="entity-title">
+        Select an entity
+      </h2>
+
+      <p id="entity-subtitle">
+        Detailed risk and relationship analysis.
+      </p>
+
+    </div>
+
+    <button
+      class="outline"
+      onclick="document.querySelector('[data-view=overview]').click()"
+    >
+      ← Back to overview
+    </button>
+
+  </div>
+
+
+  <!-- ENTITY SUMMARY -->
+
+  <div class="entity-summary-grid">
+
+    <article class="entity-card">
+
+      <span class="eyebrow">
+        RISK SCORE
+      </span>
+
+      <div class="entity-score">
+
+        <strong id="entity-score">
+          —
+        </strong>
+
+        <span>
+          /100
+        </span>
+
+      </div>
+
+      <span
+        id="entity-tier"
+        class="pill"
+      >
+        —
+      </span>
+
+    </article>
+
+
+    <article class="entity-card">
+
+      <span class="eyebrow">
+        INCOMING VALUE
+      </span>
+
+      <strong
+        id="entity-incoming"
+        class="entity-number"
+      >
+        —
+      </strong>
+
+      <small>
+        Total incoming transfers
+      </small>
+
+    </article>
+
+
+    <article class="entity-card">
+
+      <span class="eyebrow">
+        OUTGOING VALUE
+      </span>
+
+      <strong
+        id="entity-outgoing"
+        class="entity-number"
+      >
+        —
+      </strong>
+
+      <small>
+        Total outgoing transfers
+      </small>
+
+    </article>
+
+
+    <article class="entity-card">
+
+      <span class="eyebrow">
+        CONNECTIONS
+      </span>
+
+      <strong
+        id="entity-connections"
+        class="entity-number"
+      >
+        —
+      </strong>
+
+      <small>
+        Directly connected entities
+      </small>
+
+    </article>
+
+  </div>
+
+
+  <!-- ENTITY ANALYSIS -->
+
+  <div class="entity-analysis-grid">
+
+    <!-- RISK SIGNALS -->
+
+    <article class="entity-panel">
+
+      <div class="panel-heading">
+
+        <div>
+
+          <p class="eyebrow">
+            EXPLAINABILITY
+          </p>
+
+          <h3>
+            Risk signals
+          </h3>
+
+        </div>
+
+      </div>
+
+      <div
+        id="entity-signals"
+        class="entity-signals"
+      >
+
+        <p class="empty">
+          Select an entity to inspect its signals.
+        </p>
+
+      </div>
+
+    </article>
+
+
+    <!-- CONNECTIONS -->
+
+    <article class="entity-panel">
+
+      <div class="panel-heading">
+
+        <div>
+
+          <p class="eyebrow">
+            RELATIONSHIPS
+          </p>
+
+          <h3>
+            Connected entities
+          </h3>
+
+        </div>
+
+      </div>
+
+      <div
+        id="entity-connections-list"
+        class="entity-connections-list"
+      >
+
+        <p class="empty">
+          No entity selected.
+        </p>
+
+      </div>
+
+    </article>
+
+  </div>
+
+
+  <!-- TRANSACTION TIMELINE -->
+
+  <article class="entity-panel timeline-panel">
+
+    <div class="panel-heading">
+
+      <div>
+
+        <p class="eyebrow">
+          TRANSACTION HISTORY
+        </p>
+
+        <h3>
+          Investigation timeline
+        </h3>
+
+      </div>
+
+      <span
+        id="entity-transfer-count"
+        class="panel-badge"
+      >
+        0 EVENTS
+      </span>
+
+    </div>
+
+
+    <div
+      id="entity-timeline"
+      class="timeline"
+    >
+
+      <p class="empty">
+        No transaction activity available.
+      </p>
+
+    </div>
+
+  </article>
+
+</section>
+
+  <!-- ========================= -->
+  <!-- NETWORK -->
+  <!-- ========================= -->
+
+  <section id="network" class="view">
+
+    <div class="section-heading">
+
+      <div>
+        <p class="eyebrow">MONEY FLOW</p>
+        <h2>Network explorer</h2>
+      </div>
+
+      <p class="hint">
+        Select an entity to trace its connected transfers.
+      </p>
+
+    </div>
+
+
+    <div class="network-layout">
+
+      <aside id="network-list" class="network-list"></aside>
+
+      <div id="graph" class="graph">
+
+        <p class="empty">
+          Run the pipeline to explore the graph.
+        </p>
+
+      </div>
+
+      <aside id="node-detail" class="node-detail">
+
+        <p class="eyebrow">
+          SELECT A NODE
+        </p>
+
+        <h3>
+          Trace a connection
+        </h3>
+
+        <p>
+          Choose an entity to inspect its incoming and
+          outgoing movement.
+        </p>
+
+      </aside>
+
+    </div>
+
+  </section>
+
+
+  <!-- ========================= -->
+  <!-- INTEGRITY -->
+  <!-- ========================= -->
+
+  <section id="integrity" class="view">
+
+    <div class="section-heading">
+
+      <div>
+        <p class="eyebrow">CHAIN OF CUSTODY</p>
+        <h2>Evidence integrity</h2>
+      </div>
+
+      <p class="hint">
+        Each raw artifact is SHA-256 hashed at intake.
+      </p>
+
+    </div>
+
+    <div id="manifest" class="manifest"></div>
+
+    <div class="links-panel">
+
+      <h3>
+        Resolved entity links
+      </h3>
+
+      <div id="links"></div>
+
+    </div>
+
+  </section>
+
+
+  <!-- ========================= -->
+  <!-- CASEWORK -->
+  <!-- ========================= -->
+
+  <section id="casework" class="view">
+
+    <div class="section-heading">
+
+      <div>
+        <p class="eyebrow">OFFICER WORKFLOW</p>
+        <h2>Case intake &amp; review</h2>
+      </div>
+
+      <p class="hint">
+        Local prototype: retain and deploy only under approved
+        Cyber Cell controls.
+      </p>
+
+    </div>
+
+
+    <div class="case-grid">
+
+      <form id="case-form" class="panel">
+
+        <h3>Case registration</h3>
+
+        <label>
+          Case reference
+          <input
+            name="case_reference"
+            required
+            placeholder="IND-CC-2026-001"
+          />
+        </label>
+
+        <label>
+          Case title
+          <input
+            name="title"
+            required
+            placeholder="UPI fraud investigation"
+          />
+        </label>
+
+        <label>
+          Investigating officer
+          <input
+            name="officer"
+            required
+            placeholder="Name and designation"
+          />
+        </label>
+
+        <label>
+          Unit
+          <input
+            name="unit"
+            required
+            value="Indore Cyber Cell"
+          />
+        </label>
+
+        <label>
+          Incident date
+          <input
+            name="incident_date"
+            type="date"
+          />
+        </label>
+
+        <label>
+          Jurisdiction
+          <input
+            name="jurisdiction"
+            required
+            value="Indore"
+          />
+        </label>
+
+        <button class="primary" type="submit">
+          Save case details
+        </button>
+
+      </form>
+
+
+      <div class="panel">
+
+        <h3>Evidence intake</h3>
+
+        <p class="hint">
+          Only CSV evidence is accepted. The app validates fields
+          before it stages a file for hashing and correlation.
+        </p>
+
+        <form id="evidence-form">
+
+          <label>
+            Artifact type
+
+            <select name="artifact">
+
+              <option value="telecom">
+                Telecom CDR
+              </option>
+
+              <option value="upi">
+                UPI settlement log
+              </option>
+
+              <option value="kyc">
+                KYC ownership map
+              </option>
+
+            </select>
+
+          </label>
+
+
+          <label>
+            CSV evidence file
+
+            <input
+              name="file"
+              type="file"
+              accept=".csv,text/csv"
+              required
+            />
+
+          </label>
+
+
+          <button class="outline" type="submit">
+            Stage evidence file
+          </button>
+
+        </form>
+
+
+        <hr />
+
+
+        <h3>Analyst note</h3>
+
+        <form id="note-form">
+
+          <label>
+            Author
+
+            <input
+              name="author"
+              required
+              placeholder="Officer name"
+            />
+
+          </label>
+
+
+          <label>
+            Note
+
+            <textarea
+              name="text"
+              required
+              placeholder="Record a corroborated observation, request, or follow-up."
+            ></textarea>
+
+          </label>
+
+
+          <button class="outline" type="submit">
+            Add case note
+          </button>
+
+        </form>
+
+      </div>
+
+    </div>
+
+
+    <div class="review-panel panel">
+
+      <h3>Finding review</h3>
+
+      <p class="hint">
+        Risk scores are triage signals. A human reviewer must
+        record the basis before escalation or clearance.
+      </p>
+
+      <form id="review-form">
+
+        <label>
+          Entity
+
+          <select
+            id="review-node"
+            name="node"
+            required
+          ></select>
+
+        </label>
+
+
+        <label>
+          Disposition
+
+          <select name="disposition">
+
+            <option value="pending">
+              Pending review
+            </option>
+
+            <option value="reviewed">
+              Reviewed
+            </option>
+
+            <option value="escalate">
+              Escalate for supervisory review
+            </option>
+
+            <option value="cleared">
+              Cleared after review
+            </option>
+
+          </select>
+
+        </label>
+
+
+        <label>
+          Reviewer
+
+          <input
+            name="reviewer"
+            required
+            placeholder="Reviewer name"
+          />
+
+        </label>
+
+
+        <label>
+          Rationale
+
+          <textarea
+            name="rationale"
+            required
+            placeholder="State the corroborating evidence and next step."
+          ></textarea>
+
+        </label>
+
+
+        <button class="primary" type="submit">
+          Record human review
+        </button>
+
+      </form>
+
+    </div>
+
+
+    <div class="audit-panel panel">
+
+      <h3>
+        Recent audit trail
+      </h3>
+
+      <div id="audit"></div>
+
+    </div>
+
+  </section>
+
+</main>
+
+
+<div id="toast" role="status"></div>
+
+
+<script src="/static/app.js"></script>
+<script src="/static/casework.js"></script>
+
+</body>
 </html>
