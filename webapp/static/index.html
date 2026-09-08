@@ -1,28 +1,31 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <title>SETU · Investigation Workspace</title>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
   <link
     href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap"
     rel="stylesheet"
-  />
+  >
 
-  <link rel="stylesheet" href="/static/styles.css" />
-  <link rel="stylesheet" href="/static/casework.css" />
+  <link rel="stylesheet" href="/static/styles.css">
+  <link rel="stylesheet" href="/static/casework.css">
 </head>
 
 <body>
 
 <main class="shell">
 
-  <!-- TOP BAR -->
+  <!-- =====================================================
+       TOP BAR
+       ===================================================== -->
+
   <header class="topbar">
 
     <div class="brand">
@@ -40,24 +43,36 @@
     </div>
 
     <div class="topbar-actions">
+
       <div class="case-ref">
         CASE REF · SETU-DEMO-001
       </div>
 
-      <button id="run-pipeline" class="primary">
-        Run investigation <span>→</span>
+      <button
+        id="run-pipeline"
+        class="primary"
+        type="button"
+      >
+        Run investigation
+        <span>→</span>
       </button>
+
     </div>
 
   </header>
 
 
-  <!-- HERO -->
+  <!-- =====================================================
+       HERO
+       ===================================================== -->
+
   <section class="hero">
 
     <div class="hero-copy">
 
-      <p class="eyebrow">INVESTIGATION COMMAND CENTER</p>
+      <p class="eyebrow">
+        INVESTIGATION COMMAND CENTER
+      </p>
 
       <h1>
         Turn fragmented evidence
@@ -74,6 +89,7 @@
 
         <button
           class="primary hero-primary"
+          type="button"
           onclick="document.querySelector('[data-view=network]').click()"
         >
           Explore network
@@ -82,6 +98,7 @@
 
         <button
           class="hero-secondary"
+          type="button"
           onclick="document.querySelector('[data-view=casework]').click()"
         >
           Open casework
@@ -120,8 +137,14 @@
   </section>
 
 
-  <!-- KPI CARDS -->
-  <section class="metrics" id="metrics">
+  <!-- =====================================================
+       METRICS
+       ===================================================== -->
+
+  <section
+    class="metrics"
+    id="metrics"
+  >
 
     <article class="metric-card">
       <div class="metric-icon">◎</div>
@@ -138,7 +161,12 @@
 
       <div>
         <span>High risk</span>
-        <strong id="high-count" class="danger">—</strong>
+        <strong
+          id="high-count"
+          class="danger"
+        >
+          —
+        </strong>
       </div>
     </article>
 
@@ -148,7 +176,12 @@
 
       <div>
         <span>Medium risk</span>
-        <strong id="medium-count" class="warning">—</strong>
+        <strong
+          id="medium-count"
+          class="warning"
+        >
+          —
+        </strong>
       </div>
     </article>
 
@@ -183,43 +216,73 @@
     </article>
 
   </section>
- 
 
-  <!-- NAVIGATION -->
-  <nav class="tabs" aria-label="Investigation views">
 
-    <button class="tab active" data-view="overview">
+  <!-- =====================================================
+       NAVIGATION
+       ===================================================== -->
+
+  <nav
+    class="tabs"
+    aria-label="Investigation views"
+  >
+
+    <button
+      class="tab active"
+      type="button"
+      data-view="overview"
+    >
       Overview
     </button>
 
-    <button class="tab" data-view="entity">
+    <button
+      class="tab"
+      type="button"
+      data-view="entity"
+    >
       Entity intelligence
     </button>
 
-    <button class="tab" data-view="network">
+    <button
+      class="tab"
+      type="button"
+      data-view="network"
+    >
       Network explorer
     </button>
 
-    <button class="tab" data-view="integrity">
+    <button
+      class="tab"
+      type="button"
+      data-view="integrity"
+    >
       Evidence integrity
     </button>
 
-    <button class="tab" data-view="casework">
+    <button
+      class="tab"
+      type="button"
+      data-view="casework"
+    >
       Casework
     </button>
 
   </nav>
 
 
-  <!-- ========================= -->
-  <!-- OVERVIEW -->
-  <!-- ========================= -->
+  <!-- =====================================================
+       OVERVIEW
+       ===================================================== -->
 
-  <section id="overview" class="view active">
+  <section
+    id="overview"
+    class="view active"
+  >
+
+    <!-- Risk / health -->
 
     <div class="dashboard-grid">
 
-      <!-- RISK DISTRIBUTION -->
       <article class="dashboard-panel risk-panel">
 
         <div class="panel-heading">
@@ -235,6 +298,7 @@
 
         </div>
 
+
         <div class="risk-summary">
 
           <div class="risk-ring">
@@ -244,9 +308,11 @@
             </div>
           </div>
 
+
           <div class="risk-bars">
 
             <div class="risk-bar-row">
+
               <div>
                 <span>High</span>
                 <strong id="risk-high-label">0</strong>
@@ -255,10 +321,12 @@
               <div class="bar">
                 <i id="risk-high-bar"></i>
               </div>
+
             </div>
 
 
             <div class="risk-bar-row">
+
               <div>
                 <span>Medium</span>
                 <strong id="risk-medium-label">0</strong>
@@ -267,10 +335,12 @@
               <div class="bar">
                 <i id="risk-medium-bar"></i>
               </div>
+
             </div>
 
 
             <div class="risk-bar-row">
+
               <div>
                 <span>Low</span>
                 <strong id="risk-low-label">0</strong>
@@ -279,6 +349,7 @@
               <div class="bar">
                 <i id="risk-low-bar"></i>
               </div>
+
             </div>
 
           </div>
@@ -288,7 +359,6 @@
       </article>
 
 
-      <!-- INVESTIGATION HEALTH -->
       <article class="dashboard-panel health-panel">
 
         <div class="panel-heading">
@@ -304,7 +374,10 @@
         <div class="health-list">
 
           <div class="health-item">
-            <span class="health-status" id="health-data"></span>
+            <span
+              class="health-status"
+              id="health-data"
+            ></span>
 
             <div>
               <strong>Evidence loaded</strong>
@@ -314,7 +387,10 @@
 
 
           <div class="health-item">
-            <span class="health-status" id="health-links"></span>
+            <span
+              class="health-status"
+              id="health-links"
+            ></span>
 
             <div>
               <strong>Entity resolution</strong>
@@ -324,7 +400,10 @@
 
 
           <div class="health-item">
-            <span class="health-status" id="health-network"></span>
+            <span
+              class="health-status"
+              id="health-network"
+            ></span>
 
             <div>
               <strong>Network generated</strong>
@@ -334,7 +413,10 @@
 
 
           <div class="health-item">
-            <span class="health-status" id="health-report"></span>
+            <span
+              class="health-status"
+              id="health-report"
+            ></span>
 
             <div>
               <strong>Brief available</strong>
@@ -349,7 +431,7 @@
     </div>
 
 
-    <!-- PRIORITY QUEUE -->
+    <!-- Flagged entities -->
 
     <div class="section-heading priority-heading">
 
@@ -359,11 +441,16 @@
       </div>
 
       <label class="search">
+
         <span>⌕</span>
+
         <input
           id="entity-search"
+          type="search"
           placeholder="Search entity..."
-        />
+          autocomplete="off"
+        >
+
       </label>
 
     </div>
@@ -371,15 +458,27 @@
 
     <div class="risk-controls">
 
-      <button class="filter active" data-tier="ALL">
+      <button
+        class="filter active"
+        type="button"
+        data-tier="ALL"
+      >
         All
       </button>
 
-      <button class="filter" data-tier="HIGH">
+      <button
+        class="filter"
+        type="button"
+        data-tier="HIGH"
+      >
         High risk
       </button>
 
-      <button class="filter" data-tier="MEDIUM">
+      <button
+        class="filter"
+        type="button"
+        data-tier="MEDIUM"
+      >
         Medium risk
       </button>
 
@@ -398,7 +497,7 @@
             <th>TIER</th>
             <th>EVIDENCE SIGNALS</th>
             <th>REVIEW</th>
-            <th></th>
+            <th>ACTION</th>
           </tr>
 
         </thead>
@@ -406,7 +505,10 @@
         <tbody id="risk-table">
 
           <tr>
-            <td colspan="6" class="empty">
+            <td
+              colspan="6"
+              class="empty"
+            >
               No case data loaded.
             </td>
           </tr>
@@ -418,17 +520,25 @@
     </div>
 
 
-    <!-- QUICK ACTIONS -->
+    <!-- Quick actions -->
 
     <section class="quick-actions">
 
       <div>
-        <p class="eyebrow">INVESTIGATOR TOOLS</p>
-        <h2>Continue your investigation</h2>
+
+        <p class="eyebrow">
+          INVESTIGATOR TOOLS
+        </p>
+
+        <h2>
+          Continue your investigation
+        </h2>
+
         <p>
           Jump directly into the tools used to trace entities,
           validate evidence or document findings.
         </p>
+
       </div>
 
 
@@ -436,9 +546,25 @@
 
         <button
           class="quick-action"
+          type="button"
+          onclick="document.querySelector('[data-view=entity]').click()"
+        >
+          <span>◎</span>
+
+          <div>
+            <strong>Entity intelligence</strong>
+            <small>Inspect flagged entity</small>
+          </div>
+        </button>
+
+
+        <button
+          class="quick-action"
+          type="button"
           onclick="document.querySelector('[data-view=network]').click()"
         >
           <span>⌁</span>
+
           <div>
             <strong>Network explorer</strong>
             <small>Trace money movement</small>
@@ -448,9 +574,11 @@
 
         <button
           class="quick-action"
+          type="button"
           onclick="document.querySelector('[data-view=integrity]').click()"
         >
           <span>✓</span>
+
           <div>
             <strong>Evidence integrity</strong>
             <small>Verify source artifacts</small>
@@ -460,9 +588,11 @@
 
         <button
           class="quick-action"
+          type="button"
           onclick="document.querySelector('[data-view=casework]').click()"
         >
           <span>□</span>
+
           <div>
             <strong>Casework</strong>
             <small>Review findings</small>
@@ -476,6 +606,7 @@
           href="/api/brief"
         >
           <span>↓</span>
+
           <div>
             <strong>Investigation brief</strong>
             <small>Download PDF report</small>
@@ -488,262 +619,276 @@
 
   </section>
 
-  <!-- ========================= -->
-<!-- ENTITY INTELLIGENCE -->
-<!-- ========================= -->
 
-<section id="entity" class="view">
+  <!-- =====================================================
+       ENTITY INTELLIGENCE
+       ===================================================== -->
 
-  <div class="entity-header">
+  <section
+    id="entity"
+    class="view"
+  >
 
-    <div>
-
-      <p class="eyebrow">
-        ENTITY INTELLIGENCE
-      </p>
-
-      <h2 id="entity-title">
-        Select an entity
-      </h2>
-
-      <p id="entity-subtitle">
-        Detailed risk and relationship analysis.
-      </p>
-
-    </div>
-
-    <button
-      class="outline"
-      onclick="document.querySelector('[data-view=overview]').click()"
-    >
-      ← Back to overview
-    </button>
-
-  </div>
-
-
-  <!-- ENTITY SUMMARY -->
-
-  <div class="entity-summary-grid">
-
-    <article class="entity-card">
-
-      <span class="eyebrow">
-        RISK SCORE
-      </span>
-
-      <div class="entity-score">
-
-        <strong id="entity-score">
-          —
-        </strong>
-
-        <span>
-          /100
-        </span>
-
-      </div>
-
-      <span
-        id="entity-tier"
-        class="pill"
-      >
-        —
-      </span>
-
-    </article>
-
-
-    <article class="entity-card">
-
-      <span class="eyebrow">
-        INCOMING VALUE
-      </span>
-
-      <strong
-        id="entity-incoming"
-        class="entity-number"
-      >
-        —
-      </strong>
-
-      <small>
-        Total incoming transfers
-      </small>
-
-    </article>
-
-
-    <article class="entity-card">
-
-      <span class="eyebrow">
-        OUTGOING VALUE
-      </span>
-
-      <strong
-        id="entity-outgoing"
-        class="entity-number"
-      >
-        —
-      </strong>
-
-      <small>
-        Total outgoing transfers
-      </small>
-
-    </article>
-
-
-    <article class="entity-card">
-
-      <span class="eyebrow">
-        CONNECTIONS
-      </span>
-
-      <strong
-        id="entity-connections"
-        class="entity-number"
-      >
-        —
-      </strong>
-
-      <small>
-        Directly connected entities
-      </small>
-
-    </article>
-
-  </div>
-
-
-  <!-- ENTITY ANALYSIS -->
-
-  <div class="entity-analysis-grid">
-
-    <!-- RISK SIGNALS -->
-
-    <article class="entity-panel">
-
-      <div class="panel-heading">
-
-        <div>
-
-          <p class="eyebrow">
-            EXPLAINABILITY
-          </p>
-
-          <h3>
-            Risk signals
-          </h3>
-
-        </div>
-
-      </div>
-
-      <div
-        id="entity-signals"
-        class="entity-signals"
-      >
-
-        <p class="empty">
-          Select an entity to inspect its signals.
-        </p>
-
-      </div>
-
-    </article>
-
-
-    <!-- CONNECTIONS -->
-
-    <article class="entity-panel">
-
-      <div class="panel-heading">
-
-        <div>
-
-          <p class="eyebrow">
-            RELATIONSHIPS
-          </p>
-
-          <h3>
-            Connected entities
-          </h3>
-
-        </div>
-
-      </div>
-
-      <div
-        id="entity-connections-list"
-        class="entity-connections-list"
-      >
-
-        <p class="empty">
-          No entity selected.
-        </p>
-
-      </div>
-
-    </article>
-
-  </div>
-
-
-  <!-- TRANSACTION TIMELINE -->
-
-  <article class="entity-panel timeline-panel">
-
-    <div class="panel-heading">
+    <div class="entity-header">
 
       <div>
 
         <p class="eyebrow">
-          TRANSACTION HISTORY
+          ENTITY INTELLIGENCE
         </p>
 
-        <h3>
-          Investigation timeline
-        </h3>
+        <h2 id="entity-title">
+          Select an entity
+        </h2>
+
+        <p id="entity-subtitle">
+          Detailed risk and relationship analysis.
+        </p>
 
       </div>
 
-      <span
-        id="entity-transfer-count"
-        class="panel-badge"
+
+      <button
+        class="outline"
+        type="button"
+        onclick="document.querySelector('[data-view=overview]').click()"
       >
-        0 EVENTS
-      </span>
+        ← Back to overview
+      </button>
 
     </div>
 
 
-    <div
-      id="entity-timeline"
-      class="timeline"
-    >
+    <!-- Entity summary -->
 
-      <p class="empty">
-        No transaction activity available.
-      </p>
+    <div class="entity-summary-grid">
+
+      <article class="entity-card">
+
+        <span class="eyebrow">
+          RISK SCORE
+        </span>
+
+        <div class="entity-score">
+
+          <strong id="entity-score">
+            —
+          </strong>
+
+          <span>/100</span>
+
+        </div>
+
+        <span
+          id="entity-tier"
+          class="pill"
+        >
+          —
+        </span>
+
+      </article>
+
+
+      <article class="entity-card">
+
+        <span class="eyebrow">
+          INCOMING VALUE
+        </span>
+
+        <strong
+          id="entity-incoming"
+          class="entity-number"
+        >
+          —
+        </strong>
+
+        <small>
+          Total incoming transfers
+        </small>
+
+      </article>
+
+
+      <article class="entity-card">
+
+        <span class="eyebrow">
+          OUTGOING VALUE
+        </span>
+
+        <strong
+          id="entity-outgoing"
+          class="entity-number"
+        >
+          —
+        </strong>
+
+        <small>
+          Total outgoing transfers
+        </small>
+
+      </article>
+
+
+      <article class="entity-card">
+
+        <span class="eyebrow">
+          CONNECTIONS
+        </span>
+
+        <strong
+          id="entity-connections"
+          class="entity-number"
+        >
+          —
+        </strong>
+
+        <small>
+          Directly connected entities
+        </small>
+
+      </article>
 
     </div>
 
-  </article>
 
-</section>
+    <!-- Entity analysis -->
 
-  <!-- ========================= -->
-  <!-- NETWORK -->
-  <!-- ========================= -->
+    <div class="entity-analysis-grid">
 
-  <section id="network" class="view">
+      <!-- Risk signals -->
+
+      <article class="entity-panel">
+
+        <div class="panel-heading">
+
+          <div>
+            <p class="eyebrow">
+              EXPLAINABILITY
+            </p>
+
+            <h3>
+              Risk signals
+            </h3>
+          </div>
+
+        </div>
+
+
+        <div
+          id="entity-signals"
+          class="entity-signals"
+        >
+
+          <p class="empty">
+            Select an entity to inspect its signals.
+          </p>
+
+        </div>
+
+      </article>
+
+
+      <!-- Connections -->
+
+      <article class="entity-panel">
+
+        <div class="panel-heading">
+
+          <div>
+            <p class="eyebrow">
+              RELATIONSHIPS
+            </p>
+
+            <h3>
+              Connected entities
+            </h3>
+          </div>
+
+        </div>
+
+
+        <div
+          id="entity-connections-list"
+          class="entity-connections-list"
+        >
+
+          <p class="empty">
+            No entity selected.
+          </p>
+
+        </div>
+
+      </article>
+
+    </div>
+
+
+    <!-- Timeline -->
+
+    <article class="entity-panel timeline-panel">
+
+      <div class="panel-heading">
+
+        <div>
+
+          <p class="eyebrow">
+            TRANSACTION HISTORY
+          </p>
+
+          <h3>
+            Investigation timeline
+          </h3>
+
+        </div>
+
+
+        <span
+          id="entity-transfer-count"
+          class="panel-badge"
+        >
+          0 EVENTS
+        </span>
+
+      </div>
+
+
+      <div
+        id="entity-timeline"
+        class="timeline"
+      >
+
+        <p class="empty">
+          No transaction activity available.
+        </p>
+
+      </div>
+
+    </article>
+
+  </section>
+
+
+  <!-- =====================================================
+       NETWORK EXPLORER
+       ===================================================== -->
+
+  <section
+    id="network"
+    class="view"
+  >
 
     <div class="section-heading">
 
       <div>
-        <p class="eyebrow">MONEY FLOW</p>
-        <h2>Network explorer</h2>
+
+        <p class="eyebrow">
+          MONEY FLOW
+        </p>
+
+        <h2>
+          Network explorer
+        </h2>
+
       </div>
 
       <p class="hint">
@@ -755,9 +900,16 @@
 
     <div class="network-layout">
 
-      <aside id="network-list" class="network-list"></aside>
+      <aside
+        id="network-list"
+        class="network-list"
+      ></aside>
 
-      <div id="graph" class="graph">
+
+      <div
+        id="graph"
+        class="graph"
+      >
 
         <p class="empty">
           Run the pipeline to explore the graph.
@@ -765,7 +917,11 @@
 
       </div>
 
-      <aside id="node-detail" class="node-detail">
+
+      <aside
+        id="node-detail"
+        class="node-detail"
+      >
 
         <p class="eyebrow">
           SELECT A NODE
@@ -776,8 +932,7 @@
         </h3>
 
         <p>
-          Choose an entity to inspect its incoming and
-          outgoing movement.
+          Choose an entity to inspect its incoming and outgoing movement.
         </p>
 
       </aside>
@@ -787,17 +942,27 @@
   </section>
 
 
-  <!-- ========================= -->
-  <!-- INTEGRITY -->
-  <!-- ========================= -->
+  <!-- =====================================================
+       EVIDENCE INTEGRITY
+       ===================================================== -->
 
-  <section id="integrity" class="view">
+  <section
+    id="integrity"
+    class="view"
+  >
 
     <div class="section-heading">
 
       <div>
-        <p class="eyebrow">CHAIN OF CUSTODY</p>
-        <h2>Evidence integrity</h2>
+
+        <p class="eyebrow">
+          CHAIN OF CUSTODY
+        </p>
+
+        <h2>
+          Evidence integrity
+        </h2>
+
       </div>
 
       <p class="hint">
@@ -806,7 +971,12 @@
 
     </div>
 
-    <div id="manifest" class="manifest"></div>
+
+    <div
+      id="manifest"
+      class="manifest"
+    ></div>
+
 
     <div class="links-panel">
 
@@ -821,17 +991,27 @@
   </section>
 
 
-  <!-- ========================= -->
-  <!-- CASEWORK -->
-  <!-- ========================= -->
+  <!-- =====================================================
+       CASEWORK
+       ===================================================== -->
 
-  <section id="casework" class="view">
+  <section
+    id="casework"
+    class="view"
+  >
 
     <div class="section-heading">
 
       <div>
-        <p class="eyebrow">OFFICER WORKFLOW</p>
-        <h2>Case intake &amp; review</h2>
+
+        <p class="eyebrow">
+          OFFICER WORKFLOW
+        </p>
+
+        <h2>
+          Case intake &amp; review
+        </h2>
+
       </div>
 
       <p class="hint">
@@ -844,78 +1024,106 @@
 
     <div class="case-grid">
 
-      <form id="case-form" class="panel">
+      <!-- Case registration -->
 
-        <h3>Case registration</h3>
+      <form
+        id="case-form"
+        class="panel"
+      >
+
+        <h3>
+          Case registration
+        </h3>
+
 
         <label>
           Case reference
+
           <input
             name="case_reference"
             required
             placeholder="IND-CC-2026-001"
-          />
+          >
         </label>
+
 
         <label>
           Case title
+
           <input
             name="title"
             required
             placeholder="UPI fraud investigation"
-          />
+          >
         </label>
+
 
         <label>
           Investigating officer
+
           <input
             name="officer"
             required
             placeholder="Name and designation"
-          />
+          >
         </label>
+
 
         <label>
           Unit
+
           <input
             name="unit"
             required
             value="Indore Cyber Cell"
-          />
+          >
         </label>
+
 
         <label>
           Incident date
+
           <input
             name="incident_date"
             type="date"
-          />
+          >
         </label>
+
 
         <label>
           Jurisdiction
+
           <input
             name="jurisdiction"
             required
             value="Indore"
-          />
+          >
         </label>
 
-        <button class="primary" type="submit">
+
+        <button
+          class="primary"
+          type="submit"
+        >
           Save case details
         </button>
 
       </form>
 
 
+      <!-- Evidence + notes -->
+
       <div class="panel">
 
-        <h3>Evidence intake</h3>
+        <h3>
+          Evidence intake
+        </h3>
 
         <p class="hint">
           Only CSV evidence is accepted. The app validates fields
           before it stages a file for hashing and correlation.
         </p>
+
 
         <form id="evidence-form">
 
@@ -949,22 +1157,28 @@
               type="file"
               accept=".csv,text/csv"
               required
-            />
+            >
 
           </label>
 
 
-          <button class="outline" type="submit">
+          <button
+            class="outline"
+            type="submit"
+          >
             Stage evidence file
           </button>
 
         </form>
 
 
-        <hr />
+        <hr>
 
 
-        <h3>Analyst note</h3>
+        <h3>
+          Analyst note
+        </h3>
+
 
         <form id="note-form">
 
@@ -975,8 +1189,7 @@
               name="author"
               required
               placeholder="Officer name"
-            />
-
+            >
           </label>
 
 
@@ -992,7 +1205,10 @@
           </label>
 
 
-          <button class="outline" type="submit">
+          <button
+            class="outline"
+            type="submit"
+          >
             Add case note
           </button>
 
@@ -1003,14 +1219,19 @@
     </div>
 
 
+    <!-- Finding review -->
+
     <div class="review-panel panel">
 
-      <h3>Finding review</h3>
+      <h3>
+        Finding review
+      </h3>
 
       <p class="hint">
         Risk scores are triage signals. A human reviewer must
         record the basis before escalation or clearance.
       </p>
+
 
       <form id="review-form">
 
@@ -1059,8 +1280,7 @@
             name="reviewer"
             required
             placeholder="Reviewer name"
-          />
-
+          >
         </label>
 
 
@@ -1076,7 +1296,10 @@
         </label>
 
 
-        <button class="primary" type="submit">
+        <button
+          class="primary"
+          type="submit"
+        >
           Record human review
         </button>
 
@@ -1084,6 +1307,8 @@
 
     </div>
 
+
+    <!-- Audit -->
 
     <div class="audit-panel panel">
 
@@ -1100,8 +1325,20 @@
 </main>
 
 
-<div id="toast" role="status"></div>
+<!-- =====================================================
+     GLOBAL TOAST
+     ===================================================== -->
 
+<div
+  id="toast"
+  role="status"
+  aria-live="polite"
+></div>
+
+
+<!-- =====================================================
+     SCRIPTS
+     ===================================================== -->
 
 <script src="/static/app.js"></script>
 <script src="/static/casework.js"></script>
