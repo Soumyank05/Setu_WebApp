@@ -604,73 +604,43 @@ function renderTable() {
 */
 
 function openEntity(entity) {
-  const id =
-    String(entity || "").trim();
+  const id = String(entity || "").trim();
 
   if (!id) {
-    console.warn(
-      "SETU: openEntity called without an entity."
-    );
-
+    console.warn("SETU: openEntity called without an entity.");
     return;
   }
 
-  console.log(
-    "SETU: Opening entity intelligence:",
-    id
-  );
+  console.log("SETU: Opening Entity Intelligence:", id);
 
-  const entityView =
-    $("entity");
+  const entityView = $("entity");
 
   if (!entityView) {
-    console.error(
-      "SETU: #entity view was not found."
-    );
-
-    toast(
-      "Entity Intelligence view is missing."
-    );
-
+    console.error("SETU: #entity view was not found.");
+    toast("Entity Intelligence view is missing.");
     return;
   }
 
-  /*
-     Activate Entity Intelligence tab.
-  */
+  // Activate Entity Intelligence tab
+  document.querySelectorAll(".tab").forEach(tab => {
+    tab.classList.toggle(
+      "active",
+      tab.dataset.view === "entity"
+    );
+  });
 
-  document
-    .querySelectorAll(".tab")
-    .forEach(tab => {
-      tab.classList.toggle(
-        "active",
-        tab.dataset.view === "entity"
-      );
-    });
+  // Activate Entity Intelligence view
+  document.querySelectorAll(".view").forEach(view => {
+    view.classList.toggle(
+      "active",
+      view.id === "entity"
+    );
+  });
 
-  /*
-     Activate Entity Intelligence view.
-  */
-
-  document
-    .querySelectorAll(".view")
-    .forEach(view => {
-      view.classList.toggle(
-        "active",
-        view.id === "entity"
-      );
-    });
-
-  /*
-     Render entity.
-  */
-
+  // Render selected entity
   renderEntity(id);
 
-  /*
-     Scroll to the entity view.
-  */
-
+  // Scroll to the Entity Intelligence section
   window.setTimeout(() => {
     entityView.scrollIntoView({
       behavior: "smooth",
@@ -693,10 +663,10 @@ function renderEntity(entity) {
   }
 
   const scoreRow =
-    state.scores.find(
-      row =>
-        getEntityId(row) === id
-    );
+  state.scores.find(
+    row =>
+      String(getEntityId(row)).trim() === id
+  );
 
   const incoming =
     state.edges.filter(
