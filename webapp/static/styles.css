@@ -2553,6 +2553,14 @@ tbody tr:hover {
   text-decoration: underline;
 }
 
+/* Keyboard access and a clear click target for dynamic priority rows. */
+.entity-link:focus-visible,
+.small-action:focus-visible,
+.flagged-entity-row:focus-visible {
+  outline: 2px solid var(--lime);
+  outline-offset: 3px;
+}
+
 .row-arrow {
   color: var(--muted);
   transition:

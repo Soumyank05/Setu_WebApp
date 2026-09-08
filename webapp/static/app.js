@@ -342,6 +342,22 @@ function renderStatus() {
       ? `${high} high-priority entities surfaced from ${state.edges.length} payment transfers.`
       : "Run a new investigation to create a synthetic evidence case.";
   }
+
+  const progress = $("case-progress");
+  const progressLabel = $("progress-label");
+  const completed = [state.manifest && Object.keys(state.manifest).length, state.links.length, state.edges.length, state.report_available]
+    .filter(Boolean).length;
+
+  if (progress) progress.style.width = `${completed * 25}%`;
+  if (progressLabel) {
+    progressLabel.textContent = ready
+      ? `${completed} of 4 investigation stages complete`
+      : "Investigation not started";
+  }
+
+  const caseReference = String(state.case?.case_reference || "SETU-DEMO-001");
+  const caseRef = document.querySelector(".case-ref");
+  if (caseRef) caseRef.textContent = `CASE REF · ${caseReference}`;
 }
 
 
@@ -2338,6 +2354,8 @@ function render() {
 
   renderIntegrity();
 
+  renderCasework();
+
 
   const brief =
     $("brief-link");
@@ -2349,7 +2367,96 @@ function render() {
       !state.report_available
     );
 
+    brief.setAttribute("aria-disabled", String(!state.report_available));
+
   }
+}
+
+
+/* =========================================================
+   CASEWORK
+   Kept here (rather than in a second script) so it cannot
+   overwrite renderTable(), which would remove entity buttons.
+   ========================================================= */
+
+async function requestJson(url, options = {}) {
+  const response = await fetch(url, options);
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const detail = body?.detail;
+    throw new Error(typeof detail === "string" ? detail : detail?.error || "Request failed.");
+  }
+  return body;
+}
+
+function renderCasework() {
+  const form = $("case-form");
+  if (form) Object.entries(state.case || {}).forEach(([key, value]) => {
+    if (form.elements[key]) form.elements[key].value = value ?? "";
+  });
+
+  const reviewNode = $("review-node");
+  if (reviewNode) {
+    const selected = reviewNode.value;
+    const flagged = state.scores.filter(row => getRisk(row) !== "LOW");
+    reviewNode.innerHTML = flagged.length
+      ? flagged.map(row => {
+          const id = getEntityId(row);
+          return `<option value="${escapeHtml(id)}">${escapeHtml(id)}</option>`;
+        }).join("")
+      : '<option value="">No flagged entity</option>';
+    if ([...reviewNode.options].some(option => option.value === selected)) reviewNode.value = selected;
+  }
+
+  const audit = $("audit");
+  if (audit) {
+    audit.innerHTML = state.audit.length
+      ? state.audit.slice().reverse().map(item => `
+          <div class="audit-row">
+            <time>${escapeHtml(new Date(item.at_utc).toLocaleString())}</time>
+            <strong>${escapeHtml(String(item.event || "").replaceAll("_", " "))}</strong>
+          </div>`).join("")
+      : '<p class="empty">No operator actions recorded yet.</p>';
+  }
+}
+
+function setupCasework() {
+  const bind = (id, handler) => {
+    const form = $(id);
+    if (form) form.addEventListener("submit", handler);
+  };
+
+  bind("case-form", async event => {
+    event.preventDefault();
+    try {
+      await requestJson("/api/case", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(Object.fromEntries(new FormData(event.currentTarget))) });
+      await load(); toast("Case registration saved and audited.");
+    } catch (error) { toast(error.message); }
+  });
+
+  bind("evidence-form", async event => {
+    event.preventDefault();
+    try {
+      const result = await requestJson("/api/evidence", { method: "POST", body: new FormData(event.currentTarget) });
+      event.currentTarget.reset(); await load(); toast(result.message || "Evidence staged.");
+    } catch (error) { toast(error.message); }
+  });
+
+  bind("note-form", async event => {
+    event.preventDefault();
+    try {
+      await requestJson("/api/notes", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(Object.fromEntries(new FormData(event.currentTarget))) });
+      event.currentTarget.reset(); await load(); toast("Case note saved to the audit trail.");
+    } catch (error) { toast(error.message); }
+  });
+
+  bind("review-form", async event => {
+    event.preventDefault();
+    try {
+      await requestJson("/api/reviews", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(Object.fromEntries(new FormData(event.currentTarget))) });
+      await load(); toast("Human review recorded.");
+    } catch (error) { toast(error.message); }
+  });
 }
 
 
@@ -2620,6 +2727,13 @@ function setupGlobalClicks() {
   document.addEventListener(
     "click",
     event => {
+
+      const disabledBrief = event.target.closest("#brief-link.disabled");
+      if (disabledBrief) {
+        event.preventDefault();
+        toast("Run the investigation before downloading its brief.");
+        return;
+      }
 
 
       /* -----------------------------------------------------
@@ -3051,6 +3165,8 @@ function initSETU() {
   setupGlobalClicks();
 
   setupPipeline();
+
+  setupCasework();
 
   setupKeyboardShortcuts();
 

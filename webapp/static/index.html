@@ -897,24 +897,62 @@
 
     </div>
 
+    <div class="network-controls" aria-label="Network filters">
+
+      <label class="network-search">
+        <span aria-hidden="true">⌕</span>
+        <input id="network-search" type="search" placeholder="Find an entity…" autocomplete="off">
+      </label>
+
+      <label class="network-select">
+        <span>Risk</span>
+        <select id="network-risk-filter">
+          <option value="ALL">All tiers</option>
+          <option value="HIGH">High risk</option>
+          <option value="MEDIUM">Medium risk</option>
+          <option value="LOW">Low risk</option>
+        </select>
+      </label>
+
+      <label class="network-select">
+        <span>Trace</span>
+        <select id="network-hop-filter">
+          <option value="ALL">Entire network</option>
+          <option value="1">1 hop</option>
+          <option value="2">2 hops</option>
+          <option value="3">3 hops</option>
+        </select>
+      </label>
+
+      <button id="network-reset" class="outline network-reset" type="button">Reset view</button>
+
+    </div>
 
     <div class="network-layout">
 
-      <aside
-        id="network-list"
-        class="network-list"
-      ></aside>
+      <aside class="network-sidebar">
+        <div class="network-sidebar-header">
+          <p class="eyebrow">ENTITIES</p>
+          <span id="network-node-count" class="panel-badge">0</span>
+        </div>
+        <div id="network-list" class="network-list"></div>
+      </aside>
 
-
-      <div
-        id="graph"
-        class="graph"
-      >
+      <div class="graph-container">
+        <div id="graph" class="graph">
 
         <p class="empty">
           Run the pipeline to explore the graph.
         </p>
 
+        </div>
+
+        <div class="graph-legend" aria-label="Risk legend">
+          <span class="legend-title">RISK</span>
+          <span><i class="legend-dot high"></i>High</span>
+          <span><i class="legend-dot medium"></i>Medium</span>
+          <span><i class="legend-dot low"></i>Low</span>
+        </div>
       </div>
 
 
@@ -1341,7 +1379,6 @@
      ===================================================== -->
 
 <script src="/static/app.js"></script>
-<script src="/static/casework.js"></script>
 
 </body>
 </html>

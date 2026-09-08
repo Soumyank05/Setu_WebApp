@@ -60,7 +60,13 @@ def main() -> None:
         raise FileNotFoundError("Generate or provide source artifacts first: " + ", ".join(missing))
 
     PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
-    manifest = build_manifest([telecom_path, upi_path])
+    # KYC is optional for correlation, but when supplied it is evidence too and
+    # must appear in the same intake manifest as the transaction artifacts.
+    source_files = [telecom_path, upi_path]
+    kyc_path = RAW_DIR / "kyc_mapping.csv"
+    if kyc_path.exists():
+        source_files.append(kyc_path)
+    manifest = build_manifest(source_files)
     (PROCESSED_DIR / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
     telecom, upi = parse_telecom(telecom_path), parse_upi(upi_path)
     telecom.to_csv(PROCESSED_DIR / "telecom.csv", index=False)

@@ -94,14 +94,27 @@ def case_data() -> dict:
 
 @app.post("/api/pipeline")
 def run_pipeline() -> dict:
+    telecom, upi = RAW / "telecom_cdr.csv", RAW / "upi_settlement.csv"
+    available = [path.exists() for path in (telecom, upi)]
+    if any(available) and not all(available):
+        raise HTTPException(
+            status_code=400,
+            detail="Stage both Telecom CDR and UPI settlement evidence before running correlation.",
+        )
+
+    # Do not overwrite operator-staged evidence. A demo data set is created only
+    # for an empty workspace, which keeps the intake workflow usable end to end.
+    steps = STEPS if not all(available) else STEPS[1:]
     completed = []
-    for label, script in STEPS:
+    for label, script in steps:
         result = subprocess.run([sys.executable, str(ROOT / script)], capture_output=True, text=True, cwd=ROOT)
         if result.returncode:
             raise HTTPException(status_code=500, detail={"step": label, "error": result.stderr[-1_500:]})
         completed.append({"step": label, "output": result.stdout.strip()})
         audit("pipeline_step_completed", {"step": label})
-    return {"completed": completed}
+    source = "staged evidence" if all(available) else "new synthetic evidence"
+    audit("pipeline_completed", {"source": source, "steps": len(completed)})
+    return {"completed": completed, "source": source}
 
 
 @app.post("/api/case")
