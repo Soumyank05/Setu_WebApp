@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign in · SETU</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body class="login-page">
+  <main class="login-shell">
+    <section class="login-intro">
+      <div class="brand"><span class="bridge">⌁</span><div><strong>SETU</strong><small>Digital evidence correlation</small></div></div>
+      <p class="eyebrow">INVESTIGATION WORKSPACE</p>
+      <h1>Evidence, connected with confidence.</h1>
+      <p>Secure access for authorized investigation teams working across telecom, payments and identity records.</p>
+      <div class="login-assurances"><span>✓ Password-protected access</span><span>✓ Session activity is audited</span><span>✓ Role-based administration</span></div>
+    </section>
+    <section class="auth-card" aria-live="polite">
+      <p class="eyebrow">SECURE SIGN IN</p>
+      <h2>Welcome back</h2>
+      <p class="hint">Use the account issued by your workspace administrator.</p>
+      <form id="login-form" class="auth-form">
+        <label>Username<input name="username" required autocomplete="username" pattern="[A-Za-z0-9_.-]{3,50}" placeholder="your.username"></label>
+        <label>Password<input name="password" type="password" required autocomplete="current-password" minlength="12" placeholder="Enter your password"></label>
+        <button class="primary" type="submit">Sign in <span>→</span></button>
+      </form>
+      <form id="password-reset-form" class="auth-form" hidden>
+        <label>Current temporary password<input name="current_password" type="password" required autocomplete="current-password" minlength="12"></label>
+        <label>New password<input name="new_password" type="password" required autocomplete="new-password" minlength="12" placeholder="At least 12 characters"></label>
+        <button class="primary" type="submit">Set new password <span>→</span></button>
+      </form>
+      <p id="auth-message" class="auth-message"></p>
+      <p id="auth-service-state" class="auth-service-state">Checking authentication service…</p>
+    </section>
+  </main>
+  <script src="/static/login.js"></script>
+</body>
+</html>

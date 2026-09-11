@@ -14,8 +14,12 @@
     rel="stylesheet"
   >
 
-  <link rel="stylesheet" href="/static/styles.css">
-  <link rel="stylesheet" href="/static/casework.css">
+  <link rel="stylesheet" href="/static/styles.css?v=20260911-7">
+  <link rel="stylesheet" href="/static/casework.css?v=20260911-4">
+  <link rel="stylesheet" href="/static/operations.css?v=20260911-4">
+  <link rel="stylesheet" href="/static/workspace.css?v=20260911-4">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/cytoscape@3.30.4/dist/cytoscape.min.js" defer></script>
 </head>
 
 <body>
@@ -48,6 +52,12 @@
         CASE REF · SETU-DEMO-001
       </div>
 
+      <span id="auth-user" class="auth-user"></span>
+
+      <button id="logout-button" class="outline logout-button" type="button">Log out</button>
+
+      <button id="notifications-button" class="outline logout-button" type="button">Alerts <span id="notification-count">0</span></button>
+
       <button
         id="run-pipeline"
         class="primary"
@@ -60,6 +70,11 @@
     </div>
 
   </header>
+
+  <aside id="notification-center" class="notification-center" hidden>
+    <div class="status-update-heading"><div><p class="eyebrow">NOTIFICATION CENTER</p><h3>Case alerts</h3></div><button id="notifications-close" class="outline" type="button">Close</button></div>
+    <div id="notification-list"></div>
+  </aside>
 
 
   <!-- =====================================================
@@ -267,6 +282,10 @@
       Casework
     </button>
 
+    <button class="tab" type="button" data-view="operations">Investigation ops</button>
+
+    <button class="tab" type="button" data-view="workspace">Evidence &amp; timeline</button>
+
   </nav>
 
 
@@ -453,6 +472,29 @@
 
       </label>
 
+      <div class="advanced-filters">
+        <select id="status-filter" class="native-filter-select"><option value="ALL">All statuses</option><option value="new">New</option><option value="in_progress">In progress</option><option value="monitoring">Monitoring</option><option value="escalated">Escalated</option><option value="resolved">Resolved</option><option value="none">No update</option></select><div class="filter-select" data-select-for="status-filter"></div>
+        <select id="assignment-filter" class="native-filter-select"><option value="ALL">All assignments</option><option value="MINE">Assigned to me</option><option value="UNASSIGNED">Unassigned</option></select><div class="filter-select" data-select-for="assignment-filter"></div>
+        <select id="tag-filter" class="native-filter-select"><option value="ALL">All typologies</option><option value="victim">Victim</option><option value="mule_account">Mule account</option><option value="beneficiary">Beneficiary</option><option value="cash_out">Cash-out</option><option value="shared_device">Shared device</option><option value="known_associate">Known associate</option><option value="person_of_interest">Person of interest</option></select><div class="filter-select" data-select-for="tag-filter"></div>
+        <input id="amount-min" type="number" min="0" placeholder="Min amount">
+        <input id="date-from" type="date" title="Activity from date">
+        <input id="date-to" type="date" title="Activity to date">
+        <input id="device-filter" type="search" placeholder="Device / IMEI">
+        <input id="upi-filter" type="search" placeholder="UPI handle">
+        <input id="phone-filter" type="search" placeholder="Phone number">
+      </div>
+
+    </div>
+
+    <div id="assignment-panel" class="assignment-panel panel" hidden>
+      <p class="eyebrow">SUPERVISOR CONTROLS</p><h3>Assign flagged entity</h3>
+      <form id="assignment-form" class="status-update-form">
+        <label>Entity<select id="assignment-node" name="node" required></select></label>
+        <label>Assignee<input name="assignee" required placeholder="investigator.username"></label>
+        <label>Due date<input name="due_date" type="date"></label>
+        <label>Priority<select name="priority"><option value="normal">Normal</option><option value="high">High</option><option value="urgent">Urgent</option><option value="low">Low</option></select></label>
+        <button class="primary" type="submit">Assign</button>
+      </form>
     </div>
 
 
@@ -496,7 +538,7 @@
             <th>RISK SCORE</th>
             <th>TIER</th>
             <th>EVIDENCE SIGNALS</th>
-            <th>REVIEW</th>
+            <th>STATUS</th>
             <th>ACTION</th>
           </tr>
 
@@ -617,6 +659,22 @@
 
     </section>
 
+  </section>
+
+  <!-- =====================================================
+       EVIDENCE WORKSPACE / UNIFIED TIMELINE
+       ===================================================== -->
+  <section id="workspace" class="view">
+    <div class="section-heading"><div><p class="eyebrow">CASE WORKSPACE</p><h2>Evidence, tasks &amp; chronology</h2></div><p class="hint">Annotations and operational actions are appended to the audit trail.</p></div>
+    <div class="workspace-grid">
+      <article class="panel evidence-desk"><p class="eyebrow">EVIDENCE WORKSPACE</p><h3>Record preview &amp; annotation</h3><div id="evidence-artifacts" class="artifact-list"></div><div id="evidence-preview" class="record-preview"><p>Select an uploaded CSV to preview its first 100 records.</p></div><form id="evidence-annotation-form" class="compact-form"><input name="artifact" id="annotation-artifact" placeholder="Artifact" readonly required><input name="row" type="number" min="1" placeholder="Row number" required><select name="label"><option value="review">Review</option><option value="relevant">Relevant</option><option value="redact">Redact in disclosure</option><option value="exception">Validation exception</option></select><textarea name="note" placeholder="Why this record matters" required></textarea><button class="outline">Save annotation</button></form></article>
+      <article class="panel"><p class="eyebrow">INVESTIGATION TASK BOARD</p><h3>Ownership, dependencies &amp; SLA</h3><form id="board-task-form" class="compact-form"><input name="text" placeholder="Task description" required><input name="assignee" placeholder="Owner"><input name="due_date" type="date"><select name="priority"><option value="normal">Normal</option><option value="high">High</option><option value="urgent">Urgent</option><option value="low">Low</option></select><select id="task-dependency" name="depends_on"><option value="">No dependency</option></select><button class="primary">Add task</button></form><div id="task-board" class="kanban-board"></div></article>
+    </div>
+    <div class="panel timeline-workspace"><div class="status-update-heading"><div><p class="eyebrow">UNIFIED CASE TIMELINE</p><h3>Every signal in chronological context</h3></div><div class="timeline-filters"><select id="timeline-kind"><option value="ALL">All activity</option><option value="evidence">Evidence</option><option value="transaction">Transactions</option><option value="case">Case actions</option></select><button id="timeline-export" type="button" class="outline">Print timeline</button></div></div><div id="unified-timeline" class="unified-timeline"></div></div>
+    <div class="workspace-grid lower-workspace">
+      <article class="panel"><p class="eyebrow">SUPERVISOR REPORTING</p><h3>Throughput &amp; recurring typologies</h3><div id="reporting-summary" class="reporting-summary"></div><form id="report-schedule-form" class="compact-form"><select name="cadence"><option value="daily">Daily digest</option><option value="weekly">Weekly supervisor report</option><option value="monthly">Monthly trend report</option></select><input name="recipient" placeholder="Supervisor / unit mailbox" required><button class="outline">Schedule report</button></form><div id="scheduled-reports" class="ops-result"></div></article>
+      <article class="panel"><p class="eyebrow">LEGAL &amp; DISCLOSURE</p><h3>Controlled disclosure bundle</h3><p class="hint">Exports require the existing approval gate; recipient and authority are permanently audited.</p><form id="disclosure-form" class="compact-form"><input name="recipient" placeholder="Disclosure recipient" required><input name="authority_reference" placeholder="Warrant / authority reference" required><textarea name="scope" placeholder="Redacted evidence and requested scope" required></textarea><button class="primary">Prepare disclosure record</button></form><div id="disclosure-list" class="ops-result"></div></article>
+    </div>
   </section>
 
 
@@ -947,6 +1005,13 @@
 
         </div>
 
+        <section class="visual-analysis visual-analysis-inline" aria-labelledby="visual-analysis-title">
+          <div class="visual-analysis-heading"><div><p class="eyebrow">FILTER-AWARE VIEW MODEL</p><h3 id="visual-analysis-title">Visual analysis</h3></div></div>
+          <div class="visual-controls"><label>Window <select id="visual-days"><option value="30">30 days</option><option value="60">60 days</option></select></label><label>Min ₹ <input id="visual-min-amount" type="number" min="0" step="100" value="0"></label><label>Rail <select id="visual-rail"><option value="ALL">All rails</option><option value="UPI">UPI</option></select></label><button id="visual-expand" class="outline" type="button">Expand one more hop</button><a id="visual-export-png" class="outline" href="#">PNG</a><a id="visual-export-pdf" class="outline" href="#">PDF</a></div>
+          <p id="visual-summary" class="hint">Loading server-aggregated activity…</p>
+          <div class="visual-grid"><article class="visual-card"><h4>Daily transfers</h4><canvas id="activity-chart" aria-label="Daily transfer activity" role="img"></canvas></article><article class="visual-card"><h4>Risk-tier flow value</h4><canvas id="risk-flow-chart" aria-label="Risk tier flow value" role="img"></canvas></article><article class="visual-card visual-relationship"><div class="relationship-heading"><h4>Entity relationship view <small id="relationship-caption"></small></h4><span class="relationship-key"><i></i> shared device</span></div><div id="relationship-graph" aria-label="Relationship graph"></div><div id="relationship-insights" class="relationship-insights"></div></article></div>
+        </section>
+
         <div class="graph-legend" aria-label="Risk legend">
           <span class="legend-title">RISK</span>
           <span><i class="legend-dot high"></i>High</span>
@@ -1015,6 +1080,8 @@
       class="manifest"
     ></div>
 
+    <div class="panel audit-panel"><p class="eyebrow">ACCESS HISTORY</p><h3>Evidence chain of custody</h3><div id="custody"></div></div>
+
 
     <div class="links-panel">
 
@@ -1032,6 +1099,34 @@
   <!-- =====================================================
        CASEWORK
        ===================================================== -->
+
+  <section id="operations" class="view">
+    <div class="section-heading"><div><p class="eyebrow">INVESTIGATION OPERATIONS</p><h2>Graph intelligence &amp; controlled workflows</h2></div><p class="hint">All relationship signals are investigative leads, not conclusions.</p></div>
+    <div class="ops-grid">
+      <article class="panel"><p class="eyebrow">WHY LINKED? · SHORTEST PATH</p><h3>Trace entities</h3><form id="graph-trace-form" class="compact-form"><input name="source" placeholder="Source entity" required><input name="target" placeholder="Target entity" required><button class="primary">Trace path</button></form><div id="graph-trace-result" class="ops-result">Select two entities to explain their connection.</div></article>
+      <article class="panel"><p class="eyebrow">SUSPECTED RINGS</p><h3>Detected clusters</h3><div id="cluster-list" class="ops-result"></div></article>
+      <article class="panel"><p class="eyebrow">TRANSACTION PLAYBACK</p><h3>Timeline</h3><div class="playback-controls"><button id="timeline-play" class="outline" type="button">Play</button><button id="timeline-stop" class="outline" type="button">Reset</button><span id="timeline-progress"></span></div><div id="timeline-list" class="ops-result"></div></article>
+    </div>
+    <div class="ops-grid">
+      <article class="panel"><p class="eyebrow">BULK CASE ACTIONS</p><h3>Update selected entities</h3><form id="bulk-action-form" class="compact-form"><input name="nodes" placeholder="Entity IDs, comma-separated" required><select name="action"><option value="watch">Add to watchlist</option><option value="status">Update status</option><option value="tag">Apply tag</option><option value="assign">Assign</option></select><input name="assignee" placeholder="Assignee (for assign)"><input name="tag" placeholder="Tag (for tag)"><select name="status"><option value="in_progress">In progress</option><option value="monitoring">Monitoring</option><option value="new">New</option></select><button class="primary">Apply action</button></form></article>
+      <article class="panel"><p class="eyebrow">COLLABORATION &amp; HANDOFFS</p><h3>Internal case log</h3><form id="collaboration-form" class="compact-form"><select name="kind"><option value="comment">Internal comment</option><option value="handoff">Handoff note</option><option value="waiting_on">Waiting on</option></select><input name="entity" placeholder="Entity (optional)"><input name="mention" placeholder="@mention (optional)"><textarea name="text" placeholder="Secure internal note" required></textarea><button class="outline">Add record</button></form><div id="collaboration-list" class="ops-result"></div></article>
+      <article class="panel"><p class="eyebrow">AUDIT-LOG HARDENING</p><h3>Chained-log verification</h3><button id="verify-audit" class="outline">Verify hash chain</button><div id="audit-verification" class="ops-result">Verification has not run this session.</div></article>
+    </div>
+    <div class="ops-grid">
+      <article class="panel"><p class="eyebrow">SAVED SEARCHES</p><h3>Reusable investigation views</h3><form id="saved-search-form" class="compact-form"><input name="name" placeholder="Search name" required><input name="query" placeholder="Entity, UPI, device, or fuzzy term"><label><input name="shared" type="checkbox"> Shared</label><label><input name="alert" type="checkbox"> Alert</label><button class="outline">Save search</button></form><div id="saved-search-list" class="ops-result"></div></article>
+      <article class="panel"><p class="eyebrow">RETENTION &amp; LEGAL HOLD</p><h3>Evidence lifecycle</h3><form id="retention-form" class="compact-form"><input name="retention_deadline" type="date"><label><input name="legal_hold" type="checkbox"> Legal hold</label><input name="reason" placeholder="Authority or retention basis"><button class="outline">Save lifecycle policy</button></form><div id="retention-status" class="ops-result"></div></article>
+      <article class="panel"><p class="eyebrow">CONTROLLED INTAKE</p><h3>Operational connectors</h3><form id="integration-form" class="compact-form"><select name="connector"><option value="telecom">Telecom</option><option value="bank_payment">Bank / payment</option><option value="platform">Platform</option><option value="forensic_lab">Forensic lab</option><option value="secure_documents">Secure documents</option></select><select name="intake_mode"><option value="manual_review">Manual review</option><option value="approved_pull">Approved pull</option></select><label><input name="enabled" type="checkbox"> Enabled</label><button class="outline">Update connector</button></form><div id="integration-list" class="ops-result"></div></article>
+    </div>
+    <div class="ops-grid">
+      <article class="panel"><p class="eyebrow">CASE PLAYBOOKS</p><h3>Templates &amp; checklists</h3><form id="template-form" class="compact-form"><input name="name" placeholder="Template name" required><input name="typology" placeholder="Fraud typology" required><textarea name="evidence" placeholder="Required evidence — one item per line"></textarea><textarea name="tasks" placeholder="Investigation tasks — one item per line"></textarea><textarea name="closure_criteria" placeholder="Closure criteria — one item per line"></textarea><button class="outline">Save template</button></form><div id="template-list" class="ops-result"></div><div id="task-list" class="ops-result"></div></article>
+      <article class="panel"><p class="eyebrow">CROSS-CASE LINKING</p><h3>Associate a related case</h3><form id="case-link-form" class="compact-form"><input name="related_case" placeholder="Related case reference" required><input name="entity" placeholder="Shared entity / device / UPI" required><textarea name="basis" placeholder="Corroborated association basis" required></textarea><button class="outline">Associate case</button></form><div id="case-link-list" class="ops-result"></div></article>
+      <article class="panel"><p class="eyebrow">SECURITY CONTROLS</p><h3>Access posture</h3><div class="ops-result"><div class="ops-row"><strong>Role-based, case-scoped workflow</strong><small>Authenticated sessions, supervisor approvals, password reset and account lockout are active.</small></div><div class="ops-row"><strong>Pending infrastructure policy</strong><small>MFA enrollment, IP allowlists, device history, session revocation, and immutable external storage need a production identity/storage provider.</small></div></div></article>
+    </div>
+    <div class="ops-grid">
+      <article class="panel"><p class="eyebrow">APPROVAL-GATED ACTION</p><h3>Request an exception</h3><form id="sensitive-action-form" class="compact-form"><select name="action"><option value="evidence_export">Evidence export</option><option value="evidence_replacement">Evidence replacement</option><option value="watchlist_removal">Watchlist removal</option><option value="case_closure">Case closure</option><option value="retention_disposition">Retention disposition</option></select><input name="node" placeholder="Entity or CASE" value="CASE"><textarea name="reason" placeholder="Reason and authority" required></textarea><button class="primary">Request approval</button></form></article>
+      <article class="panel"><p class="eyebrow">DUPLICATE CANDIDATES</p><h3>Cross-case identifier matches</h3><div id="duplicate-match-list" class="ops-result">Register another case to compare identifiers.</div></article>
+    </div>
+  </section>
 
   <section
     id="casework"
@@ -1058,7 +1153,6 @@
       </p>
 
     </div>
-
 
     <div class="case-grid">
 
@@ -1256,6 +1350,35 @@
 
     </div>
 
+    <div class="status-update-panel panel">
+      <div class="status-update-heading">
+        <div>
+          <p class="eyebrow">ENTITY STATUS</p>
+          <h3>Progress updates</h3>
+        </div>
+        <p class="hint">Updates are time-stamped and attributed to your signed-in account.</p>
+      </div>
+      <form id="status-update-form" class="status-update-form">
+        <label>Flagged entity<select id="status-node" name="node" required></select></label>
+        <label>Status<select name="status"><option value="new">New</option><option value="in_progress">In progress</option><option value="monitoring">Monitoring</option><option value="escalated">Escalated</option><option value="resolved">Resolved</option></select></label>
+        <label class="status-message">Update<textarea name="message" required placeholder="Describe the action taken, current evidence position, or required next step."></textarea></label>
+        <button class="primary" type="submit">Post update</button>
+      </form>
+      <div id="status-updates" class="status-updates"></div>
+    </div>
+
+    <div class="panel watchlist-panel"><div class="status-update-heading"><div><p class="eyebrow">WATCHLIST</p><h3>Monitored entities</h3></div><p class="hint">Watch an entity from the priority queue to keep it visible.</p></div><div id="watchlist"></div></div>
+
+    <div class="panel tag-panel"><div class="status-update-heading"><div><p class="eyebrow">ENTITY CLASSIFICATION</p><h3>Tags &amp; typologies</h3></div><p class="hint">Tags support triage and are not factual findings on their own.</p></div><form id="entity-tag-form" class="tag-form"><label>Entity<select id="tag-node" name="node" required></select></label><label>Typology<select name="tag"><option value="victim">Victim</option><option value="mule_account">Mule account</option><option value="beneficiary">Beneficiary</option><option value="cash_out">Cash-out</option><option value="shared_device">Shared device</option><option value="known_associate">Known associate</option><option value="person_of_interest">Person of interest</option><option value="false_positive">False positive</option></select></label><label class="tag-note">Basis / note<textarea name="note" placeholder="Record the corroborated basis for this classification."></textarea></label><button class="outline" type="submit">Apply tag</button></form></div>
+
+    <div class="panel external-request-panel"><div class="status-update-heading"><div><p class="eyebrow">EXTERNAL FOLLOW-UP</p><h3>Requests to partners &amp; labs</h3></div><p class="hint">Track each request through response and closure.</p></div><form id="external-request-form" class="request-form"><label>Type<select name="request_type"><option value="bank">Bank / payment provider</option><option value="telecom">Telecom operator</option><option value="platform">Online platform</option><option value="forensic_lab">Forensic lab</option><option value="other">Other</option></select></label><label>Recipient<input name="recipient" required placeholder="Organization or contact"></label><label>Request subject<input name="subject" required placeholder="What evidence or action is needed?"></label><label>Owner<input name="owner" required placeholder="investigator.username"></label><label>Due date<input name="due_date" type="date"></label><label>Entity (optional)<input name="entity" placeholder="Entity ID"></label><label>Reference<input name="reference" placeholder="Letter / ticket number"></label><label class="request-notes">Notes<textarea name="notes" placeholder="Scope, authority, or handling instructions"></textarea></label><button class="primary" type="submit">Create request</button></form><div id="external-request-list"></div></div>
+
+    <div class="panel analytics-panel"><div class="status-update-heading"><div><p class="eyebrow">DASHBOARD ANALYTICS</p><h3>Resolution &amp; workload</h3></div><p class="hint">Live operational summary for supervisors.</p></div><div id="analytics" class="analytics-grid"></div></div>
+
+    <div id="approval-panel" class="panel approval-panel" hidden><div class="status-update-heading"><div><p class="eyebrow">SUPERVISOR APPROVALS</p><h3>Escalation &amp; closure queue</h3></div><p class="hint">Approval is required before an investigator can escalate or resolve a finding.</p></div><div id="approval-list"></div></div>
+
+    <div id="export-panel" class="panel export-panel" hidden><p class="eyebrow">SUPERVISOR EXPORTS</p><h3>Signed case package</h3><p class="hint">Includes case metadata, timeline, reviews, evidence hashes, custody events, and a SHA-256 signed audit log.</p><div class="export-actions"><a class="outline" href="/api/case-package?format=pdf">PDF package</a><a class="outline" href="/api/case-package?format=csv">CSV audit</a><a class="primary" href="/api/case-package?format=zip">ZIP package</a></div></div>
+
 
     <!-- Finding review -->
 
@@ -1378,7 +1501,9 @@
      SCRIPTS
      ===================================================== -->
 
-<script src="/static/app.js"></script>
+<script src="/static/app.js?v=20260911-7"></script>
+<script src="/static/operations.js?v=20260911-4"></script>
+<script src="/static/workspace.js?v=20260911-4"></script>
 
 </body>
 </html>

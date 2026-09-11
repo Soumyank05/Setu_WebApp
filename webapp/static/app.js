@@ -28,15 +28,37 @@ const state = {
 
   notes: [],
   reviews: {},
+  status_updates: {},
+  assignments: {},
+  watchlists: {},
+  notifications: [],
+  custody: [],
+  entity_attributes: {},
+  analytics: {},
+  approvals: [],
+  external_requests: [],
+  entity_tags: {},
   audit: [],
 
   report_available: false,
+
+  auth: null,
 
   network: {
     selected: null,
     search: "",
     risk: "ALL",
     hops: "ALL"
+  },
+  visual: {
+    days: 30,
+    minAmount: 0,
+    rail: "ALL",
+    expand: false,
+    model: null,
+    activityChart: null,
+    riskChart: null,
+    cy: null
   }
 };
 
@@ -49,6 +71,28 @@ let activeTier = "ALL";
 
 function $(id) {
   return document.getElementById(id);
+}
+
+/* Native option menus cannot be consistently themed by macOS browsers. Keep
+   the real select for filtering/accessibility and present a SETU-style menu. */
+function initialiseFilterSelects() {
+  document.querySelectorAll(".filter-select[data-select-for]").forEach(host => {
+    const select = $(host.dataset.selectFor);
+    if (!select || host.dataset.ready) return;
+    host.dataset.ready = "true";
+    const render = () => {
+      const current = select.options[select.selectedIndex];
+      host.innerHTML = `<button class="filter-select-trigger" type="button" aria-haspopup="listbox" aria-expanded="false"><span>${escapeHtml(current?.text || "Select")}</span><i aria-hidden="true"></i></button><div class="filter-select-menu" role="listbox">${[...select.options].map(option => `<button type="button" role="option" aria-selected="${option.selected}" data-filter-value="${escapeHtml(option.value)}">${escapeHtml(option.text)}</button>`).join("")}</div>`;
+      const trigger = host.querySelector(".filter-select-trigger");
+      trigger.addEventListener("click", event => { event.stopPropagation(); document.querySelectorAll(".filter-select.open").forEach(item => { if (item !== host) item.classList.remove("open"); }); host.classList.toggle("open"); trigger.setAttribute("aria-expanded", String(host.classList.contains("open"))); });
+      host.querySelectorAll("[data-filter-value]").forEach(option => option.addEventListener("click", () => { select.value = option.dataset.filterValue; select.dispatchEvent(new Event("change", {bubbles:true})); host.classList.remove("open"); render(); }));
+    };
+    select.addEventListener("change", render); render();
+  });
+  if (!document.documentElement.dataset.filterMenusReady) {
+    document.documentElement.dataset.filterMenusReady = "true";
+    document.addEventListener("click", () => document.querySelectorAll(".filter-select.open").forEach(item => item.classList.remove("open")));
+  }
 }
 
 
@@ -239,6 +283,10 @@ function reasons(row) {
   return active
     .map(([, label]) => label)
     .join(" · ");
+}
+
+function entityTags(node) {
+  return arrayOrEmpty(state.entity_tags?.[node]);
 }
 
 
@@ -497,7 +545,7 @@ function renderTable() {
       .toLowerCase();
 
   let rows = state.scores.filter(row => {
-    const entity =
+    const entityText =
       getEntityId(row).toLowerCase();
 
     const risk =
@@ -505,15 +553,35 @@ function renderTable() {
 
     const matchesSearch =
       !search ||
-      entity.includes(search);
+      entityText.includes(search);
 
     const matchesTier =
       activeTier === "ALL" ||
       risk === activeTier;
 
+    const entity = getEntityId(row);
+    const latest = arrayOrEmpty(state.status_updates?.[entity])[0];
+    const statusFilter = $("status-filter")?.value || "ALL";
+    const assignmentFilter = $("assignment-filter")?.value || "ALL";
+    const tagFilter = $("tag-filter")?.value || "ALL";
+    const assignment = state.assignments?.[entity];
+    const matchesStatus = statusFilter === "ALL" || (latest?.status || "none") === statusFilter;
+    const matchesAssignment = assignmentFilter === "ALL" || (assignmentFilter === "MINE" && assignment?.assignee === state.auth?.username) || (assignmentFilter === "UNASSIGNED" && !assignment);
+    const matchesTag = tagFilter === "ALL" || entityTags(entity).some(item => item.tag === tagFilter);
+    const attrs = state.entity_attributes?.[entity] || {};
+    const contains = (field, value) => !value || arrayOrEmpty(attrs[field]).some(item => String(item).toLowerCase().includes(value.toLowerCase()));
+    const minAmount = Number($("amount-min")?.value || 0);
+    const from = $("date-from")?.value || "";
+    const to = $("date-to")?.value || "";
+    const matchesEvidence = Number(attrs.amount || 0) >= minAmount && (!from || String(attrs.date_max || "") >= from) && (!to || String(attrs.date_min || "") <= `${to}T23:59:59`) && contains("imeis", $("device-filter")?.value || "") && contains("upis", $("upi-filter")?.value || "") && contains("phones", $("phone-filter")?.value || "");
+
     return (
       matchesSearch &&
       matchesTier &&
+      matchesStatus &&
+      matchesAssignment &&
+      matchesTag &&
+      matchesEvidence &&
       risk !== "LOW"
     );
   });
@@ -547,6 +615,12 @@ function renderTable() {
       const risk =
         getRisk(row);
 
+      const latestUpdate = arrayOrEmpty(state.status_updates?.[entity])[0];
+      const updateLabel = latestUpdate ? String(latestUpdate.status || "new").replaceAll("_", " ") : "No update";
+      const assignment = state.assignments?.[entity];
+      const due = assignment?.due_date || "";
+      const dueClass = due && due < new Date().toISOString().slice(0, 10) ? "overdue" : "";
+
       return `
         <tr
           class="flagged-entity-row"
@@ -578,23 +652,17 @@ function renderTable() {
           </td>
 
           <td class="signals">
-            ${escapeHtml(reasons(row))}
+            ${escapeHtml(reasons(row))}${entityTags(entity).length ? `<small class="tag-list">${entityTags(entity).map(item => escapeHtml(item.tag.replaceAll("_", " "))).join(" · ")}</small>` : ""}
           </td>
 
           <td>
-            <button
-              type="button"
-              class="small-action"
-              data-trace-entity="${escapeHtml(entity)}"
-            >
-              Trace
-            </button>
+            <span class="entity-status ${escapeHtml(String(latestUpdate?.status || "none"))}">${escapeHtml(updateLabel)}</span>
+            ${latestUpdate ? `<small class="status-author">${escapeHtml(latestUpdate.author || "")}</small>` : ""}
+            ${assignment ? `<small class="status-author ${dueClass}">${escapeHtml(assignment.assignee)} · due ${escapeHtml(due)}</small>` : ""}
           </td>
 
           <td>
-            <span class="row-arrow">
-              →
-            </span>
+            <button type="button" class="small-action" data-watch-entity="${escapeHtml(entity)}">${arrayOrEmpty(state.watchlists?.[String(state.auth?.id)])[0] && arrayOrEmpty(state.watchlists?.[String(state.auth?.id)]).includes(entity) ? "Unwatch" : "Watch"}</button>
           </td>
 
         </tr>
@@ -825,7 +893,8 @@ function renderEntity(entity) {
 
   renderEntityTimeline(
     incoming,
-    outgoing
+    outgoing,
+    id
   );
 }
 
@@ -936,7 +1005,8 @@ function renderEntityConnections(nodes) {
 
 function renderEntityTimeline(
   incoming,
-  outgoing
+  outgoing,
+  entity
 ) {
   const container =
     $("entity-timeline");
@@ -959,7 +1029,10 @@ function renderEntityTimeline(
       other: getReceiver(edge),
       amount: getAmount(edge),
       time: getTimestamp(edge)
-    }))
+    })),
+    ...arrayOrEmpty(state.status_updates?.[entity]).map(update => ({ kind: "status", time: update.updated_at_utc, label: `Status: ${String(update.status).replaceAll("_", " ")}`, detail: update.message })),
+    ...(state.reviews?.[entity] ? [{ kind: "review", time: state.reviews[entity].updated_at_utc, label: `Review: ${state.reviews[entity].disposition}`, detail: state.reviews[entity].rationale }] : []),
+    ...state.notes.map(note => ({ kind: "note", time: note.at_utc, label: `Case note · ${note.author}`, detail: note.text }))
 
   ];
 
@@ -988,13 +1061,13 @@ function renderEntityTimeline(
 
           <div
             class="timeline-marker ${
-              event.direction === "IN"
+              event.kind === "status" ? "in" : event.kind === "review" ? "out" : event.direction === "IN"
                 ? "in"
                 : "out"
             }"
           >
             ${
-              event.direction === "IN"
+              event.kind === "status" ? "•" : event.kind === "review" ? "✓" : event.direction === "IN"
                 ? "↓"
                 : "↑"
             }
@@ -1005,21 +1078,19 @@ function renderEntityTimeline(
             <strong>
 
               ${
-                event.direction === "IN"
+                event.kind ? event.label : event.direction === "IN"
                   ? "Received from"
                   : "Sent to"
               }
 
               ${escapeHtml(
-                event.other
+                event.kind ? event.detail : event.other
               )}
 
             </strong>
 
             <span>
-              ${formatCurrency(
-                event.amount
-              )}
+              ${event.kind ? "Case activity" : formatCurrency(event.amount)}
             </span>
 
             <small>
@@ -1604,6 +1675,10 @@ function renderNodeDetail(entityId) {
         Open entity intelligence
       </button>
 
+      <button type="button" class="outline node-trace-button" data-open-graph-operations="${escapeHtml(id)}">
+        Explain a link / trace shortest path
+      </button>
+
     </div>
   `;
 }
@@ -1621,8 +1696,23 @@ function renderGraph() {
     return;
   }
 
-  const entities =
-    getFilteredNetworkEntities();
+  let entities = getFilteredNetworkEntities();
+
+  // Keep the legacy explorer readable as well: when an entity is selected it
+  // becomes a compact one-hop preview, never the entire payment universe.
+  if (state.network.selected) {
+    const selectedId = state.network.selected;
+    const byCounterparty = new Map();
+    state.edges.forEach(edge => {
+      const sender = getSender(edge), receiver = getReceiver(edge);
+      if (sender === selectedId || receiver === selectedId) {
+        const other = sender === selectedId ? receiver : sender;
+        byCounterparty.set(other, (byCounterparty.get(other) || 0) + getAmount(edge));
+      }
+    });
+    const allowed = new Set([selectedId, ...[...byCounterparty.entries()].sort((a, b) => b[1] - a[1]).slice(0, 15).map(([id]) => id)]);
+    entities = entities.filter(entity => allowed.has(entity.id));
+  }
 
   if (!entities.length) {
     graph.innerHTML = `
@@ -1980,6 +2070,89 @@ function renderGraph() {
     svg;
 }
 
+/* =========================================================
+   VISUAL ANALYSIS — charts consume the API's aggregates only.
+   ========================================================= */
+
+function visualQuery() {
+  const params = new URLSearchParams({days: state.visual.days, risk: state.network.risk, rail: state.visual.rail, min_amount: state.visual.minAmount, expand: state.visual.expand});
+  if (state.network.selected) params.set("entity", state.network.selected);
+  return params;
+}
+
+function drawAggregateFallback(canvas, values, color, label) {
+  if (!canvas) return;
+  const width = canvas.clientWidth || 300, height = 220, ratio = window.devicePixelRatio || 1;
+  canvas.width = width * ratio; canvas.height = height * ratio; canvas.style.height = `${height}px`;
+  const context = canvas.getContext("2d"); context.scale(ratio, ratio); context.clearRect(0, 0, width, height);
+  const maximum = Math.max(...values, 1), pad = 22;
+  context.strokeStyle = "#233239"; context.lineWidth = 1;
+  for (let row = 0; row < 4; row += 1) { const y = pad + (height - 2 * pad) * row / 3; context.beginPath(); context.moveTo(pad, y); context.lineTo(width - pad, y); context.stroke(); }
+  context.strokeStyle = color; context.lineWidth = 2; context.beginPath();
+  values.forEach((value, index) => { const x = pad + (width - 2 * pad) * index / Math.max(values.length - 1, 1), y = height - pad - (height - 2 * pad) * value / maximum; index ? context.lineTo(x, y) : context.moveTo(x, y); }); context.stroke();
+  context.fillStyle = "#899a9f"; context.font = "10px DM Mono"; context.fillText(`${label} · Chart library unavailable`, pad, 14);
+}
+
+function renderVisualAnalysis(model) {
+  state.visual.model = model;
+  const summary = $("visual-summary");
+  if (summary) summary.textContent = `${formatNumber(model.summary.transfer_count)} transfers · ${formatCurrency(model.summary.transfer_value)} · ${model.filters.days}-day filtered view`;
+  const caption = $("relationship-caption");
+  if (caption) caption.textContent = model.selected.id ? `${model.selected.id} · top ${model.relationship_graph.counterparty_limit} counterparties${model.relationship_graph.expanded ? " · 2 hops" : " · 1 hop"}` : "No matching entity";
+  if (window.Chart) {
+    state.visual.activityChart?.destroy(); state.visual.riskChart?.destroy();
+    const activity = $("activity-chart"), risk = $("risk-flow-chart");
+    if (activity) state.visual.activityChart = new Chart(activity, {type:"line", data:{labels:model.daily.map(item => item.date.slice(5)), datasets:[{label:"Transfer value", data:model.daily.map(item => item.value), borderColor:"#71d3df", backgroundColor:"#71d3df22", fill:true, tension:.28, pointRadius:0, yAxisID:"y"},{label:"Transfer count", data:model.daily.map(item => item.count), borderColor:"#c9ff53", tension:.28, pointRadius:0, yAxisID:"yCount"}]}, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{labels:{color:"#899a9f",boxWidth:8,font:{size:9}}}, tooltip:{callbacks:{label:item => item.datasetIndex ? `${item.raw} transfers` : formatCurrency(item.raw)}}}, scales:{x:{ticks:{maxTicksLimit:6,color:"#899a9f"},grid:{display:false}},y:{position:"left",ticks:{color:"#899a9f",callback:value => `₹${Math.round(value / 1000)}k`},grid:{color:"#233239"}},yCount:{position:"right",ticks:{color:"#c9ff53",maxTicksLimit:4},grid:{drawOnChartArea:false}}}}});
+    if (risk) state.visual.riskChart = new Chart(risk, {type:"bar", data:{labels:["Low","Medium","High"], datasets:[{label:"Flow value", data:["LOW","MEDIUM","HIGH"].map(tier => model.risk_tiers.find(item => item.tier === tier)?.value || 0), backgroundColor:["#71d3df","#f5b971","#ef7070"]}]}, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}, tooltip:{callbacks:{label:item => formatCurrency(item.raw)}}}, scales:{x:{stacked:true,ticks:{color:"#899a9f"},grid:{display:false}},y:{ticks:{color:"#899a9f",callback:value => `₹${Math.round(value / 1000)}k`},grid:{color:"#233239"}}}}});
+  } else {
+    drawAggregateFallback($("activity-chart"), model.daily.map(item => item.value), "#71d3df", "Daily transfer value");
+    drawAggregateFallback($("risk-flow-chart"), ["LOW", "MEDIUM", "HIGH"].map(tier => model.risk_tiers.find(item => item.tier === tier)?.value || 0), "#ef7070", "Risk-tier flow value");
+  }
+  const holder = $("relationship-graph");
+  if (!holder) return;
+  state.visual.cy?.destroy();
+  if (!window.cytoscape) { holder.innerHTML = `<p class="empty">Interactive relationship renderer is unavailable. Showing the server-filtered counterparties:</p><div class="node-connections">${model.selected.counterparties.map(item => `<div class="connection-item"><span>${escapeHtml(item.id)}</span><span>${formatCurrency(item.value)} · ${item.count}</span></div>`).join("") || "No matching links."}</div>`; return; }
+  const colors = {LOW:"#71d3df", MEDIUM:"#f5b971", HIGH:"#ef7070"};
+  const selectedId = model.selected.id;
+  const flowById = Object.fromEntries(model.selected.counterparties.map(item => [item.id, item.value]));
+  const elements = [
+    ...model.relationship_graph.nodes.map(node => ({data:{id:node.id,label:node.id,risk_tier:node.risk_tier,flow:flowById[node.id] || 0,shared:node.shared_device}, classes:`risk-${node.risk_tier.toLowerCase()} ${node.id === selectedId ? "focal" : ""} ${node.shared_device ? "shared-device-node" : ""}`})),
+    ...model.relationship_graph.edges.map((edge, index) => ({data:{id:`edge-${index}`,source:edge.source,target:edge.target,label:`${formatCurrency(edge.value)} · ${edge.count} tx`,value:edge.value}, classes:`${edge.source === selectedId ? "flow-out" : edge.target === selectedId ? "flow-in" : "secondary-flow"} ${edge.shared_device ? "shared-device-edge" : ""}`}))
+  ];
+  state.visual.cy = cytoscape({container:holder, elements, style:[
+    {selector:"node",style:{"background-color":node => colors[node.data("risk_tier")] || "#71d3df",label:"data(label)",color:"#e7f0ed","font-size":8,"font-family":"DM Mono","text-valign":"bottom","text-margin-y":6,"text-wrap":"wrap","text-max-width":72,"border-color":"#10181e","border-width":2,width:node => Math.min(36, 20 + Math.sqrt(node.data("flow") || 0) / 20),height:node => Math.min(36, 20 + Math.sqrt(node.data("flow") || 0) / 20)}},
+    {selector:".focal",style:{width:46,height:46,"border-color":"#c9ff53","border-width":4,"background-color":"#192a2d","font-size":10,"font-weight":700}},
+    {selector:".shared-device-node",style:{"border-color":"#c9ff53","border-width":4,"border-style":"double"}},
+    {selector:"edge",style:{width:edge => Math.min(5, 1 + Math.sqrt(edge.data("value") || 0) / 500),"line-color":"#45656a","target-arrow-color":"#45656a","target-arrow-shape":"triangle",label:"data(label)",color:"#b6c5c8","font-size":7,"font-family":"DM Mono","text-background-color":"#10181e","text-background-opacity":.92,"text-background-padding":2,"curve-style":"bezier","text-rotation":"autorotate"}},
+    {selector:".flow-out",style:{"line-color":"#71d3df","target-arrow-color":"#71d3df"}},{selector:".flow-in",style:{"line-color":"#f5b971","target-arrow-color":"#f5b971"}},{selector:".secondary-flow",style:{opacity:.42}},{selector:".shared-device-edge",style:{"line-color":"#c9ff53","target-arrow-color":"#c9ff53",width:4}}
+  ], layout:{name:"breadthfirst",roots:`#${CSS.escape(selectedId)}`,directed:false,animate:false,padding:28,spacingFactor:1.25}});
+  state.visual.cy.on("tap", "node", event => selectNetworkNode(event.target.id()));
+  const insights = $("relationship-insights");
+  if (insights) insights.innerHTML = model.selected.counterparties.slice(0, 3).map(item => `<button type="button" data-network-node="${escapeHtml(item.id)}"><span>${escapeHtml(item.id)}</span><strong>${formatCurrency(item.value)}</strong><small>${item.count} transfers</small></button>`).join("") || '<span>No filtered counterparties.</span>';
+}
+
+async function refreshVisualAnalysis() {
+  if (!$("visual-summary")) return;
+  try {
+    const model = await requestJson(`/api/chart-data?${visualQuery().toString()}`);
+    if (!state.network.selected && model.selected.id) {
+      state.network.selected = model.selected.id;
+      renderNetworkList(); renderGraph(); renderNodeDetail(model.selected.id);
+    }
+    renderVisualAnalysis(model);
+    const query = visualQuery().toString();
+    $("visual-export-png").href = `/api/chart-data/export?format=png&${query}`;
+    $("visual-export-pdf").href = `/api/chart-data/export?format=pdf&${query}`;
+  } catch (error) { const summary = $("visual-summary"); if (summary) summary.textContent = `Visual analysis unavailable: ${error.message}`; }
+}
+
+function setupVisualAnalysis() {
+  $("visual-days")?.addEventListener("change", event => { state.visual.days = Number(event.target.value); state.visual.expand = false; refreshVisualAnalysis(); });
+  $("visual-min-amount")?.addEventListener("change", event => { state.visual.minAmount = Number(event.target.value || 0); state.visual.expand = false; refreshVisualAnalysis(); });
+  $("visual-rail")?.addEventListener("change", event => { state.visual.rail = event.target.value; state.visual.expand = false; refreshVisualAnalysis(); });
+  $("visual-expand")?.addEventListener("click", () => { state.visual.expand = !state.visual.expand; $("visual-expand").textContent = state.visual.expand ? "Return to one hop" : "Expand one more hop"; refreshVisualAnalysis(); });
+}
+
 
 /* =========================================================
    NETWORK NODE SELECTION
@@ -1999,6 +2172,8 @@ function selectNetworkNode(entityId) {
   renderNetworkList();
   renderGraph();
   renderNodeDetail(id);
+  state.visual.expand = false;
+  refreshVisualAnalysis();
 }
 
 
@@ -2022,6 +2197,8 @@ function openNetworkEntity(entityId) {
   renderNetworkList();
   renderGraph();
   renderNodeDetail(id);
+  state.visual.expand = false;
+  refreshVisualAnalysis();
 }
 
 
@@ -2045,6 +2222,7 @@ function setupNetworkControls() {
 
         renderNetworkList();
         renderGraph();
+        refreshVisualAnalysis();
 
       }
     );
@@ -2066,6 +2244,8 @@ function setupNetworkControls() {
 
         renderNetworkList();
         renderGraph();
+        state.visual.expand = false;
+        refreshVisualAnalysis();
 
       }
     );
@@ -2125,6 +2305,8 @@ function setupNetworkControls() {
         renderNetworkList();
         renderGraph();
         renderNodeDetail(null);
+        state.visual.expand = false;
+        refreshVisualAnalysis();
 
         toast(
           "Network view reset."
@@ -2148,6 +2330,7 @@ function renderNetwork() {
   renderNodeDetail(
     state.network.selected
   );
+  refreshVisualAnalysis();
 }
 
 
@@ -2162,6 +2345,8 @@ function renderIntegrity() {
 
   const links =
     $("links");
+  const custody = $("custody");
+  if (custody) custody.innerHTML = state.custody.length ? state.custody.slice().reverse().slice(0, 30).map(item => `<div class="audit-row"><time>${escapeHtml(new Date(item.at_utc).toLocaleString())}</time><strong>${escapeHtml(item.event)} · ${escapeHtml(item.artifact)}</strong></div>`).join("") : '<p class="empty">No custody events recorded yet.</p>';
 
 
   if (manifest) {
@@ -2322,6 +2507,31 @@ function applyCaseData(data) {
   state.reviews =
     data.reviews || {};
 
+  state.status_updates =
+    data.status_updates || {};
+
+  state.assignments = data.assignments || {};
+  state.watchlists = data.watchlists || {};
+  state.custody = arrayOrEmpty(data.custody);
+  state.entity_attributes = data.entity_attributes || {};
+  state.analytics = data.analytics || {};
+  state.approvals = arrayOrEmpty(data.approvals);
+  state.external_requests = arrayOrEmpty(data.external_requests);
+  state.entity_tags = data.entity_tags || {};
+  state.graph_intelligence = data.graph_intelligence || {};
+  state.templates = arrayOrEmpty(data.templates);
+  state.collaboration = arrayOrEmpty(data.collaboration);
+  state.case_links = arrayOrEmpty(data.case_links);
+  state.duplicate_matches = arrayOrEmpty(data.duplicate_matches);
+  state.retention = data.retention || {};
+  state.saved_searches = arrayOrEmpty(data.saved_searches);
+  state.integrations = data.integrations || {};
+  state.security_policy = data.security_policy || {};
+  state.tasks = arrayOrEmpty(data.tasks);
+  state.evidence_annotations = data.evidence_annotations || {};
+  state.disclosures = arrayOrEmpty(data.disclosures);
+  state.report_schedules = arrayOrEmpty(data.report_schedules);
+
   state.audit =
     arrayOrEmpty(
       data.audit
@@ -2382,11 +2592,57 @@ function render() {
 async function requestJson(url, options = {}) {
   const response = await fetch(url, options);
   const body = await response.json().catch(() => ({}));
+  if (response.status === 401) {
+    window.location.replace("/login");
+    throw new Error("Your session has expired. Please sign in again.");
+  }
   if (!response.ok) {
     const detail = body?.detail;
     throw new Error(typeof detail === "string" ? detail : detail?.error || "Request failed.");
   }
   return body;
+}
+
+let appInitialized = false;
+
+function renderAuthenticatedUser() {
+  const user = state.auth;
+  const userLabel = $("auth-user");
+  if (userLabel) userLabel.textContent = user ? `${user.username} · ${user.role.toUpperCase()}` : "";
+  const supervisor = ["admin", "supervisor"].includes(user?.role);
+  $("run-pipeline")?.classList.toggle("disabled", !supervisor);
+  if ($("run-pipeline")) $("run-pipeline").disabled = !supervisor;
+}
+
+async function authenticateSession() {
+  const response = await fetch("/api/auth/me", { cache: "no-store" });
+  if (!response.ok) {
+    window.location.replace("/login");
+    return false;
+  }
+  state.auth = await response.json();
+  if (state.auth.force_password_reset) { window.location.replace("/login"); return false; }
+  renderAuthenticatedUser();
+  if (!appInitialized) initSETU();
+  return true;
+}
+
+function setupAuth() {
+  const logout = $("logout-button");
+  if (logout) logout.addEventListener("click", async () => {
+    if (logout.disabled) return;
+    logout.disabled = true;
+    try {
+      const response = await fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" });
+      if (!response.ok) throw new Error("Logout request was not accepted.");
+    } catch (error) {
+      console.error("SETU logout error:", error);
+      toast("Your local session could not be revoked, but you have been signed out of this page.");
+    } finally {
+      window.location.replace("/login");
+    }
+  });
+  authenticateSession();
 }
 
 function renderCasework() {
@@ -2408,6 +2664,22 @@ function renderCasework() {
     if ([...reviewNode.options].some(option => option.value === selected)) reviewNode.value = selected;
   }
 
+  const statusNode = $("status-node");
+  if (statusNode) {
+    const selected = statusNode.value;
+    const flagged = state.scores.filter(row => getRisk(row) !== "LOW");
+    statusNode.innerHTML = flagged.length
+      ? flagged.map(row => {
+          const id = getEntityId(row);
+          return `<option value="${escapeHtml(id)}">${escapeHtml(id)}</option>`;
+        }).join("")
+      : '<option value="">No flagged entity</option>';
+    if ([...statusNode.options].some(option => option.value === selected)) statusNode.value = selected;
+  }
+
+  renderStatusUpdates();
+  renderAssignmentAndAnalytics();
+
   const audit = $("audit");
   if (audit) {
     audit.innerHTML = state.audit.length
@@ -2418,6 +2690,65 @@ function renderCasework() {
           </div>`).join("")
       : '<p class="empty">No operator actions recorded yet.</p>';
   }
+}
+
+function renderAssignmentAndAnalytics() {
+  const supervisor = ["admin", "supervisor"].includes(state.auth?.role);
+  const assignmentPanel = $("assignment-panel"), exportPanel = $("export-panel");
+  const approvalPanel = $("approval-panel");
+  if (assignmentPanel) assignmentPanel.hidden = !supervisor;
+  if (exportPanel) exportPanel.hidden = !supervisor;
+  if (approvalPanel) approvalPanel.hidden = !supervisor;
+  const assignmentNode = $("assignment-node");
+  if (assignmentNode && supervisor) assignmentNode.innerHTML = state.scores.filter(row => getRisk(row) !== "LOW").map(row => `<option value="${escapeHtml(getEntityId(row))}">${escapeHtml(getEntityId(row))}</option>`).join("");
+  const tagNode = $("tag-node");
+  if (tagNode) tagNode.innerHTML = state.scores.filter(row => getRisk(row) !== "LOW").map(row => `<option value="${escapeHtml(getEntityId(row))}">${escapeHtml(getEntityId(row))}</option>`).join("");
+  const watched = arrayOrEmpty(state.watchlists?.[String(state.auth?.id)]);
+  const watchlist = $("watchlist");
+  if (watchlist) watchlist.innerHTML = watched.length ? watched.map(node => `<div class="watch-item"><span>${escapeHtml(node)}</span><button class="small-action" data-watch-entity="${escapeHtml(node)}">Unwatch</button></div>`).join("") : '<p class="empty">No entities are being monitored.</p>';
+  const analytics = $("analytics"), value = state.analytics || {};
+  if (analytics) analytics.innerHTML = [
+    ["Escalation rate", `${value.escalation_rate || 0}%`],
+    ["Avg. resolution", value.average_resolution_hours == null ? "—" : `${value.average_resolution_hours}h`],
+    ["Resolved", value.by_status?.resolved || 0],
+    ["Active workload", Object.values(value.workload || {}).reduce((sum, count) => sum + count, 0)],
+    ["SLA overdue", value.sla?.overdue || 0],
+    ["Due today", value.sla?.due_today || 0]
+  ].map(([label, amount]) => `<div class="analytics-stat"><span>${label}</span><strong>${amount}</strong></div>`).join("") + Object.entries(value.workload || {}).map(([name, count]) => `<div class="workload-row"><span>${escapeHtml(name)}</span><strong>${count} assigned</strong></div>`).join("");
+  const approvalList = $("approval-list");
+  if (approvalList && supervisor) {
+    const pending = state.approvals.filter(item => item.status === "pending");
+    approvalList.innerHTML = pending.length ? pending.map(item => `<div class="approval-row"><strong>${escapeHtml(item.node)} · ${escapeHtml(item.action.replaceAll("_", " "))}</strong><p>${escapeHtml(item.message)}</p><small>Requested by ${escapeHtml(item.requested_by)} · ${escapeHtml(new Date(item.requested_at_utc).toLocaleString())}</small><div><button class="small-action" data-approval-id="${escapeHtml(item.id)}" data-approval-decision="approved">Approve</button><button class="small-action" data-approval-id="${escapeHtml(item.id)}" data-approval-decision="rejected">Reject</button></div></div>`).join("") : '<p class="empty">No pending escalation or closure requests.</p>';
+  }
+  const requestList = $("external-request-list");
+  if (requestList) requestList.innerHTML = state.external_requests.length ? state.external_requests.map(item => `<div class="request-row"><strong>${escapeHtml(item.request_type.replaceAll("_", " "))} · ${escapeHtml(item.recipient)}</strong><span class="entity-status ${escapeHtml(item.status)}">${escapeHtml(item.status)}</span><p>${escapeHtml(item.subject)}${item.entity ? ` · ${escapeHtml(item.entity)}` : ""}</p><small>${escapeHtml(item.owner)} · due ${escapeHtml(item.due_date || "not set")} · ${escapeHtml(item.reference || item.id)}</small><div><button class="small-action" data-request-id="${escapeHtml(item.id)}" data-request-status="sent">Mark sent</button><button class="small-action" data-request-id="${escapeHtml(item.id)}" data-request-status="responded">Record response</button><button class="small-action" data-request-id="${escapeHtml(item.id)}" data-request-status="closed">Close</button></div></div>`).join("") : '<p class="empty">No external requests recorded.</p>';
+}
+
+async function refreshNotifications() {
+  try {
+    state.notifications = await requestJson("/api/notifications");
+    const count = $("notification-count"); if (count) count.textContent = state.notifications.length;
+    const list = $("notification-list"); if (list) list.innerHTML = state.notifications.length ? state.notifications.map(item => {
+      const type = String(item.type || "notice").replace(/[^a-z_]/g, "");
+      const label = type.replaceAll("_", " ") || "case alert";
+      return `<article class="notification-row ${escapeHtml(type)}"><div class="notification-icon" aria-hidden="true">!</div><div class="notification-copy"><div class="notification-meta"><span>${escapeHtml(label)}</span><time>${item.at ? escapeHtml(new Date(item.at).toLocaleString()) : "New"}</time></div><strong>${escapeHtml(item.node || "Case")}</strong><p>${escapeHtml(item.message)}</p></div></article>`;
+    }).join("") : '<p class="empty">No new operational alerts.</p>';
+  } catch (error) { console.warn("SETU notification error", error); }
+}
+
+function renderStatusUpdates() {
+  const container = $("status-updates");
+  if (!container) return;
+  const updates = Object.values(state.status_updates || {}).flat()
+    .sort((a, b) => String(b.updated_at_utc).localeCompare(String(a.updated_at_utc)));
+  container.innerHTML = updates.length
+    ? updates.slice(0, 20).map(update => `
+        <article class="status-update-row">
+          <div><span class="entity-status ${escapeHtml(update.status)}">${escapeHtml(String(update.status).replaceAll("_", " "))}</span><strong>${escapeHtml(update.node)}</strong></div>
+          <p>${escapeHtml(update.message)}</p>
+          <small>${escapeHtml(update.author)} · ${escapeHtml(new Date(update.updated_at_utc).toLocaleString())}</small>
+        </article>`).join("")
+    : '<p class="empty">No progress updates posted for flagged entities yet.</p>';
 }
 
 function setupCasework() {
@@ -2457,6 +2788,33 @@ function setupCasework() {
       await load(); toast("Human review recorded.");
     } catch (error) { toast(error.message); }
   });
+
+  bind("status-update-form", async event => {
+    event.preventDefault();
+    try {
+      const result = await requestJson("/api/status-updates", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(Object.fromEntries(new FormData(event.currentTarget))) });
+      event.currentTarget.elements.message.value = "";
+      await load(); toast(result.requires_approval ? "Supervisor approval requested." : "Entity status update posted.");
+    } catch (error) { toast(error.message); }
+  });
+
+  bind("assignment-form", async event => {
+    event.preventDefault();
+    try { await requestJson("/api/assignments", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(Object.fromEntries(new FormData(event.currentTarget))) }); await load(); toast("Entity assignment saved."); } catch (error) { toast(error.message); }
+  });
+  bind("external-request-form", async event => {
+    event.preventDefault();
+    try { await requestJson("/api/external-requests", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(Object.fromEntries(new FormData(event.currentTarget))) }); event.currentTarget.reset(); await load(); toast("External request created."); } catch (error) { toast(error.message); }
+  });
+  bind("entity-tag-form", async event => {
+    event.preventDefault();
+    try { await requestJson("/api/entity-tags", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(Object.fromEntries(new FormData(event.currentTarget))) }); event.currentTarget.elements.note.value = ""; await load(); toast("Entity tag applied."); } catch (error) { toast(error.message); }
+  });
+  ["status-filter", "assignment-filter", "amount-min", "date-from", "date-to", "device-filter", "upi-filter", "phone-filter"].forEach(id => $(id)?.addEventListener("input", renderTable));
+  ["status-filter", "assignment-filter", "tag-filter"].forEach(id => $(id)?.addEventListener("change", renderTable));
+  $("notifications-button")?.addEventListener("click", async () => { await refreshNotifications(); $("notification-center").hidden = false; });
+  $("notifications-close")?.addEventListener("click", () => { $("notification-center").hidden = true; });
+
 }
 
 
@@ -2496,6 +2854,7 @@ async function load() {
 
 
     render();
+    await refreshNotifications();
 
 
     console.log(
@@ -2594,8 +2953,7 @@ function activateView(viewName) {
 
 
   if (target === "integrity") {
-
-    renderIntegrity();
+    requestJson("/api/evidence-chain").then(items => { state.custody = arrayOrEmpty(items); renderIntegrity(); }).catch(() => renderIntegrity());
 
   }
 
@@ -2732,6 +3090,35 @@ function setupGlobalClicks() {
       if (disabledBrief) {
         event.preventDefault();
         toast("Run the investigation before downloading its brief.");
+        return;
+      }
+
+      const approvalButton = event.target.closest("[data-approval-id]");
+      if (approvalButton) {
+        event.preventDefault();
+        const rationale = window.prompt(`Reason for ${approvalButton.dataset.approvalDecision}:`);
+        if (!rationale || rationale.trim().length < 2) { toast("A brief decision reason is required."); return; }
+        requestJson(`/api/approvals/${encodeURIComponent(approvalButton.dataset.approvalId)}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ decision: approvalButton.dataset.approvalDecision, rationale: rationale.trim() }) })
+          .then(() => load()).then(() => toast("Approval decision recorded.")).catch(error => toast(error.message));
+        return;
+      }
+
+      const requestButton = event.target.closest("[data-request-id]");
+      if (requestButton) {
+        event.preventDefault();
+        const status = requestButton.dataset.requestStatus;
+        const responseNote = status === "responded" ? (window.prompt("Response received or next step:") || "") : "";
+        if (status === "responded" && responseNote.trim().length < 2) { toast("Record a brief response note."); return; }
+        requestJson(`/api/external-requests/${encodeURIComponent(requestButton.dataset.requestId)}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status, response_note: responseNote.trim() }) })
+          .then(() => load()).then(() => toast("External request updated.")).catch(error => toast(error.message));
+        return;
+      }
+
+      const watchButton = event.target.closest("[data-watch-entity]");
+      if (watchButton) {
+        event.preventDefault();
+        requestJson("/api/watchlist", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ node: watchButton.getAttribute("data-watch-entity") }) })
+          .then(() => load()).then(() => toast("Watchlist updated.")).catch(error => toast(error.message));
         return;
       }
 
@@ -2969,6 +3356,16 @@ function setupGlobalClicks() {
 
       }
 
+      const graphOperations = event.target.closest("[data-open-graph-operations]");
+      if (graphOperations) {
+        event.preventDefault();
+        const source = graphOperations.getAttribute("data-open-graph-operations");
+        document.querySelector('[data-view="operations"]')?.click();
+        const sourceInput = document.querySelector('#graph-trace-form [name="source"]');
+        if (sourceInput) sourceInput.value = source;
+        return;
+      }
+
     }
   );
 
@@ -3149,6 +3546,9 @@ function setupKeyboardShortcuts() {
 
 function initSETU() {
 
+  if (appInitialized) return;
+  appInitialized = true;
+
   console.log(
     "SETU: Initializing investigation workspace..."
   );
@@ -3162,11 +3562,15 @@ function initSETU() {
 
   setupNetworkControls();
 
+  setupVisualAnalysis();
+
   setupGlobalClicks();
 
   setupPipeline();
 
   setupCasework();
+
+  initialiseFilterSelects();
 
   setupKeyboardShortcuts();
 
@@ -3187,11 +3591,11 @@ if (
 
   document.addEventListener(
     "DOMContentLoaded",
-    initSETU
+    setupAuth
   );
 
 } else {
 
-  initSETU();
+  setupAuth();
 
 }

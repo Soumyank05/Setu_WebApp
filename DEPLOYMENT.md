@@ -24,3 +24,7 @@ SETU's scores identify patterns for triage only. They do not establish identity,
 4. Use the graph and risk queue to prioritize manual review.
 5. Record corroborated notes and a review disposition for each flagged entity.
 6. Download the brief for the approved case file.
+
+## Production-mode guard
+
+Set `SETU_PRODUCTION=true` only behind HTTPS. In that mode, SETU blocks enabling a live intake connector unless all of the following are configured: `SETU_COOKIE_SECURE=true`, an administrator-approved IP allowlist and MFA policy, `SETU_IDENTITY_PROVIDER`, and `SETU_IMMUTABLE_AUDIT_URI`. The environment variables identify the approved services; the deployment team must integrate and validate those services before operational use.

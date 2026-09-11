@@ -1,4 +1,4 @@
-"""Create synthetic telecom, UPI, and KYC artifacts containing one mule chain."""
+"""Create a realistic-sized synthetic evidence package with a seeded mule chain."""
 
 from __future__ import annotations
 
@@ -10,9 +10,12 @@ from pathlib import Path
 from faker import Faker
 
 OUT_DIR = Path(__file__).parent / "raw"
-BASE_TIME = datetime(2026, 8, 20, 9, 0, 0)
-NOISE_PEOPLE, NOISE_TRANSACTIONS = 500, 500
+BASE_TIME = datetime(2026, 7, 1, 9, 0, 0)
+# 2,200 CDRs + 7,200 UPI rows + 600 KYC rows = 10,000 records exactly.
+NOISE_PEOPLE, NOISE_CDRS, NOISE_TRANSACTIONS = 598, 2_197, 7_196
 fake = Faker("en_IN")
+random.seed(20260911)
+Faker.seed(20260911)
 
 
 def digits(length: int) -> str:
@@ -23,20 +26,26 @@ def phone() -> str:
     return "9" + digits(9)
 
 
-def timestamp(hours: int = 24 * 30) -> str:
+def timestamp(hours: int = 24 * 60) -> str:
     return (BASE_TIME + timedelta(minutes=random.randint(0, hours * 60))).isoformat()
+
+
+def realistic_amount() -> int:
+    """Use a long-tail payment distribution, rounded like settlement records."""
+    amount = random.lognormvariate(6.35, 1.05)
+    return max(25, min(40_000, int(round(amount / 5) * 5)))
 
 
 def main() -> None:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     people = [{"phone": phone(), "imei": "IMEI-" + digits(10), "imsi": "IMSI-" + digits(10), "upi": fake.user_name() + "@upi"} for _ in range(NOISE_PEOPLE)]
     telecom, upi = [], []
-    for person in people:
-        for _ in range(random.randint(3, 7)):
-            telecom.append({"phone_number": person["phone"], "imei": person["imei"], "imsi": person["imsi"], "timestamp": timestamp(), "tower_id": f"TWR-{random.randint(100, 199)}"})
+    for _ in range(NOISE_CDRS):
+        person = random.choice(people)
+        telecom.append({"phone_number": person["phone"], "imei": person["imei"], "imsi": person["imsi"], "timestamp": timestamp(), "tower_id": f"TWR-{random.randint(100, 199)}"})
     for _ in range(NOISE_TRANSACTIONS):
         sender, receiver = random.sample(people, 2)
-        upi.append({"sender_phone": sender["phone"], "receiver_upi": receiver["upi"], "amount": random.choice([100, 250, 500, 999, 1500, 2000]), "timestamp": timestamp()})
+        upi.append({"sender_phone": sender["phone"], "receiver_upi": receiver["upi"], "amount": realistic_amount(), "timestamp": timestamp()})
 
     victim, mule_one, mule_two = phone(), phone(), phone()
     shared_imei = "IMEI-" + digits(10)
@@ -61,7 +70,7 @@ def main() -> None:
     ):
         with (OUT_DIR / name).open("w", newline="") as output:
             writer = csv.DictWriter(output, fieldnames=fields); writer.writeheader(); writer.writerows(rows)
-    print(f"Wrote {len(telecom)} CDRs, {len(upi)} UPI transactions, and {len(people) + 2} KYC records.")
+    print(f"Wrote {len(telecom)} CDRs, {len(upi)} UPI transactions, and {len(people) + 2} KYC records ({len(telecom) + len(upi) + len(people) + 2:,} total records).")
     print(f"Planted chain: victim {victim} -> {handle_one}; shared device {shared_imei}; cashout {cashout}.")
 
 

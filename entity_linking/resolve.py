@@ -17,7 +17,11 @@ def find_shared_device_links(telecom: pd.DataFrame) -> list[dict[str, str]]:
     for imei, group in telecom.dropna(subset=["imei"]).groupby("imei"):
         phones = sorted(group["entity_id"].astype(str).unique())
         for first, second in combinations(phones, 2):
-            links.append({"entity_a": first, "entity_b": second, "relationship": "shared_device", "evidence": f"shared IMEI {imei}"})
+            # A shared device is high-confidence correlation evidence, not an
+            # identity conclusion.  Preserve that distinction for the reviewer.
+            links.append({"entity_a": first, "entity_b": second, "relationship": "shared_device",
+                          "evidence": f"shared IMEI {imei}", "confidence": 0.98,
+                          "match_basis": "exact_device_identifier", "review_required": True})
     return links
 
 
@@ -37,7 +41,7 @@ def main() -> None:
     if not telecom_path.exists():
         raise FileNotFoundError("Run `python -m parsers.ingest` first.")
     links = find_shared_device_links(pd.read_csv(telecom_path, dtype={"entity_id": "string", "imei": "string"}))
-    pd.DataFrame(links, columns=["entity_a", "entity_b", "relationship", "evidence"]).to_csv(PROCESSED_DIR / "entity_links.csv", index=False)
+    pd.DataFrame(links, columns=["entity_a", "entity_b", "relationship", "evidence", "confidence", "match_basis", "review_required"]).to_csv(PROCESSED_DIR / "entity_links.csv", index=False)
 
     kyc_path = RAW_DIR / "kyc_mapping.csv"
     if kyc_path.exists():
