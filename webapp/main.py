@@ -19,7 +19,8 @@ from typing import Optional
 import pandas as pd
 from fastapi import Cookie, Depends, FastAPI, File, Form, HTTPException, Request, Response, UploadFile
 from fastapi.responses import FileResponse
-from reportlab.lib.pagesizes import A4
+from reportlab.lib.pagesizes import A4, landscape
+from reportlab.lib import colors
 from reportlab.pdfgen import canvas
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
@@ -47,6 +48,11 @@ TASKS_PATH = PROCESSED / "case_tasks.json"
 EVIDENCE_ANNOTATIONS_PATH = PROCESSED / "evidence_annotations.json"
 DISCLOSURES_PATH = PROCESSED / "disclosures.json"
 REPORT_SCHEDULES_PATH = PROCESSED / "report_schedules.json"
+GRAPH_VIEWS_PATH = PROCESSED / "graph_views.json"
+NARRATIVES_PATH = PROCESSED / "case_narratives.json"
+ALERT_RULES_PATH = PROCESSED / "alert_rules.json"
+MERGE_REVIEWS_PATH = PROCESSED / "merge_reviews.json"
+GRAPH_ANNOTATIONS_PATH = PROCESSED / "graph_annotations.json"
 AUTH_DB = PROCESSED / "users.sqlite3"
 SESSION_COOKIE = "setu_session"
 SESSION_LIFETIME_HOURS = int(os.getenv("SETU_SESSION_LIFETIME_HOURS", "8"))
@@ -187,6 +193,53 @@ class SavedSearch(BaseModel):
     filters: dict = Field(default_factory=dict)
     shared: bool = False
     alert: bool = False
+
+
+class SavedGraphView(BaseModel):
+    name: str = Field(min_length=2, max_length=100)
+    entity: str = Field(default="", max_length=160)
+    days: int = Field(default=30, ge=1, le=365)
+    risk: str = Field(default="ALL", max_length=20)
+    rail: str = Field(default="ALL", max_length=40)
+    min_amount: float = Field(default=0, ge=0)
+    expand: bool = False
+    shared: bool = False
+
+
+class CaseNarrative(BaseModel):
+    title: str = Field(min_length=3, max_length=160)
+    summary: str = Field(min_length=10, max_length=5_000)
+    entity: str = Field(default="", max_length=160)
+    findings: list[str] = Field(default_factory=list, max_length=30)
+    charts: list[str] = Field(default_factory=list, max_length=10)
+    annotations: list[str] = Field(default_factory=list, max_length=30)
+
+
+class AlertRule(BaseModel):
+    name: str = Field(min_length=3, max_length=100)
+    entity: str = Field(default="", max_length=160)
+    min_amount: float = Field(default=0, ge=0)
+    risk: str = Field(default="HIGH", max_length=20)
+    new_evidence: bool = True
+    value_threshold: bool = True
+    high_risk_cluster: bool = False
+
+
+class MergeReview(BaseModel):
+    entity: str = Field(min_length=2, max_length=160)
+    matched_entity: str = Field(min_length=2, max_length=160)
+    case_reference: str = Field(min_length=3, max_length=80)
+    decision: str = Field(pattern="^(confirmed|rejected|needs_more_evidence)$")
+    rationale: str = Field(min_length=3, max_length=1_000)
+    confidence: str = Field(default="candidate", pattern="^(low|candidate|probable|high)$")
+
+
+class GraphAnnotation(BaseModel):
+    target_type: str = Field(pattern="^(entity|route)$")
+    target: str = Field(min_length=2, max_length=400)
+    note: str = Field(min_length=2, max_length=2_000)
+    disposition: str = Field(default="reviewed", pattern="^(reviewed|cleared|escalated)$")
+    suspected_mule: bool = False
 
 
 class IntegrationConfig(BaseModel):
@@ -570,6 +623,63 @@ def shortest_path(source: str, target: str) -> dict:
     return {"connected": False, "nodes": [], "steps": []}
 
 
+def compare_paths(source: str, target: str, max_hops: int = 6) -> dict:
+    """Return distinct directed transfer routes, ranked for investigation review."""
+    scores = {str(row.get("node", "")): row for row in records(PROCESSED / "risk_scores.csv")}
+    adjacency: dict[str, list[dict]] = {}
+    for edge in records(PROCESSED / "graph_edges.csv"):
+        sender, receiver = str(edge.get("sender", "")), str(edge.get("receiver", ""))
+        if sender and receiver:
+            adjacency.setdefault(sender, []).append({**edge, "sender": sender, "receiver": receiver,
+                                                       "amount": float(edge.get("amount", 0) or 0)})
+    routes: list[dict] = []
+    def visit(node: str, nodes: list[str], edges: list[dict]) -> None:
+        if len(routes) >= 100 or len(edges) >= max_hops:
+            return
+        for edge in adjacency.get(node, []):
+            nxt = edge["receiver"]
+            if nxt in nodes:
+                continue
+            route_nodes, route_edges = nodes + [nxt], edges + [edge]
+            if nxt == target:
+                tiers = [risk_tier(scores.get(item)) for item in route_nodes]
+                risk = max(tiers, key=("LOW", "MEDIUM", "HIGH").index)
+                routes.append({"nodes": route_nodes, "hops": len(route_edges),
+                               "value": round(sum(item["amount"] for item in route_edges), 2),
+                               "bottleneck_value": round(min(item["amount"] for item in route_edges), 2),
+                               "risk": risk, "transfers": [{"from": item["sender"], "to": item["receiver"], "amount": item["amount"], "timestamp": item.get("timestamp", "")} for item in route_edges]})
+            else:
+                visit(nxt, route_nodes, route_edges)
+    visit(source, [source], [])
+    risk_rank = {"HIGH": 0, "MEDIUM": 1, "LOW": 2}
+    routes.sort(key=lambda item: (-item["bottleneck_value"], item["hops"], risk_rank[item["risk"]], -item["value"]))
+    for index, route in enumerate(routes, 1):
+        route["rank"] = index
+    return {"source": source, "target": target, "routes": routes, "max_hops": max_hops}
+
+
+def entity_traceability(entity: str) -> dict:
+    """Link one graph identity back to row-level evidence without guessing provenance."""
+    entity = str(entity).strip()
+    csv_rows, documents = [], []
+    for path in sorted(RAW.glob("*.csv")):
+        try:
+            for number, row in enumerate(records(path), 1):
+                if any(entity.lower() == str(value).strip().lower() for value in row.values()):
+                    csv_rows.append({"artifact": path.name, "row": number, "fields": {key: str(value) for key, value in row.items() if str(value).strip()}})
+        except (OSError, UnicodeDecodeError, pd.errors.ParserError):
+            continue
+    manifest = read_json(PROCESSED / "manifest.json", {})
+    for name, item in manifest.items():
+        documents.append({"artifact": name, "sha256": item.get("sha256", ""), "rows": item.get("rows", "")})
+    attrs = evidence_attributes().get(entity, {})
+    annotations = [item for items in read_json(EVIDENCE_ANNOTATIONS_PATH, {}).values() for item in items if entity.lower() in json.dumps(item).lower()]
+    notes = [item for item in read_json(NOTES_PATH, []) if entity.lower() in json.dumps(item).lower()]
+    notes.extend(item for item in read_json(GRAPH_ANNOTATIONS_PATH, []) if entity.lower() in item.get("target", "").lower() or entity.lower() in item.get("note", "").lower())
+    return {"entity": entity, "csv_rows": csv_rows[:100], "documents": documents, "device_ids": attrs.get("imeis", []),
+            "identifiers": {key: attrs.get(key, []) for key in ("phones", "upis")}, "notes": notes, "evidence_annotations": annotations}
+
+
 @app.get("/")
 def home() -> FileResponse:
     return FileResponse(Path(__file__).parent / "static" / "index.html")
@@ -697,6 +807,9 @@ def case_data(_: dict = Depends(get_current_user)) -> dict:
         "collaboration": read_json(COLLABORATION_PATH, []), "case_links": read_json(CASE_LINKS_PATH, []),
         "duplicate_matches": duplicate_case_matches(),
         "retention": read_json(RETENTION_PATH, {}), "saved_searches": read_json(SAVED_SEARCHES_PATH, []),
+        "graph_views": read_json(GRAPH_VIEWS_PATH, []), "case_narratives": read_json(NARRATIVES_PATH, []),
+        "alert_rules": read_json(ALERT_RULES_PATH, []), "merge_reviews": read_json(MERGE_REVIEWS_PATH, []),
+        "graph_annotations": read_json(GRAPH_ANNOTATIONS_PATH, []),
         "integrations": read_json(INTEGRATIONS_PATH, {}), "security_policy": read_json(SECURITY_PATH, {}),
         "tasks": read_json(TASKS_PATH, []),
         "evidence_annotations": read_json(EVIDENCE_ANNOTATIONS_PATH, {}),
@@ -727,6 +840,88 @@ def redacted_entity_label(entity: str) -> str:
     return f"ENTITY-{digest}"
 
 
+def exported_relationship_graph(model: dict) -> tuple[list[dict], list[dict]]:
+    """Return redacted nodes and directed transfer routes for visual exports."""
+    graph = model["relationship_graph"]
+    selected = model["selected"].get("id", "")
+    raw_nodes = sorted(graph["nodes"], key=lambda node: node["id"] != selected)
+    nodes = [{**node, "label": redacted_entity_label(node["id"])} for node in raw_nodes]
+    labels = {node["id"]: node["label"] for node in nodes}
+    edges = [{**edge, "source_label": labels.get(edge["source"], redacted_entity_label(edge["source"])),
+              "target_label": labels.get(edge["target"], redacted_entity_label(edge["target"]))}
+             for edge in graph["edges"]]
+    return nodes, edges
+
+
+def relationship_positions(nodes: list[dict], width: float, height: float) -> dict[str, tuple[float, float]]:
+    """Lay out the selected entity centrally and its routes around it."""
+    if not nodes:
+        return {}
+    focal = next((node for node in nodes if node.get("id") == nodes[0].get("id")), nodes[0])
+    positions = {focal["id"]: (width / 2, height / 2)}
+    others = [node for node in nodes if node["id"] != focal["id"]]
+    if not others:
+        return positions
+    import math
+    radius_x, radius_y = max(100, width * .39), max(70, height * .34)
+    for index, node in enumerate(others):
+        angle = -math.pi / 2 + (2 * math.pi * index / len(others))
+        positions[node["id"]] = (width / 2 + radius_x * math.cos(angle), height / 2 + radius_y * math.sin(angle))
+    return positions
+
+
+def draw_pdf_transaction_routes(page: canvas.Canvas, nodes: list[dict], edges: list[dict], x: float, y: float, width: float, height: float) -> None:
+    """Draw a readable, directed transaction route diagram on a ReportLab canvas."""
+    positions = relationship_positions(nodes, width, height)
+    risk_colors = {"LOW": colors.HexColor("#71d3df"), "MEDIUM": colors.HexColor("#f5b971"), "HIGH": colors.HexColor("#ef7070")}
+    page.setStrokeColor(colors.HexColor("#45656a")); page.setFillColor(colors.HexColor("#b6c5c8"))
+    for edge in edges:
+        start, end = positions.get(edge["source"]), positions.get(edge["target"])
+        if not start or not end:
+            continue
+        sx, sy, tx, ty = x + start[0], y + start[1], x + end[0], y + end[1]
+        dx, dy = tx - sx, ty - sy
+        distance = max((dx * dx + dy * dy) ** .5, 1)
+        ux, uy = dx / distance, dy / distance
+        page.setLineWidth(min(3, 0.8 + (edge.get("value", 0) ** .5) / 600))
+        page.line(sx + ux * 29, sy + uy * 18, tx - ux * 29, ty - uy * 18)
+        tip_x, tip_y = tx - ux * 25, ty - uy * 15
+        page.setFillColor(colors.HexColor("#45656a"))
+        path = page.beginPath(); path.moveTo(tip_x, tip_y); path.lineTo(tip_x - ux * 9 - uy * 5, tip_y - uy * 9 + ux * 5); path.lineTo(tip_x - ux * 9 + uy * 5, tip_y - uy * 9 - ux * 5); path.close()
+        page.drawPath(path, fill=1, stroke=0)
+        page.setFillColor(colors.HexColor("#b6c5c8")); page.setFont("Helvetica", 6)
+        page.drawCentredString((sx + tx) / 2, (sy + ty) / 2 + 4, f"INR {edge['value']:,.0f} · {edge['count']} tx")
+    for node in nodes:
+        nx, ny = positions[node["id"]]; nx, ny = x + nx, y + ny
+        page.setFillColor(risk_colors.get(node.get("risk_tier"), colors.HexColor("#71d3df")))
+        page.circle(nx, ny, 18 if node == nodes[0] else 14, fill=1, stroke=0)
+        page.setFillColor(colors.HexColor("#10181e")); page.setFont("Helvetica-Bold", 6)
+        page.drawCentredString(nx, ny - 2, node["label"].replace("ENTITY-", "E-"))
+
+
+def draw_png_transaction_routes(draw, nodes: list[dict], edges: list[dict], x: int, y: int, width: int, height: int) -> None:
+    """Draw the same redacted directed route diagram for the raster export."""
+    positions = relationship_positions(nodes, width, height)
+    risk_colors = {"LOW": "#71d3df", "MEDIUM": "#f5b971", "HIGH": "#ef7070"}
+    for edge in edges:
+        start, end = positions.get(edge["source"]), positions.get(edge["target"])
+        if not start or not end:
+            continue
+        sx, sy, tx, ty = x + start[0], y + start[1], x + end[0], y + end[1]
+        draw.line((sx, sy, tx, ty), fill="#45656a", width=max(1, min(5, int(1 + (edge.get("value", 0) ** .5) / 500))))
+        distance = max(((tx - sx) ** 2 + (ty - sy) ** 2) ** .5, 1)
+        ux, uy = (tx - sx) / distance, (ty - sy) / distance
+        tip_x, tip_y = tx - ux * 22, ty - uy * 22
+        draw.polygon([(tip_x, tip_y), (tip_x - ux * 10 - uy * 6, tip_y - uy * 10 + ux * 6),
+                      (tip_x - ux * 10 + uy * 6, tip_y - uy * 10 - ux * 6)], fill="#45656a")
+        draw.text(((sx + tx) / 2 + 4, (sy + ty) / 2 + 4), f"₹{edge['value']:,.0f} · {edge['count']} tx", fill="#b6c5c8")
+    for node in nodes:
+        nx, ny = positions[node["id"]]; nx, ny = x + nx, y + ny
+        radius = 25 if node == nodes[0] else 20
+        draw.ellipse((nx - radius, ny - radius, nx + radius, ny + radius), fill=risk_colors.get(node.get("risk_tier"), "#71d3df"), outline="#e7f0ed")
+        draw.text((nx - radius + 3, ny - 4), node["label"].replace("ENTITY-", "E-"), fill="#10181e")
+
+
 @app.get("/api/chart-data/export")
 def export_chart_data(format: str = "pdf", days: int = 30, risk: str = "ALL", rail: str = "ALL",
                       min_amount: float = 0, max_amount: Optional[float] = None, entity: str = "", expand: bool = False,
@@ -741,12 +936,19 @@ def export_chart_data(format: str = "pdf", days: int = 30, risk: str = "ALL", ra
              f"Transfers: {model['summary']['transfer_count']}  |  Value: INR {model['summary']['transfer_value']:,.0f}",
              f"Period: {model['filters']['days']} days  |  Risk: {model['filters']['risk']}  |  Rail: {model['filters']['rail']}", "", "Top counterparties (redacted):"]
     lines.extend(f"{redacted_entity_label(item['id'])} · INR {item['value']:,.0f} · {item['count']} transfers" for item in selected["counterparties"])
+    nodes, routes = exported_relationship_graph(model)
     if format.lower() == "pdf":
-        output = io.BytesIO(); page = canvas.Canvas(output, pagesize=A4); _, height = A4
+        output = io.BytesIO(); page = canvas.Canvas(output, pagesize=landscape(A4)); page_width, height = landscape(A4)
         y = height - 56
         for line in lines:
             page.drawString(48, y, line[:110]); y -= 18
-            if y < 48: page.showPage(); y = height - 56
+            if y < height - 210: break
+        page.setStrokeColor(colors.HexColor("#45656a")); page.line(48, y - 5, page_width - 48, y - 5)
+        page.setFillColor(colors.HexColor("#10181e")); page.setFont("Helvetica-Bold", 13)
+        page.drawString(48, y - 31, "TRANSACTION ROUTE FLOWCHART")
+        page.setFont("Helvetica", 8); page.setFillColor(colors.HexColor("#52636a"))
+        page.drawString(48, y - 45, "Arrows show the direction of aggregated transfers. Entity labels are redacted for controlled disclosure.")
+        draw_pdf_transaction_routes(page, nodes, routes, 48, 44, page_width - 96, max(130, y - 105))
         page.save()
         audit("redacted_visual_analysis_exported", {"format": "pdf", "entity": bool(entity), "days": days, "by": user["username"]})
         custody("exported_redacted", "visual_analysis.pdf", user, source="chart_data_export", filters=model["filters"])
@@ -756,8 +958,12 @@ def export_chart_data(format: str = "pdf", days: int = 30, risk: str = "ALL", ra
         from PIL import Image, ImageDraw
     except ImportError as exc:
         raise HTTPException(status_code=501, detail="PNG export support is not installed.") from exc
-    image = Image.new("RGB", (1200, max(360, 90 + len(lines) * 30)), "#10181e"); draw = ImageDraw.Draw(image)
+    image = Image.new("RGB", (1400, max(700, 160 + len(lines) * 24)), "#10181e"); draw = ImageDraw.Draw(image)
     for index, line in enumerate(lines): draw.text((40, 32 + index * 28), line, fill="#c9ff53" if index == 0 else "#e7f0ed")
+    graph_top = min(image.height - 470, 70 + len(lines) * 28)
+    draw.line((40, graph_top, image.width - 40, graph_top), fill="#45656a")
+    draw.text((40, graph_top + 16), "TRANSACTION ROUTE FLOWCHART · arrows show transfer direction", fill="#c9ff53")
+    draw_png_transaction_routes(draw, nodes, routes, 40, graph_top + 55, image.width - 80, image.height - graph_top - 75)
     output = io.BytesIO(); image.save(output, format="PNG")
     audit("redacted_visual_analysis_exported", {"format": "png", "entity": bool(entity), "days": days, "by": user["username"]})
     custody("exported_redacted", "visual_analysis.png", user, source="chart_data_export", filters=model["filters"])
@@ -843,6 +1049,29 @@ def trace_graph(trace: GraphTrace, user: dict = Depends(get_current_user)) -> di
     result = shortest_path(trace.source, trace.target)
     audit("graph_path_traced", {"source": trace.source, "target": trace.target, "connected": result["connected"], "by": user["username"]})
     return result
+
+
+@app.post("/api/graph/paths")
+def compare_graph_paths(trace: GraphTrace, user: dict = Depends(get_current_user)) -> dict:
+    result = compare_paths(trace.source, trace.target)
+    audit("graph_paths_compared", {"source": trace.source, "target": trace.target, "routes": len(result["routes"]), "by": user["username"]})
+    return result
+
+
+@app.get("/api/entities/{entity}/traceability")
+def entity_evidence_traceability(entity: str, user: dict = Depends(get_current_user)) -> dict:
+    result = entity_traceability(entity)
+    audit("entity_traceability_viewed", {"entity": entity, "rows": len(result["csv_rows"]), "by": user["username"]})
+    return result
+
+
+@app.post("/api/graph-annotations")
+def add_graph_annotation(annotation: GraphAnnotation, user: dict = Depends(get_current_user)) -> dict:
+    items = read_json(GRAPH_ANNOTATIONS_PATH, [])
+    entry = {"id": f"ANN-{secrets.token_hex(4).upper()}", **annotation.model_dump(), "author": user["username"], "created_at_utc": datetime.now(timezone.utc).isoformat()}
+    items.insert(0, entry); write_json(GRAPH_ANNOTATIONS_PATH, items)
+    audit("graph_annotation_added", {"annotation": entry["id"], "target": entry["target"], "disposition": entry["disposition"], "by": user["username"]})
+    return entry
 
 
 @app.get("/api/audit/verify")
@@ -1178,6 +1407,42 @@ def save_search(search: SavedSearch, user: dict = Depends(get_current_user)) -> 
     searches = read_json(SAVED_SEARCHES_PATH, []); entry = {"id": f"SRCH-{secrets.token_hex(4).upper()}", **search.model_dump(), "owner": user["username"], "created_at_utc": datetime.now(timezone.utc).isoformat()}; searches.insert(0, entry); write_json(SAVED_SEARCHES_PATH, searches); audit("saved_search_created", {"search": entry["id"], "by": user["username"]}); return entry
 
 
+@app.post("/api/graph-views")
+def save_graph_view(view: SavedGraphView, user: dict = Depends(get_current_user)) -> dict:
+    views = read_json(GRAPH_VIEWS_PATH, [])
+    entry = {"id": f"VIEW-{secrets.token_hex(4).upper()}", **view.model_dump(), "owner": user["username"], "created_at_utc": datetime.now(timezone.utc).isoformat()}
+    views.insert(0, entry); write_json(GRAPH_VIEWS_PATH, views)
+    audit("graph_view_saved", {"view": entry["id"], "entity": entry["entity"], "by": user["username"]})
+    return entry
+
+
+@app.post("/api/case-narratives")
+def save_case_narrative(narrative: CaseNarrative, user: dict = Depends(get_current_user)) -> dict:
+    narratives = read_json(NARRATIVES_PATH, [])
+    entry = {"id": f"NAR-{secrets.token_hex(4).upper()}", **narrative.model_dump(), "author": user["username"], "created_at_utc": datetime.now(timezone.utc).isoformat()}
+    narratives.insert(0, entry); write_json(NARRATIVES_PATH, narratives)
+    audit("case_narrative_saved", {"narrative": entry["id"], "entity": entry["entity"], "by": user["username"]})
+    return entry
+
+
+@app.post("/api/alert-rules")
+def save_alert_rule(rule: AlertRule, user: dict = Depends(get_current_user)) -> dict:
+    rules = read_json(ALERT_RULES_PATH, [])
+    entry = {"id": f"ALRT-{secrets.token_hex(4).upper()}", **rule.model_dump(), "owner": user["username"], "enabled": True, "created_at_utc": datetime.now(timezone.utc).isoformat()}
+    rules.insert(0, entry); write_json(ALERT_RULES_PATH, rules)
+    audit("alert_rule_saved", {"rule": entry["id"], "entity": entry["entity"], "by": user["username"]})
+    return entry
+
+
+@app.post("/api/merge-reviews")
+def review_duplicate_candidate(review: MergeReview, user: dict = Depends(require_supervisor)) -> dict:
+    reviews = read_json(MERGE_REVIEWS_PATH, [])
+    entry = {"id": f"MRG-{secrets.token_hex(4).upper()}", **review.model_dump(), "reviewed_by": user["username"], "reviewed_at_utc": datetime.now(timezone.utc).isoformat()}
+    reviews.insert(0, entry); write_json(MERGE_REVIEWS_PATH, reviews)
+    audit("duplicate_candidate_reviewed", {"entity": review.entity, "matched_entity": review.matched_entity, "decision": review.decision, "by": user["username"]})
+    return entry
+
+
 @app.post("/api/integrations")
 def configure_integration(config: IntegrationConfig, user: dict = Depends(require_supervisor)) -> dict:
     if config.enabled and PRODUCTION_MODE:
@@ -1230,6 +1495,34 @@ def notifications(user: dict = Depends(get_current_user)) -> list[dict]:
         activity = [edge for edge in records(PROCESSED / "graph_edges.csv") if node in {str(edge.get("sender", "")), str(edge.get("receiver", ""))}]
         if activity:
             items.append({"type": "watchlist", "node": node, "message": f"Watchlist activity: {len(activity)} linked transfers", "at": max((str(edge.get("timestamp", "")) for edge in activity), default="")})
+    for rule in read_json(ALERT_RULES_PATH, []):
+        if not rule.get("enabled") or rule.get("owner") != user["username"]:
+            continue
+        node = rule.get("entity", "")
+        activity = [edge for edge in records(PROCESSED / "graph_edges.csv") if not node or node in {str(edge.get("sender", "")), str(edge.get("receiver", ""))}]
+        newest_artifact = max((datetime.fromtimestamp(path.stat().st_mtime, timezone.utc) for path in RAW.glob("*") if path.is_file()), default=None)
+        try:
+            created_at = datetime.fromisoformat(str(rule.get("created_at_utc", "")).replace("Z", "+00:00"))
+        except ValueError:
+            created_at = datetime.min.replace(tzinfo=timezone.utc)
+        has_entity_evidence = not node or bool(entity_traceability(node)["csv_rows"])
+        if rule.get("new_evidence", True) and newest_artifact and newest_artifact > created_at and has_entity_evidence:
+            items.append({"type": "rule_evidence", "node": node or "Case", "message": f"Rule {rule['name']}: new supporting evidence is available", "at": newest_artifact.isoformat()})
+        if rule.get("value_threshold", True):
+            for edge in activity:
+                try:
+                    amount = float(edge.get("amount", 0) or 0)
+                except (TypeError, ValueError):
+                    continue
+                if amount >= float(rule.get("min_amount", 0) or 0):
+                    items.append({"type": "rule_value", "node": node or "Transaction", "message": f"Rule {rule['name']}: transfer of INR {amount:,.0f} meets threshold", "at": str(edge.get("timestamp", ""))})
+                    break
+        if rule.get("high_risk_cluster", False):
+            high_entities = {str(row.get("node", "")) for row in records(PROCESSED / "risk_scores.csv") if str(row.get("risk_tier", "")).upper() == "HIGH"}
+            clusters = graph_intelligence().get("clusters", [])
+            hit = next((cluster for cluster in clusters if any(entity in high_entities for entity in cluster["entities"]) and (not node or node in cluster["entities"])), None)
+            if hit:
+                items.append({"type": "rule_cluster", "node": node or hit["id"], "message": f"Rule {rule['name']}: linked to high-risk cluster {hit['id']}", "at": ""})
     for search in read_json(SAVED_SEARCHES_PATH, []):
         if not search.get("alert") or (not search.get("shared") and search.get("owner") != user["username"]):
             continue
@@ -1272,6 +1565,47 @@ def download_brief(user: dict = Depends(require_supervisor)) -> FileResponse:
         raise HTTPException(status_code=404, detail="Run the pipeline before downloading a brief.")
     custody("downloaded", "setu_brief.pdf", user, source="investigation_brief", sha256=hashlib.sha256(path.read_bytes()).hexdigest())
     return FileResponse(path, media_type="application/pdf", filename="setu_brief.pdf")
+
+
+@app.get("/api/investigation-export")
+def investigation_export(days: int = 30, risk: str = "ALL", rail: str = "ALL", min_amount: float = 0,
+                         entity: str = "", caption: str = "Selected relationship view", user: dict = Depends(require_supervisor)) -> Response:
+    """Export a presentation-ready, reproducible graph package with its methodology."""
+    model = chart_data_model(days=days, risk=risk, rail=rail, min_amount=min_amount, entity=entity, expand=True)
+    nodes, routes = exported_relationship_graph(model)
+    pdf = io.BytesIO(); page = canvas.Canvas(pdf, pagesize=landscape(A4)); width, height = landscape(A4)
+    page.setTitle("SETU investigation export")
+    page.setFont("Helvetica-Bold", 17); page.drawString(42, height - 42, "SETU · Investigation route package")
+    page.setFont("Helvetica", 9); page.drawString(42, height - 58, caption[:125])
+    filters = model["filters"]
+    page.drawString(42, height - 74, f"Filters: {filters['days']} days · risk {filters['risk']} · rail {filters['rail']} · min value ₹{filters['min_amount']:,.0f}")
+    page.drawString(42, height - 88, f"Focus: {entity or 'highest-value entity'} · {model['summary']['transfer_count']} transfers · ₹{model['summary']['transfer_value']:,.0f}")
+    draw_pdf_transaction_routes(page, nodes, routes, 42, 230, width - 84, 190)
+    y = 212; page.setFont("Helvetica-Bold", 10); page.drawString(42, y, "Selected route table")
+    page.setFont("Helvetica", 8); y -= 14
+    for route in routes[:9]:
+        page.drawString(42, y, f"{route['source'][:24]} → {route['target'][:24]}   ₹{route['value']:,.0f}   {route['count']} transfer(s)")
+        y -= 12
+    page.showPage(); y = height - 45
+    page.setFont("Helvetica-Bold", 16); page.drawString(42, y, "Methodology and traceability")
+    y -= 24; page.setFont("Helvetica", 10)
+    methodology = [
+        "Scope: the selected graph is derived from staged payment records within the recorded filters.",
+        "Route logic: directed transfers are aggregated by sender and receiver; no relationship is treated as a conclusion without corroboration.",
+        "Risk logic: each route inherits the highest risk tier of its endpoints and shared-device links are separately identified.",
+        "Traceability: node selection exposes source CSV rows, artifact hashes, device identifiers, and investigator notes.",
+        "Reproducibility: filter settings, caption, methodology, and export timestamp are included in this package."
+    ]
+    for line in methodology:
+        page.drawString(42, y, line); y -= 18
+    page.setFont("Helvetica-Bold", 10); page.drawString(42, y - 8, "Included annotations")
+    page.setFont("Helvetica", 9); y -= 24
+    for item in read_json(GRAPH_ANNOTATIONS_PATH, [])[:12]:
+        page.drawString(42, y, f"{item.get('disposition', 'reviewed').upper()} · {item.get('target', '')[:45]} · {item.get('note', '')[:75]}"); y -= 14
+    page.save()
+    audit("investigation_route_package_exported", {"entity": entity, "filters": filters, "by": user["username"]})
+    custody("exported", "investigation_route_package.pdf", user, source="investigation_export", filters=filters)
+    return Response(content=pdf.getvalue(), media_type="application/pdf", headers={"Content-Disposition": "attachment; filename=investigation_route_package.pdf"})
 
 
 @app.get("/api/case-package")

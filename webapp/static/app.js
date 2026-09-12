@@ -136,6 +136,15 @@ function formatCurrency(value) {
 }
 
 
+function formatCompactCurrency(value) {
+  const number = Number(value || 0);
+  if (number >= 10_000_000) return `₹${(number / 10_000_000).toFixed(number >= 100_000_000 ? 0 : 2)} Cr`;
+  if (number >= 100_000) return `₹${(number / 100_000).toFixed(number >= 1_000_000 ? 0 : 1)} L`;
+  if (number >= 1_000) return `₹${(number / 1_000).toFixed(1)}k`;
+  return formatCurrency(number);
+}
+
+
 function formatNumber(value) {
   return Number(value || 0).toLocaleString("en-IN");
 }
@@ -333,6 +342,7 @@ function renderMetrics() {
   const mediumCount = $("medium-count");
   const linkCount = $("link-count");
   const transactionValue = $("transaction-value");
+  const transactionValueDetail = $("transaction-value-detail");
   const transferCount = $("transfer-count");
 
   if (entityCount) {
@@ -352,10 +362,12 @@ function renderMetrics() {
   }
 
   if (transactionValue) {
-    transactionValue.textContent =
-      stats.count
-        ? formatCurrency(stats.total)
-        : "—";
+    transactionValue.textContent = stats.count ? formatCompactCurrency(stats.total) : "—";
+    transactionValue.title = stats.count ? formatCurrency(stats.total) : "";
+  }
+
+  if (transactionValueDetail) {
+    transactionValueDetail.textContent = stats.count ? formatCurrency(stats.total) : "";
   }
 
   if (transferCount) {
@@ -1679,6 +1691,11 @@ function renderNodeDetail(entityId) {
         Explain a link / trace shortest path
       </button>
 
+      <div id="node-provenance" class="node-detail-section provenance-loading">
+        <span class="eyebrow">EVIDENCE TRACEABILITY</span>
+        <p class="empty">Loading source rows, documents, device IDs, and notes…</p>
+      </div>
+
     </div>
   `;
 }
@@ -2125,7 +2142,7 @@ function renderVisualAnalysis(model) {
     {selector:".shared-device-node",style:{"border-color":"#c9ff53","border-width":4,"border-style":"double"}},
     {selector:"edge",style:{width:edge => Math.min(5, 1 + Math.sqrt(edge.data("value") || 0) / 500),"line-color":"#45656a","target-arrow-color":"#45656a","target-arrow-shape":"triangle",label:"data(label)",color:"#b6c5c8","font-size":7,"font-family":"DM Mono","text-background-color":"#10181e","text-background-opacity":.92,"text-background-padding":2,"curve-style":"bezier","text-rotation":"autorotate"}},
     {selector:".flow-out",style:{"line-color":"#71d3df","target-arrow-color":"#71d3df"}},{selector:".flow-in",style:{"line-color":"#f5b971","target-arrow-color":"#f5b971"}},{selector:".secondary-flow",style:{opacity:.42}},{selector:".shared-device-edge",style:{"line-color":"#c9ff53","target-arrow-color":"#c9ff53",width:4}}
-  ], layout:{name:"breadthfirst",roots:`#${CSS.escape(selectedId)}`,directed:false,animate:false,padding:28,spacingFactor:1.25}});
+  ], layout:{name:"concentric",concentric:node => node.hasClass("focal") ? 2 : 1,levelWidth:() => 1,minNodeSpacing:72,avoidOverlap:true,animate:false,padding:42,startAngle:-Math.PI / 2}});
   state.visual.cy.on("tap", "node", event => selectNetworkNode(event.target.id()));
   const insights = $("relationship-insights");
   if (insights) insights.innerHTML = model.selected.counterparties.slice(0, 3).map(item => `<button type="button" data-network-node="${escapeHtml(item.id)}"><span>${escapeHtml(item.id)}</span><strong>${formatCurrency(item.value)}</strong><small>${item.count} transfers</small></button>`).join("") || '<span>No filtered counterparties.</span>';
@@ -2151,6 +2168,53 @@ function setupVisualAnalysis() {
   $("visual-min-amount")?.addEventListener("change", event => { state.visual.minAmount = Number(event.target.value || 0); state.visual.expand = false; refreshVisualAnalysis(); });
   $("visual-rail")?.addEventListener("change", event => { state.visual.rail = event.target.value; state.visual.expand = false; refreshVisualAnalysis(); });
   $("visual-expand")?.addEventListener("click", () => { state.visual.expand = !state.visual.expand; $("visual-expand").textContent = state.visual.expand ? "Return to one hop" : "Expand one more hop"; refreshVisualAnalysis(); });
+  const dialog = $("relationship-dialog"), card = $("relationship-card"), dialogContent = $("relationship-dialog-content");
+  let cardPlaceholder = null;
+  const resizeRelationshipGraph = (fullscreen = false) => {
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const graph = state.visual.cy;
+      if (!graph) return;
+      graph.resize();
+      const spacing = fullscreen ? 120 : 72, padding = fullscreen ? 86 : 36;
+      const layout = graph.layout({name:"concentric",concentric:node => node.hasClass("focal") ? 2 : 1,levelWidth:() => 1,minNodeSpacing:spacing,avoidOverlap:true,animate:false,padding,startAngle:-Math.PI / 2});
+      const fitGraph = () => { graph.resize(); graph.fit(graph.elements(), padding); };
+      layout.one("layoutstop", fitGraph); layout.run();
+      // Fullscreen dimensions settle after the browser's fullscreenchange event.
+      window.setTimeout(fitGraph, 160);
+    }));
+  };
+  const restoreRelationshipCard = () => {
+    if (!cardPlaceholder || !card) return;
+    cardPlaceholder.replaceWith(card); cardPlaceholder = null;
+    resizeRelationshipGraph();
+  };
+  const fullscreenButton = $("relationship-fullscreen");
+  const updateFullscreenState = () => {
+    const isFullscreen = document.fullscreenElement === card;
+    if (fullscreenButton) fullscreenButton.textContent = isFullscreen ? "Exit fullscreen" : "Go fullscreen";
+    resizeRelationshipGraph(isFullscreen);
+  };
+  fullscreenButton?.addEventListener("click", async () => {
+    if (!card) return;
+    if (document.fullscreenElement === card) { await document.exitFullscreen(); return; }
+    if (typeof card.requestFullscreen === "function") {
+      try { await card.requestFullscreen(); return; } catch (_) { /* Fall back below if the browser declines native fullscreen. */ }
+    }
+    // Older browsers retain the modal view as a graceful fallback.
+    if (!dialog || !dialogContent || dialog.open) return;
+    cardPlaceholder = document.createComment("fullscreen relationship graph");
+    card.replaceWith(cardPlaceholder); dialogContent.append(card);
+    if (typeof dialog.showModal === "function") dialog.showModal();
+    else { dialog.setAttribute("open", ""); dialog.classList.add("relationship-dialog-fallback"); }
+    resizeRelationshipGraph(true);
+  });
+  $("relationship-dialog-close")?.addEventListener("click", () => {
+    if (!dialog) return;
+    if (typeof dialog.close === "function") dialog.close();
+    else { dialog.removeAttribute("open"); dialog.classList.remove("relationship-dialog-fallback"); restoreRelationshipCard(); }
+  });
+  dialog?.addEventListener("close", restoreRelationshipCard);
+  document.addEventListener("fullscreenchange", updateFullscreenState);
 }
 
 
@@ -2172,6 +2236,7 @@ function selectNetworkNode(entityId) {
   renderNetworkList();
   renderGraph();
   renderNodeDetail(id);
+  if (typeof window.loadNodeProvenance === "function") window.loadNodeProvenance(id);
   state.visual.expand = false;
   refreshVisualAnalysis();
 }
@@ -2531,6 +2596,11 @@ function applyCaseData(data) {
   state.evidence_annotations = data.evidence_annotations || {};
   state.disclosures = arrayOrEmpty(data.disclosures);
   state.report_schedules = arrayOrEmpty(data.report_schedules);
+  state.graph_views = arrayOrEmpty(data.graph_views);
+  state.case_narratives = arrayOrEmpty(data.case_narratives);
+  state.alert_rules = arrayOrEmpty(data.alert_rules);
+  state.merge_reviews = arrayOrEmpty(data.merge_reviews);
+  state.graph_annotations = arrayOrEmpty(data.graph_annotations);
 
   state.audit =
     arrayOrEmpty(
