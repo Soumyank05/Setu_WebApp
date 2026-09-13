@@ -9,6 +9,12 @@
   window.render = function () {
     priorRender();
     const intelligence = state.graph_intelligence || {};
+    const bulkAssignee = byId("bulk-assignee");
+    if (bulkAssignee) {
+      const selected = bulkAssignee.value;
+      bulkAssignee.innerHTML = '<option value="">Choose assignee when assigning</option>' + (state.assignees || []).map(account => `<option value="${safe(account.username)}">${safe(account.username)} · ${safe(account.role)}</option>`).join("");
+      if ([...bulkAssignee.options].some(option => option.value === selected)) bulkAssignee.value = selected;
+    }
     list("cluster-list", intelligence.clusters, c => `<div class="ops-row"><strong>${safe(c.id)} · ${c.entity_count} entities</strong><small>${safe(c.signal)} · ${c.links} internal links</small><small>${safe(c.entities.join(" → "))}</small></div>`);
     list("timeline-list", (intelligence.timeline || []).slice(-100), (edge, index) => `<div class="ops-row" data-timeline-index="${index}" data-timestamp="${safe(edge.timestamp)}"><strong>${safe(edge.sender)} → ${safe(edge.receiver)} · ₹${safe(edge.amount)}</strong><small>${safe(edge.timestamp)}</small></div>`);
     list("collaboration-list", state.collaboration, item => `<div class="ops-row"><strong>${safe(item.kind.replace("_", " "))}${item.entity ? " · " + safe(item.entity) : ""}</strong><small>${safe(item.text)} — ${safe(item.author)} ${item.mention ? "→ " + safe(item.mention) : ""}</small></div>`);
@@ -21,7 +27,6 @@
     list("duplicate-match-list", state.duplicate_matches, item => `<div class="ops-row"><strong>${safe(item.entity)} ↔ ${safe(item.matched_entity)} · ${safe(item.case_reference)}</strong><small>${safe(item.identifiers.join(", "))} · candidate match; review before association</small></div>`);
   };
 
-  byId("graph-trace-form")?.addEventListener("submit", async e => { e.preventDefault(); try { const result = await post("/api/graph/trace", Object.fromEntries(new FormData(e.currentTarget))); byId("graph-trace-result").innerHTML = result.connected ? `<div class="ops-row"><strong>${safe(result.nodes.join(" → "))}</strong><small>${result.steps.map(s => `${safe(s.relationship)} · ₹${safe(s.amount)} · ${safe(s.timestamp)}`).join("<br>")}</small></div>` : "No path found between those entities."; } catch(err) { toast(err.message); }});
   byId("bulk-action-form")?.addEventListener("submit", async e => { e.preventDefault(); try { const d = Object.fromEntries(new FormData(e.currentTarget)); d.nodes = d.nodes.split(",").map(x => x.trim()).filter(Boolean); const x = await post("/api/bulk-actions", d); toast(`${x.updated} entities updated.`); await load(); } catch(err) { toast(err.message); }});
   byId("collaboration-form")?.addEventListener("submit", async e => { e.preventDefault(); try { await post("/api/collaboration", Object.fromEntries(new FormData(e.currentTarget))); e.currentTarget.reset(); await load(); toast("Collaboration record added."); } catch(err) { toast(err.message); }});
   byId("saved-search-form")?.addEventListener("submit", async e => { e.preventDefault(); try { const d = Object.fromEntries(new FormData(e.currentTarget)); d.shared = e.currentTarget.elements.shared.checked; d.alert = e.currentTarget.elements.alert.checked; await post("/api/saved-searches", d); e.currentTarget.reset(); await load(); toast("Search saved."); } catch(err) { toast(err.message); }});
@@ -31,8 +36,5 @@
   byId("case-link-form")?.addEventListener("submit", async e => { e.preventDefault(); try { await post("/api/case-links", Object.fromEntries(new FormData(e.currentTarget))); e.currentTarget.reset(); await load(); toast("Related case associated."); } catch(err) { toast(err.message); }});
   byId("sensitive-action-form")?.addEventListener("submit", async e => { e.preventDefault(); try { await post("/api/sensitive-actions", Object.fromEntries(new FormData(e.currentTarget))); e.currentTarget.reset(); await load(); toast("Approval request sent to a different supervisor."); } catch(err) { toast(err.message); }});
   document.addEventListener("click", async e => { const apply = e.target.closest("[data-apply-template]"), done = e.target.closest("[data-complete-task]"); try { if (apply) { await post(`/api/templates/${encodeURIComponent(apply.dataset.applyTemplate)}/apply`, {}); await load(); toast("Checklist tasks created."); } if (done) { await post(`/api/tasks/${encodeURIComponent(done.dataset.completeTask)}`, {status:"done", note:"Completed from investigation operations."}); await load(); toast("Task marked done."); } } catch(err) { toast(err.message); }});
-  let playbackTimer = null;
-  byId("timeline-play")?.addEventListener("click", () => { const rows = [...document.querySelectorAll("[data-timeline-index]")]; let cursor = 0; clearInterval(playbackTimer); playbackTimer = setInterval(() => { rows.forEach(row => row.classList.remove("playing")); if (cursor >= rows.length) { clearInterval(playbackTimer); return; } rows[cursor].classList.add("playing"); rows[cursor].scrollIntoView({block:"nearest"}); byId("timeline-progress").textContent = `${cursor + 1}/${rows.length}`; cursor += 1; }, 700); });
-  byId("timeline-stop")?.addEventListener("click", () => { clearInterval(playbackTimer); document.querySelectorAll("[data-timeline-index]").forEach(row => row.classList.remove("playing")); byId("timeline-progress").textContent = ""; });
   byId("verify-audit")?.addEventListener("click", async () => { try { const r = await fetch("/api/audit/verify"); const data = await r.json(); if (!r.ok) throw new Error(data.detail || "Verification failed"); byId("audit-verification").innerHTML = `<strong class="${data.valid ? "audit-valid" : "audit-invalid"}">${data.valid ? "HASH CHAIN VALID" : "CHAIN VERIFICATION FAILED"}</strong><small> ${data.checked} entries checked · checkpoint ${safe((data.checkpoint || "").slice(0, 16))}…</small>`; } catch(err) { toast(err.message); }});
 })();

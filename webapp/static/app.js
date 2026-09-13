@@ -30,6 +30,7 @@ const state = {
   reviews: {},
   status_updates: {},
   assignments: {},
+  assignees: [],
   watchlists: {},
   notifications: [],
   custody: [],
@@ -2576,6 +2577,7 @@ function applyCaseData(data) {
     data.status_updates || {};
 
   state.assignments = data.assignments || {};
+  state.assignees = arrayOrEmpty(data.assignees);
   state.watchlists = data.watchlists || {};
   state.custody = arrayOrEmpty(data.custody);
   state.entity_attributes = data.entity_attributes || {};
@@ -2771,6 +2773,14 @@ function renderAssignmentAndAnalytics() {
   if (approvalPanel) approvalPanel.hidden = !supervisor;
   const assignmentNode = $("assignment-node");
   if (assignmentNode && supervisor) assignmentNode.innerHTML = state.scores.filter(row => getRisk(row) !== "LOW").map(row => `<option value="${escapeHtml(getEntityId(row))}">${escapeHtml(getEntityId(row))}</option>`).join("");
+  const assignmentAssignee = $("assignment-assignee");
+  if (assignmentAssignee && supervisor) {
+    const selected = assignmentAssignee.value;
+    assignmentAssignee.innerHTML = state.assignees.length
+      ? state.assignees.map(account => `<option value="${escapeHtml(account.username)}">${escapeHtml(account.username)} · ${escapeHtml(account.role)}</option>`).join("")
+      : '<option value="">No active accounts available</option>';
+    if ([...assignmentAssignee.options].some(option => option.value === selected)) assignmentAssignee.value = selected;
+  }
   const tagNode = $("tag-node");
   if (tagNode) tagNode.innerHTML = state.scores.filter(row => getRisk(row) !== "LOW").map(row => `<option value="${escapeHtml(getEntityId(row))}">${escapeHtml(getEntityId(row))}</option>`).join("");
   const watched = arrayOrEmpty(state.watchlists?.[String(state.auth?.id)]);
@@ -2822,6 +2832,15 @@ function renderStatusUpdates() {
 }
 
 function setupCasework() {
+  const assignmentDueDate = $("assignment-due-date");
+  if (assignmentDueDate) {
+    assignmentDueDate.addEventListener("click", () => {
+      // Chromium-based browsers expose showPicker(); other browsers retain
+      // their standard date-input calendar behavior.
+      try { assignmentDueDate.showPicker?.(); } catch (_) { /* native picker is already handling the click */ }
+    });
+  }
+
   const bind = (id, handler) => {
     const form = $(id);
     if (form) form.addEventListener("submit", handler);
@@ -2870,7 +2889,15 @@ function setupCasework() {
 
   bind("assignment-form", async event => {
     event.preventDefault();
-    try { await requestJson("/api/assignments", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(Object.fromEntries(new FormData(event.currentTarget))) }); await load(); toast("Entity assignment saved."); } catch (error) { toast(error.message); }
+    try {
+      const saved = await requestJson("/api/assignments", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(Object.fromEntries(new FormData(event.currentTarget))) });
+      // Reflect the confirmed assignment immediately; load() then refreshes the
+      // rest of the case data without making the operator refresh the page.
+      state.assignments = { ...state.assignments, [saved.node]: saved };
+      render();
+      await load();
+      toast("Entity assignment saved.");
+    } catch (error) { toast(error.message); }
   });
   bind("external-request-form", async event => {
     event.preventDefault();

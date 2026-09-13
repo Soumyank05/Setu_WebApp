@@ -491,8 +491,8 @@
       <p class="eyebrow">SUPERVISOR CONTROLS</p><h3>Assign flagged entity</h3>
       <form id="assignment-form" class="status-update-form">
         <label>Entity<select id="assignment-node" name="node" required></select></label>
-        <label>Assignee<input name="assignee" required placeholder="investigator.username"></label>
-        <label>Due date<input name="due_date" type="date"></label>
+        <label>Assignee<select id="assignment-assignee" name="assignee" required></select></label>
+        <label>Due date<input id="assignment-due-date" name="due_date" type="date" title="Choose a due date from the calendar"></label>
         <label>Priority<select name="priority"><option value="normal">Normal</option><option value="high">High</option><option value="urgent">Urgent</option><option value="low">Low</option></select></label>
         <button class="primary" type="submit">Assign</button>
       </form>
@@ -1103,14 +1103,14 @@
        ===================================================== -->
 
   <section id="operations" class="view">
-    <div class="section-heading"><div><p class="eyebrow">INVESTIGATION OPERATIONS</p><h2>Graph intelligence &amp; controlled workflows</h2></div><p class="hint">All relationship signals are investigative leads, not conclusions.</p></div>
+    <div class="section-heading"><div><p class="eyebrow">INVESTIGATION OPERATIONS</p><h2>Case actions &amp; investigation tools</h2></div><p class="hint">Changes are saved to the case server and recorded in the audit trail.</p></div>
     <div class="ops-grid">
       <article class="panel"><p class="eyebrow">PATH COMPARISON</p><h3>Rank every meaningful route</h3><form id="graph-trace-form" class="compact-form"><input name="source" placeholder="Source entity" required><input name="target" placeholder="Target entity" required><button class="primary">Compare routes</button></form><div id="graph-trace-result" class="ops-result">Compare routes by transferable value, hops, and endpoint risk.</div></article>
       <article class="panel"><p class="eyebrow">SUSPECTED RINGS</p><h3>Detected clusters</h3><div id="cluster-list" class="ops-result"></div></article>
-      <article class="panel"><p class="eyebrow">TRANSACTION PLAYBACK</p><h3>Replay transfers over time</h3><div class="playback-controls"><label>From <input id="playback-from" type="date"></label><label>To <input id="playback-to" type="date"></label><label>Speed <select id="playback-speed"><option value="1100">Slow</option><option value="650" selected>Normal</option><option value="280">Fast</option></select></label><label>Pause at <input id="playback-pause" type="number" min="1" placeholder="#"></label><button id="timeline-play" class="outline" type="button">Play</button><button id="timeline-pause" class="outline" type="button">Pause</button><button id="timeline-stop" class="outline" type="button">Reset</button><span id="timeline-progress"></span></div><div id="timeline-list" class="ops-result"></div></article>
+      <article class="panel"><p class="eyebrow">TRANSACTION PLAYBACK</p><h3>Replay transfers over time</h3><details class="ops-disclosure"><summary>Open playback controls</summary><div class="playback-controls"><label>From <input id="playback-from" type="date"></label><label>To <input id="playback-to" type="date"></label><label>Speed <select id="playback-speed"><option value="1100">Slow</option><option value="650" selected>Normal</option><option value="280">Fast</option></select></label><label>Pause at <input id="playback-pause" type="number" min="1" placeholder="#"></label><button id="timeline-play" class="outline" type="button">Play</button><button id="timeline-pause" class="outline" type="button">Pause</button><button id="timeline-stop" class="outline" type="button">Reset</button><span id="timeline-progress"></span></div><div id="timeline-list" class="ops-result"></div></details></article>
     </div>
     <div class="ops-grid">
-      <article class="panel"><p class="eyebrow">BULK CASE ACTIONS</p><h3>Update selected entities</h3><form id="bulk-action-form" class="compact-form"><input name="nodes" placeholder="Entity IDs, comma-separated" required><select name="action"><option value="watch">Add to watchlist</option><option value="status">Update status</option><option value="tag">Apply tag</option><option value="assign">Assign</option></select><input name="assignee" placeholder="Assignee (for assign)"><input name="tag" placeholder="Tag (for tag)"><select name="status"><option value="in_progress">In progress</option><option value="monitoring">Monitoring</option><option value="new">New</option></select><button class="primary">Apply action</button></form></article>
+      <article class="panel"><p class="eyebrow">BULK CASE ACTIONS</p><h3>Update selected entities</h3><form id="bulk-action-form" class="compact-form"><input name="nodes" placeholder="Entity IDs, comma-separated" required><select name="action"><option value="watch">Add to watchlist</option><option value="status">Update status</option><option value="tag">Apply tag</option><option value="assign">Assign</option></select><select id="bulk-assignee" name="assignee"><option value="">Choose assignee when assigning</option></select><input name="tag" placeholder="Tag (for tag)"><select name="status"><option value="in_progress">In progress</option><option value="monitoring">Monitoring</option><option value="new">New</option></select><button class="primary">Save changes</button></form></article>
       <article class="panel"><p class="eyebrow">COLLABORATION &amp; HANDOFFS</p><h3>Internal case log</h3><form id="collaboration-form" class="compact-form"><select name="kind"><option value="comment">Internal comment</option><option value="handoff">Handoff note</option><option value="waiting_on">Waiting on</option></select><input name="entity" placeholder="Entity (optional)"><input name="mention" placeholder="@mention (optional)"><textarea name="text" placeholder="Secure internal note" required></textarea><button class="outline">Add record</button></form><div id="collaboration-list" class="ops-result"></div></article>
       <article class="panel"><p class="eyebrow">AUDIT-LOG HARDENING</p><h3>Chained-log verification</h3><button id="verify-audit" class="outline">Verify hash chain</button><div id="audit-verification" class="ops-result">Verification has not run this session.</div></article>
     </div>
@@ -1119,6 +1119,7 @@
       <article class="panel"><p class="eyebrow">RETENTION &amp; LEGAL HOLD</p><h3>Evidence lifecycle</h3><form id="retention-form" class="compact-form"><input name="retention_deadline" type="date"><label><input name="legal_hold" type="checkbox"> Legal hold</label><input name="reason" placeholder="Authority or retention basis"><button class="outline">Save lifecycle policy</button></form><div id="retention-status" class="ops-result"></div></article>
       <article class="panel"><p class="eyebrow">CONTROLLED INTAKE</p><h3>Operational connectors</h3><form id="integration-form" class="compact-form"><select name="connector"><option value="telecom">Telecom</option><option value="bank_payment">Bank / payment</option><option value="platform">Platform</option><option value="forensic_lab">Forensic lab</option><option value="secure_documents">Secure documents</option></select><select name="intake_mode"><option value="manual_review">Manual review</option><option value="approved_pull">Approved pull</option></select><label><input name="enabled" type="checkbox"> Enabled</label><button class="outline">Update connector</button></form><div id="integration-list" class="ops-result"></div></article>
     </div>
+    <details class="advanced-operations"><summary>Advanced investigation controls</summary><p>Use these tools for formal reporting, monitoring, cross-case work, and exception requests.</p>
     <div class="ops-grid">
       <article class="panel"><p class="eyebrow">SAVED GRAPH VIEWS</p><h3>Name, save, and share a view</h3><form id="graph-view-form" class="compact-form"><input name="name" placeholder="View name" required><input name="entity" placeholder="Focus entity (optional)"><label><input name="shared" type="checkbox"> Share with case team</label><button class="outline">Save current filters</button></form><div id="graph-view-list" class="ops-result"></div></article>
       <article class="panel"><p class="eyebrow">CASE NARRATIVE BUILDER</p><h3>Presentation-ready finding</h3><form id="narrative-form" class="compact-form"><input name="title" placeholder="Finding title" required><input name="entity" placeholder="Related entity (optional)"><textarea name="summary" placeholder="Corroborated observation, route, and next step" required></textarea><input name="findings" placeholder="Finding IDs, comma-separated"><label><input name="include_graph" type="checkbox" checked> Include selected graph</label><label><input name="include_annotations" type="checkbox" checked> Include annotations</label><button class="outline">Add to brief</button></form><div id="narrative-list" class="ops-result"></div></article>
@@ -1138,6 +1139,7 @@
       <article class="panel"><p class="eyebrow">APPROVAL-GATED ACTION</p><h3>Request an exception</h3><form id="sensitive-action-form" class="compact-form"><select name="action"><option value="evidence_export">Evidence export</option><option value="evidence_replacement">Evidence replacement</option><option value="watchlist_removal">Watchlist removal</option><option value="case_closure">Case closure</option><option value="retention_disposition">Retention disposition</option></select><input name="node" placeholder="Entity or CASE" value="CASE"><textarea name="reason" placeholder="Reason and authority" required></textarea><button class="primary">Request approval</button></form></article>
       <article class="panel"><p class="eyebrow">DUPLICATE CANDIDATES</p><h3>Cross-case identifier matches</h3><div id="duplicate-match-list" class="ops-result">Register another case to compare identifiers.</div></article>
     </div>
+    </details>
   </section>
 
   <section
@@ -1513,8 +1515,8 @@
      SCRIPTS
      ===================================================== -->
 
-<script src="/static/app.js?v=20260912-6"></script>
-<script src="/static/operations.js?v=20260912-5"></script>
+<script src="/static/app.js?v=20260913-3"></script>
+<script src="/static/operations.js?v=20260913-1"></script>
 <script src="/static/advanced-operations.js?v=20260912-1"></script>
 <script src="/static/workspace.js?v=20260911-4"></script>
 

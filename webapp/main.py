@@ -420,6 +420,30 @@ def require_supervisor(user: dict = Depends(get_current_user)) -> dict:
     return user
 
 
+def active_assignees() -> list[dict]:
+    """Return accounts that can safely be selected as case assignees."""
+    with db() as connection:
+        rows = connection.execute(
+            """SELECT id, username, role FROM users
+               WHERE is_active = 1 AND locked_at IS NULL
+               ORDER BY username COLLATE NOCASE"""
+        ).fetchall()
+    return [public_user(row) for row in rows]
+
+
+def resolve_active_assignee(username: str) -> str:
+    """Resolve a submitted account name to its stored, active username."""
+    with db() as connection:
+        row = connection.execute(
+            """SELECT username FROM users
+               WHERE username = ? AND is_active = 1 AND locked_at IS NULL""",
+            (username.strip(),),
+        ).fetchone()
+    if not row:
+        raise HTTPException(status_code=422, detail="Select an active account from the assignee list.")
+    return row["username"]
+
+
 @app.on_event("startup")
 def initialize() -> None:
     init_auth_db()
@@ -788,7 +812,7 @@ def save_security_policy(policy: SecurityPolicy, admin: dict = Depends(require_a
 
 
 @app.get("/api/case")
-def case_data(_: dict = Depends(get_current_user)) -> dict:
+def case_data(user: dict = Depends(get_current_user)) -> dict:
     scores = records(PROCESSED / "risk_scores.csv")
     links = records(PROCESSED / "entity_links.csv")
     edges = records(PROCESSED / "graph_edges.csv")
@@ -815,6 +839,8 @@ def case_data(_: dict = Depends(get_current_user)) -> dict:
         "evidence_annotations": read_json(EVIDENCE_ANNOTATIONS_PATH, {}),
         "disclosures": read_json(DISCLOSURES_PATH, []),
         "report_schedules": read_json(REPORT_SCHEDULES_PATH, []),
+        # Account names are shared only with users who can assign work.
+        "assignees": active_assignees() if user["role"] in {"admin", "supervisor"} else [],
         "audit": [json.loads(line) for line in AUDIT_PATH.read_text().splitlines()[-20:]] if AUDIT_PATH.exists() else [],
         "report_available": (REPORT / "setu_brief.pdf").exists(),
     }
@@ -1309,10 +1335,11 @@ def save_assignment(assignment: Assignment, admin: dict = Depends(require_superv
     assignments = read_json(ASSIGNMENTS_PATH, {})
     priority_days = {"urgent": 0, "high": 1, "normal": 3, "low": 7}
     due_date = assignment.due_date or (datetime.now(timezone.utc).date() + timedelta(days=priority_days[assignment.priority])).isoformat()
-    entry = {**assignment.model_dump(), "due_date": due_date, "due_date_auto_set": not bool(assignment.due_date), "updated_at_utc": datetime.now(timezone.utc).isoformat(), "assigned_by": admin["username"]}
+    assignee = resolve_active_assignee(assignment.assignee)
+    entry = {**assignment.model_dump(), "assignee": assignee, "due_date": due_date, "due_date_auto_set": not bool(assignment.due_date), "updated_at_utc": datetime.now(timezone.utc).isoformat(), "assigned_by": admin["username"]}
     assignments[assignment.node] = entry
     write_json(ASSIGNMENTS_PATH, assignments)
-    audit("entity_assigned", {"node": assignment.node, "assignee": assignment.assignee, "due_date": assignment.due_date, "by": admin["username"]})
+    audit("entity_assigned", {"node": assignment.node, "assignee": assignee, "due_date": due_date, "by": admin["username"]})
     return entry
 
 
@@ -1337,8 +1364,9 @@ def bulk_actions(action: BulkAction, user: dict = Depends(get_current_user)) -> 
     if action.action == "assign":
         if user["role"] not in {"admin", "supervisor"} or not action.assignee:
             raise HTTPException(status_code=403, detail="A supervisor and assignee are required for bulk assignment.")
+        assignee = resolve_active_assignee(action.assignee)
         assignments = read_json(ASSIGNMENTS_PATH, {})
-        for node in nodes: assignments[node] = {"node": node, "assignee": action.assignee, "priority": "normal", "due_date": "", "updated_at_utc": datetime.now(timezone.utc).isoformat(), "assigned_by": user["username"]}
+        for node in nodes: assignments[node] = {"node": node, "assignee": assignee, "priority": "normal", "due_date": "", "updated_at_utc": datetime.now(timezone.utc).isoformat(), "assigned_by": user["username"]}
         write_json(ASSIGNMENTS_PATH, assignments)
     elif action.action == "tag":
         if not action.tag: raise HTTPException(status_code=400, detail="Select a tag for this bulk action.")

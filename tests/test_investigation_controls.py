@@ -10,6 +10,24 @@ from webapp import main
 
 
 class InvestigationControlTests(unittest.TestCase):
+    def test_assignment_resolves_an_active_account_and_rejects_unknown_accounts(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            database, assignments, audit_path = root / "users.sqlite3", root / "assignments.json", root / "audit.jsonl"
+            with patch.object(main, "AUTH_DB", database), patch.object(main, "ASSIGNMENTS_PATH", assignments), patch.object(main, "AUDIT_PATH", audit_path), patch.object(main, "PROCESSED", root):
+                main.init_auth_db()
+                with main.db() as connection:
+                    connection.execute(
+                        "INSERT INTO users (username, password_hash, role, created_at) VALUES (?, ?, ?, ?)",
+                        ("Analyst.One", "unused", "investigator", "2026-01-01T00:00:00+00:00"),
+                    )
+                saved = main.save_assignment(main.Assignment(node="ENTITY-1", assignee="analyst.one"), {"username": "supervisor"})
+                self.assertEqual(saved["assignee"], "Analyst.One")
+                self.assertEqual(main.active_assignees(), [{"id": 1, "username": "Analyst.One", "role": "investigator"}])
+                with self.assertRaises(main.HTTPException) as error:
+                    main.save_assignment(main.Assignment(node="ENTITY-2", assignee="missing.user"), {"username": "supervisor"})
+            self.assertEqual(error.exception.status_code, 422)
+
     def test_shortest_path_returns_the_minimum_hops(self):
         edges = [
             {"sender": "A", "receiver": "B", "amount": 10, "timestamp": "2026-01-01"},
