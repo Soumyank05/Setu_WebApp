@@ -514,6 +514,22 @@ function renderRiskDistribution() {
 }
 
 
+function renderModelStatus() {
+  const scores = arrayOrEmpty(state.scores);
+  const versions = [...new Set(scores.map(row => String(row.scoring_model_version || "").trim()).filter(Boolean))];
+  const reviewCount = scores.filter(row => getRisk(row) !== "LOW").length;
+  const signalCounts = {};
+  scores.filter(row => getRisk(row) !== "LOW").forEach(row => getSignals(row).forEach(([, label]) => { signalCounts[label] = (signalCounts[label] || 0) + 1; }));
+  const topSignal = Object.entries(signalCounts).sort((a, b) => b[1] - a[1])[0];
+  const version = $("model-version"), queue = $("model-review-count"), paths = $("model-path-count"), signal = $("model-top-signal"), badge = $("model-status-badge");
+  if (version) version.textContent = versions.length === 1 ? versions[0] : versions.length ? "Mixed versions" : "Legacy / unavailable";
+  if (queue) queue.textContent = scores.length ? reviewCount : "—";
+  if (paths) paths.textContent = scores.length ? state.risk_paths.length : "—";
+  if (signal) signal.textContent = topSignal ? `${topSignal[0]} · ${topSignal[1]}` : "—";
+  if (badge) badge.textContent = scores.length ? (versions.length <= 1 ? "VERSIONED" : "REVIEW MIXED") : "AWAITING DATA";
+}
+
+
 /* =========================================================
    SYSTEM HEALTH
    ========================================================= */
@@ -2652,6 +2668,8 @@ function render() {
   renderStatus();
 
   renderRiskDistribution();
+
+  renderModelStatus();
 
   renderHealth();
 

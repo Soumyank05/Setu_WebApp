@@ -625,6 +625,17 @@ button {
   padding: 21px;
 }
 
+.model-status-panel { grid-column: 1 / -1; }
+.model-status-grid { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:12px; margin-top:20px; }
+.model-status-grid > div { min-width:0; padding:13px; border:1px solid var(--line); border-radius:6px; background:#0c1318; }
+.model-status-grid span,.model-status-grid small { display:block; color:var(--muted); font:10px "DM Mono"; }
+.model-status-grid strong { display:block; overflow:hidden; margin:8px 0 5px; color:var(--lime); font:15px "DM Mono"; text-overflow:ellipsis; white-space:nowrap; }
+.model-status-grid small { line-height:1.4; }
+
+@media (max-width: 760px) {
+  .model-status-grid { grid-template-columns:repeat(2, minmax(0, 1fr)); }
+}
+
 .panel-heading {
   display: flex;
 
