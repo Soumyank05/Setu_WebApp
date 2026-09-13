@@ -20,6 +20,8 @@ PROCESSED_DIR, REPORT_DIR = ROOT / "data" / "processed", Path(__file__).parent
 def build_brief() -> dict:
     manifest = json.loads((PROCESSED_DIR / "manifest.json").read_text())
     scores = pd.read_csv(PROCESSED_DIR / "risk_scores.csv")
+    paths_path = PROCESSED_DIR / "risk_paths.csv"
+    paths = pd.read_csv(paths_path) if paths_path.exists() else pd.DataFrame()
     links_path = PROCESSED_DIR / "entity_links.csv"
     links = pd.read_csv(links_path) if links_path.exists() else pd.DataFrame()
     entities = []
@@ -30,14 +32,15 @@ def build_brief() -> dict:
             labels = [("shared_device", "shared device"), ("multi_hop_routing", "multi-hop routing"), ("high_velocity_fanout", "high-velocity fan-out"), ("high_in_degree", "high in-degree")]
             reasons = [label for field, label in labels if getattr(row, field)]
         entities.append({"entity_id": str(row.node), "risk_score": int(row.risk_score), "risk_tier": row.risk_tier, "reasons": reasons})
-    return {"brief_title": "SETU Investigative Brief", "generated_at_utc": datetime.now(timezone.utc).isoformat(), "evidence_manifest": manifest, "flagged_entities": entities, "entity_links": links.to_dict("records"), "recommended_actions": [f"Prioritize account-freeze review for {sum(item['risk_tier'] == 'HIGH' for item in entities)} HIGH-risk entities.", "Verify shared-device links with the telecom provider before escalation.", "Request PSP KYC details for unmapped cash-out handles."]}
+    versions = scores.get("scoring_model_version", pd.Series(dtype="string")).dropna().astype(str).unique()
+    return {"brief_title": "SETU Investigative Brief", "generated_at_utc": datetime.now(timezone.utc).isoformat(), "scoring_model_version": versions[0] if len(versions) == 1 else "legacy-or-mixed", "evidence_manifest": manifest, "flagged_entities": entities, "flagged_paths": paths[paths.get("path_tier", pd.Series(dtype="string")) != "LOW"].head(50).to_dict("records"), "entity_links": links.to_dict("records"), "recommended_actions": [f"Prioritize account-freeze review for {sum(item['risk_tier'] == 'HIGH' for item in entities)} HIGH-risk entities.", "Verify shared-device links with the telecom provider before escalation.", "Request PSP KYC details for unmapped cash-out handles."]}
 
 
 def write_pdf(brief: dict, output: Path) -> None:
     doc = SimpleDocTemplate(str(output), pagesize=A4, leftMargin=18 * mm, rightMargin=18 * mm, topMargin=18 * mm, bottomMargin=18 * mm)
     styles = getSampleStyleSheet(); heading = ParagraphStyle("heading", parent=styles["Heading2"], spaceBefore=10, spaceAfter=5)
     metadata = ParagraphStyle("metadata", parent=styles["Normal"], fontSize=8, textColor=colors.grey)
-    story = [Paragraph(brief["brief_title"], styles["Title"]), Paragraph(f"Generated: {brief['generated_at_utc']}", metadata), HRFlowable(width="100%", color=colors.grey), Paragraph("Evidence integrity", heading)]
+    story = [Paragraph(brief["brief_title"], styles["Title"]), Paragraph(f"Generated: {brief['generated_at_utc']} · Scoring rules: {brief['scoring_model_version']}", metadata), Paragraph(f"Rapid, value-retaining paths surfaced for review: {len(brief['flagged_paths'])}.", metadata), HRFlowable(width="100%", color=colors.grey), Paragraph("Evidence integrity", heading)]
     evidence = [["Source", "SHA-256", "Bytes"]] + [[name, details["sha256"][:24] + "…", str(details["size_bytes"])] for name, details in brief["evidence_manifest"].items()]
     flagged = [["Entity", "Score", "Tier", "Reasons"]] + [[item["entity_id"], str(item["risk_score"]), item["risk_tier"], ", ".join(item["reasons"])] for item in brief["flagged_entities"]]
     for table_data in (evidence, flagged):

@@ -816,12 +816,13 @@ def save_security_policy(policy: SecurityPolicy, admin: dict = Depends(require_a
 @app.get("/api/case")
 def case_data(user: dict = Depends(get_current_user)) -> dict:
     scores = records(PROCESSED / "risk_scores.csv")
+    risk_paths = records(PROCESSED / "risk_paths.csv")
     links = records(PROCESSED / "entity_links.csv")
     edges = records(PROCESSED / "graph_edges.csv")
     manifest_path = PROCESSED / "manifest.json"
     manifest = json.loads(manifest_path.read_text()) if manifest_path.exists() else {}
     return {
-        "ready": bool(scores), "scores": scores, "links": links, "edges": edges,
+        "ready": bool(scores), "scores": scores, "risk_paths": risk_paths, "links": links, "edges": edges,
         "manifest": manifest, "case": read_json(CASE_PATH, {}), "notes": read_json(NOTES_PATH, []),
         "reviews": read_json(REVIEWS_PATH, {}), "status_updates": read_json(STATUS_UPDATES_PATH, {}),
         "approvals": read_json(APPROVALS_PATH, []),

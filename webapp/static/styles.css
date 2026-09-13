@@ -1771,6 +1771,17 @@ tbody tr:hover {
   margin-top: 3px;
 }
 
+/* Expose the score composition without requiring investigators to infer it. */
+.score-explanation { display:grid; grid-template-columns:1fr auto; gap:4px 12px; padding:12px; margin:14px 0 4px; border:1px solid var(--line); border-radius:6px; background:#c9ff5309; }
+.score-explanation span,.score-explanation small,.signal-row small { color:var(--muted); font:10px "DM Mono"; }
+.score-explanation strong { color:var(--lime); font:18px "DM Mono"; }
+.score-explanation small { grid-column:1 / -1; line-height:1.45; }
+.signal-row { align-items:flex-start; }
+.signal-row > span:nth-child(2) { flex:1; }
+.signal-row > span strong,.signal-row > span small { display:block; }
+.signal-row > span small { margin-top:3px; line-height:1.4; }
+.signal-points { color:var(--lime); font:11px "DM Mono"; white-space:nowrap; }
+
 
 /* CONNECTIONS */
 

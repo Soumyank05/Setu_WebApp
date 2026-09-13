@@ -20,6 +20,7 @@
 
 const state = {
   scores: [],
+  risk_paths: [],
   links: [],
   edges: [],
 
@@ -273,17 +274,26 @@ function getSignals(row) {
   }
 
   const signals = [
-    ["shared_device", "Shared device"],
-    ["multi_hop_routing", "Multi-hop routing"],
-    ["high_velocity_fanout", "Rapid fan-out"],
-    ["high_in_degree", "High in-degree"]
+    ["shared_device", "Shared device", 20],
+    ["multi_hop_routing", "Rapid pass-through", 30],
+    ["high_velocity_fanout", "Rapid fan-out", 15],
+    ["high_in_degree", "Unusually high fan-in", 15],
+    ["high_value_flow", "High-value flow", 10],
+    ["anomaly_flag", "Behavioural outlier", 10, value => Number(value) === -1]
   ];
 
-  return signals.filter(([key]) => hasSignal(row[key]));
+  return signals.filter(([key, , , predicate]) => predicate ? predicate(row[key]) : hasSignal(row[key]));
 }
 
 
 function reasons(row) {
+  if (row?.risk_reasons) {
+    return String(row.risk_reasons)
+      .split(";")
+      .map(reason => reason.trim().replace(/\b\w/g, letter => letter.toUpperCase()))
+      .join(" · ");
+  }
+
   const active = getSignals(row);
 
   if (!active.length) {
@@ -293,6 +303,17 @@ function reasons(row) {
   return active
     .map(([, label]) => label)
     .join(" · ");
+}
+
+
+function signalContext(row, key) {
+  if (key === "multi_hop_routing" && row.pass_through_ratio !== undefined) return `${Math.round(Number(row.pass_through_ratio) * 100)}% of an incoming transfer was forwarded within 15 minutes.`;
+  if (key === "high_velocity_fanout" && row.max_fanout_counterparties !== undefined) return `${row.max_fanout_counterparties} distinct recipients were paid within 15 minutes.`;
+  if (key === "high_in_degree" && row.in_degree !== undefined) return `${row.in_degree} distinct incoming counterparties; above the case-relative threshold.`;
+  if (key === "high_value_flow") return "Total flow is in the top 5% for this investigation.";
+  if (key === "anomaly_flag") return "Outlier across transaction volume, degree, and short-window activity.";
+  if (key === "shared_device") return "Corroborated by a shared device identifier; review remains required.";
+  return "Contributed to this entity's triage score.";
 }
 
 function entityTags(node) {
@@ -947,22 +968,25 @@ function renderEntitySignals(row) {
     return;
   }
 
-  container.innerHTML =
-    active.map(
-      ([, label]) => `
+  container.innerHTML = `
+    <div class="score-explanation">
+      <span>Score basis</span><strong>${getScore(row)}/100</strong>
+      <small>Only corroborated signals contribute to the triage score. Human review is required.</small>
+    </div>
+    ${active.map(
+      ([key, label, points]) => `
         <div class="signal-row">
 
           <span
             class="signal-dot"
           ></span>
 
-          <span>
-            ${escapeHtml(label)}
-          </span>
+          <span><strong>${escapeHtml(label)}</strong><small>${escapeHtml(signalContext(row, key))}</small></span>
+          <b class="signal-points">+${points || 0}</b>
 
         </div>
       `
-    ).join("");
+    ).join("")}`;
 }
 
 
@@ -1531,16 +1555,15 @@ function renderNodeDetail(entityId) {
     signalRows.length
       ? signalRows
           .map(
-            ([, label]) => `
+            ([key, label, points]) => `
               <div class="signal-row">
 
                 <span
                   class="signal-dot"
                 ></span>
 
-                <span>
-                  ${escapeHtml(label)}
-                </span>
+                <span><strong>${escapeHtml(label)}</strong><small>${escapeHtml(signalContext(scoreRow, key))}</small></span>
+                <b class="signal-points">+${points || 0}</b>
 
               </div>
             `
@@ -2558,6 +2581,8 @@ function applyCaseData(data) {
     arrayOrEmpty(
       data.edges
     );
+
+  state.risk_paths = arrayOrEmpty(data.risk_paths);
 
   state.manifest =
     data.manifest || {};

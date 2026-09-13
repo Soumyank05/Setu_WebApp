@@ -1,10 +1,13 @@
 """Unit tests for evidence-backed risk signals."""
 
 import unittest
+import json
+import tempfile
+from pathlib import Path
 
 import pandas as pd
 
-from scoring.score import compute_features, score_features
+from scoring.score import compute_features, compute_risk_paths, load_config, score_features
 
 
 class RiskScoringTests(unittest.TestCase):
@@ -40,6 +43,46 @@ class RiskScoringTests(unittest.TestCase):
         scored = score_features(features).iloc[0]
         self.assertEqual(scored.risk_tier, "HIGH")
         self.assertIn("rapid pass through", scored.risk_reasons)
+
+    def test_versioned_rule_set_can_adjust_weights_and_tiers(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "rules.json"
+            path.write_text(json.dumps({"version": "test-rules-1", "high_tier_minimum": 40, "signal_weights": {"shared_device": 40}}))
+            config = load_config(path)
+        features = pd.DataFrame([{
+            "node": "candidate", "in_degree": 0, "out_degree": 0, "incoming_transactions": 0, "outgoing_transactions": 0,
+            "total_in_amount": 0, "total_out_amount": 0, "shared_device": True, "multi_hop_routing": False,
+            "pass_through_ratio": 0, "max_fanout_counterparties": 0, "high_velocity_fanout": False,
+            "high_in_degree": False, "high_value_flow": False,
+        }])
+        scored = score_features(features, config).iloc[0]
+        self.assertEqual(scored.risk_score, 40)
+        self.assertEqual(scored.risk_tier, "HIGH")
+        self.assertEqual(scored.scoring_model_version, "test-rules-1")
+
+    def test_rapid_value_retaining_path_is_scored(self):
+        edges = pd.DataFrame([
+            {"sender": "victim", "receiver": "mule", "amount": 1000, "timestamp": "2026-01-01T10:00:00"},
+            {"sender": "mule", "receiver": "cashout-a", "amount": 480, "timestamp": "2026-01-01T10:03:00"},
+            {"sender": "mule", "receiver": "cashout-b", "amount": 450, "timestamp": "2026-01-01T10:05:00"},
+        ])
+        edges["timestamp"] = pd.to_datetime(edges["timestamp"])
+        config = load_config()
+        features = score_features(compute_features(edges, {"mule"}, config), config)
+        paths = compute_risk_paths(edges, features, config)
+        self.assertEqual(len(paths), 1)
+        path = paths.iloc[0]
+        self.assertEqual(path.intermediary, "mule")
+        self.assertAlmostEqual(path.retention_ratio, .93)
+        self.assertEqual(path.forwarded_transactions, 2)
+        self.assertIn("split to multiple recipients", path.path_reasons)
+
+    def test_empty_case_returns_a_valid_empty_score_set(self):
+        edges = pd.DataFrame(columns=["sender", "receiver", "amount", "timestamp"])
+        features = compute_features(edges, set(), load_config())
+        scored = score_features(features, load_config())
+        self.assertTrue(scored.empty)
+        self.assertIn("risk_score", scored.columns)
 
 
 if __name__ == "__main__":

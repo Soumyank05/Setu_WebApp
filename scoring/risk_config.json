@@ -1,0 +1,22 @@
+{
+  "version": "2026.09.1",
+  "pass_through_window_minutes": 15,
+  "pass_through_ratio_min": 0.7,
+  "pass_through_ratio_max": 1.3,
+  "fanout_window_minutes": 15,
+  "min_fanout_counterparties": 2,
+  "high_fanin_quantile": 0.9,
+  "high_fanin_minimum": 3,
+  "high_value_quantile": 0.95,
+  "anomaly_contamination": 0.05,
+  "high_tier_minimum": 55,
+  "medium_tier_minimum": 30,
+  "signal_weights": {
+    "shared_device": 20,
+    "rapid_pass_through": 30,
+    "rapid_fanout": 15,
+    "unusually_high_fanin": 15,
+    "high_value_flow": 10,
+    "behavioural_outlier": 10
+  }
+}
