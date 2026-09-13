@@ -541,7 +541,9 @@ def risk_tier(score: dict | None) -> str:
     if explicit in {"LOW", "MEDIUM", "HIGH"}:
         return explicit
     value = float((score or {}).get("risk_score", 0) or 0)
-    return "HIGH" if value >= 70 else "MEDIUM" if value >= 40 else "LOW"
+    # Keep the display fallback aligned with scoring.score.risk_tier for older
+    # score files that do not carry an explicit tier.
+    return "HIGH" if value >= 55 else "MEDIUM" if value >= 30 else "LOW"
 
 
 def chart_data_model(days: int = 30, risk: str = "ALL", rail: str = "ALL", min_amount: float = 0,

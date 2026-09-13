@@ -24,8 +24,12 @@ def build_brief() -> dict:
     links = pd.read_csv(links_path) if links_path.exists() else pd.DataFrame()
     entities = []
     for row in scores[scores.risk_tier != "LOW"].sort_values("risk_score", ascending=False).itertuples(index=False):
-        labels = [("shared_device", "shared device"), ("multi_hop_routing", "multi-hop routing"), ("high_velocity_fanout", "high-velocity fan-out"), ("high_in_degree", "high in-degree")]
-        entities.append({"entity_id": str(row.node), "risk_score": int(row.risk_score), "risk_tier": row.risk_tier, "reasons": [label for field, label in labels if getattr(row, field)]})
+        if hasattr(row, "risk_reasons") and pd.notna(row.risk_reasons) and row.risk_reasons:
+            reasons = str(row.risk_reasons).split("; ")
+        else:
+            labels = [("shared_device", "shared device"), ("multi_hop_routing", "multi-hop routing"), ("high_velocity_fanout", "high-velocity fan-out"), ("high_in_degree", "high in-degree")]
+            reasons = [label for field, label in labels if getattr(row, field)]
+        entities.append({"entity_id": str(row.node), "risk_score": int(row.risk_score), "risk_tier": row.risk_tier, "reasons": reasons})
     return {"brief_title": "SETU Investigative Brief", "generated_at_utc": datetime.now(timezone.utc).isoformat(), "evidence_manifest": manifest, "flagged_entities": entities, "entity_links": links.to_dict("records"), "recommended_actions": [f"Prioritize account-freeze review for {sum(item['risk_tier'] == 'HIGH' for item in entities)} HIGH-risk entities.", "Verify shared-device links with the telecom provider before escalation.", "Request PSP KYC details for unmapped cash-out handles."]}
 
 
