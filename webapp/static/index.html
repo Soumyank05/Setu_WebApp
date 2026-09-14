@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <title>SETU · Investigation Workspace</title>
+  <link rel="icon" type="image/png" href="/static/favicon.png">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,10 +15,10 @@
     rel="stylesheet"
   >
 
-  <link rel="stylesheet" href="/static/styles.css?v=20260912-4">
-  <link rel="stylesheet" href="/static/casework.css?v=20260911-4">
-  <link rel="stylesheet" href="/static/operations.css?v=20260911-4">
-  <link rel="stylesheet" href="/static/workspace.css?v=20260911-4">
+  <link rel="stylesheet" href="/static/styles.css?v=20260915-3">
+  <link rel="stylesheet" href="/static/casework.css?v=20260915-3">
+  <link rel="stylesheet" href="/static/operations.css?v=20260915-3">
+  <link rel="stylesheet" href="/static/workspace.css?v=20260915-3">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/cytoscape@3.30.4/dist/cytoscape.min.js" defer></script>
 </head>
@@ -33,7 +34,7 @@
   <header class="topbar">
 
     <div class="brand">
-      <span class="bridge">⌁</span>
+      <img src="/static/setu-logo.png" alt="SETU Logo" class="brand-logo" width="40" height="40">
 
       <div>
         <strong>SETU</strong>
@@ -86,12 +87,12 @@
     <div class="hero-copy">
 
       <p class="eyebrow">
-        INVESTIGATION COMMAND CENTER
+        INVESTIGATION COMMAND CENTER · EVIDENCE CORRELATION
       </p>
 
       <h1>
-        Turn fragmented evidence
-        <span>into a traceable story.</span>
+        Digital evidence correlation
+        <span>&amp; triage workspace.</span>
       </h1>
 
       <p class="lede">
@@ -321,55 +322,51 @@
 
         <div class="risk-summary">
 
-          <div class="risk-ring">
-            <div>
-              <strong id="risk-percentage">—</strong>
-              <span>high risk</span>
+          <!-- High Risk Highlight Banner -->
+          <div class="risk-highlight-card">
+            <div class="risk-highlight-header">
+              <div class="risk-highlight-title">
+                <span class="risk-highlight-pulse"></span>
+                <span>Critical Attention · High Risk</span>
+              </div>
+              <span class="risk-percentage-badge">
+                <strong id="risk-percentage">—</strong> of active triage
+              </span>
+            </div>
+
+            <div class="risk-highlight-body">
+              <div class="risk-highlight-count-group">
+                <strong id="risk-high-label">0</strong>
+                <span>Flagged entities requiring immediate enforcement</span>
+              </div>
+            </div>
+
+            <div class="bar">
+              <i id="risk-high-bar"></i>
             </div>
           </div>
 
+          <!-- Medium and Low Risks Underneath -->
+          <div class="risk-secondary-grid">
 
-          <div class="risk-bars">
-
-            <div class="risk-bar-row">
-
-              <div>
-                <span>High</span>
-                <strong id="risk-high-label">0</strong>
-              </div>
-
-              <div class="bar">
-                <i id="risk-high-bar"></i>
-              </div>
-
-            </div>
-
-
-            <div class="risk-bar-row">
-
-              <div>
-                <span>Medium</span>
+            <div class="risk-sub-card medium">
+              <div class="risk-sub-header">
+                <span>Medium Risk</span>
                 <strong id="risk-medium-label">0</strong>
               </div>
-
               <div class="bar">
                 <i id="risk-medium-bar"></i>
               </div>
-
             </div>
 
-
-            <div class="risk-bar-row">
-
-              <div>
-                <span>Low</span>
+            <div class="risk-sub-card low">
+              <div class="risk-sub-header">
+                <span>Low Risk / Baseline</span>
                 <strong id="risk-low-label">0</strong>
               </div>
-
               <div class="bar">
                 <i id="risk-low-bar"></i>
               </div>
-
             </div>
 
           </div>

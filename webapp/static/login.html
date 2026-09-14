@@ -3,39 +3,133 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Sign in · SETU</title>
+  <title>Sign In · SETU Investigation Workspace</title>
+  <link rel="icon" type="image/png" href="/static/favicon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/styles.css">
+  <link rel="stylesheet" href="/static/styles.css?v=20260915-5">
 </head>
 <body class="login-page">
-  <main class="login-shell">
-    <section class="login-intro">
-      <div class="brand"><span class="bridge">⌁</span><div><strong>SETU</strong><small>Digital evidence correlation</small></div></div>
-      <p class="eyebrow">INVESTIGATION WORKSPACE</p>
-      <h1>Evidence, connected with confidence.</h1>
-      <p>Secure access for authorized investigation teams working across telecom, payments and identity records.</p>
-      <div class="login-assurances"><span>✓ Password-protected access</span><span>✓ Session activity is audited</span><span>✓ Role-based administration</span></div>
+
+  <main class="login-layout">
+
+    <!-- Left Column: Big Logo Showcase & Tagline -->
+    <section class="login-brand-panel">
+      <div class="login-brand-showcase">
+        <img
+          src="/static/setu-logo.png"
+          alt="SETU App Logo"
+          class="login-hero-logo"
+          width="120"
+          height="120"
+        >
+
+        <div class="login-brand-meta">
+          <span class="eyebrow">CYBER-FRAUD &amp; EVIDENCE INTELLIGENCE</span>
+          <h1 class="login-brand-title">SETU</h1>
+          <p class="login-tagline">Digital evidence correlation &amp; forensic triage platform.</p>
+        </div>
+
+        <div class="login-brand-badge">
+          <span class="pulse"></span>
+          <span>SECURE GATEWAY · CASE REF SETU-DEMO-001</span>
+        </div>
+      </div>
     </section>
-    <section class="auth-card" aria-live="polite">
-      <p class="eyebrow">SECURE SIGN IN</p>
-      <h2>Welcome back</h2>
-      <p class="hint">Use the account issued by your workspace administrator.</p>
-      <form id="login-form" class="auth-form">
-        <label>Username<input name="username" required autocomplete="username" pattern="[A-Za-z0-9_.-]{3,50}" placeholder="your.username"></label>
-        <label>Password<input name="password" type="password" required autocomplete="current-password" minlength="12" placeholder="Enter your password"></label>
-        <button class="primary" type="submit">Sign in <span>→</span></button>
-      </form>
-      <form id="password-reset-form" class="auth-form" hidden>
-        <label>Current temporary password<input name="current_password" type="password" required autocomplete="current-password" minlength="12"></label>
-        <label>New password<input name="new_password" type="password" required autocomplete="new-password" minlength="12" placeholder="At least 12 characters"></label>
-        <button class="primary" type="submit">Set new password <span>→</span></button>
-      </form>
-      <p id="auth-message" class="auth-message"></p>
-      <p id="auth-service-state" class="auth-service-state">Checking authentication service…</p>
+
+    <!-- Right Column: Authentication Card -->
+    <section class="login-card-panel">
+      <div class="login-card" aria-live="polite">
+
+        <div class="login-card-header">
+          <h2>Sign In</h2>
+          <p>Access the investigation workspace with your authorized credentials.</p>
+        </div>
+
+        <form id="login-form" class="auth-form">
+          <div class="form-group">
+            <label for="username">Username</label>
+            <input
+              id="username"
+              name="username"
+              type="text"
+              required
+              autocomplete="username"
+              pattern="[A-Za-z0-9_.-]{3,50}"
+              placeholder="e.g. investigator.id"
+              spellcheck="false"
+              autofocus
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              required
+              autocomplete="current-password"
+              minlength="12"
+              placeholder="Enter your password"
+            >
+          </div>
+
+          <button class="primary login-submit" type="submit">
+            Sign In
+          </button>
+        </form>
+
+        <form id="password-reset-form" class="auth-form" hidden>
+          <div class="form-group">
+            <label for="current_password">Current Temporary Password</label>
+            <input
+              id="current_password"
+              name="current_password"
+              type="password"
+              required
+              autocomplete="current-password"
+              minlength="12"
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="new_password">New Password</label>
+            <input
+              id="new_password"
+              name="new_password"
+              type="password"
+              required
+              autocomplete="new-password"
+              minlength="12"
+              placeholder="At least 12 characters"
+            >
+          </div>
+
+          <button class="primary login-submit" type="submit">
+            Set New Password
+          </button>
+        </form>
+
+        <div id="auth-message" class="auth-message" role="alert"></div>
+
+        <footer class="login-footer">
+          <div id="auth-service-state" class="auth-service-state">Checking authentication service…</div>
+          <div class="login-security-notice">
+            <span>Restricted Access</span>
+            <span>·</span>
+            <span>Session Audited</span>
+            <span>·</span>
+            <span>Role-Based Controls</span>
+          </div>
+        </footer>
+
+      </div>
     </section>
+
   </main>
+
   <script src="/static/login.js"></script>
 </body>
 </html>
