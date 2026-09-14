@@ -26,8 +26,42 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 ROOT = Path(__file__).resolve().parents[1]
-PROCESSED, REPORT = ROOT / "data" / "processed", ROOT / "report"
-RAW = ROOT / "data" / "raw"
+
+# Serverless environment adaptation (e.g., Vercel / AWS Lambda)
+# Deployed source directories are read-only; copy seeded data to /tmp for read-write access
+if os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME"):
+    import shutil
+    PROCESSED = Path("/tmp/setu_data/processed")
+    REPORT = Path("/tmp/setu_data/report")
+    RAW = Path("/tmp/setu_data/raw")
+    if not PROCESSED.exists():
+        PROCESSED.mkdir(parents=True, exist_ok=True)
+        REPORT.mkdir(parents=True, exist_ok=True)
+        RAW.mkdir(parents=True, exist_ok=True)
+        seed_processed = ROOT / "data" / "processed"
+        if seed_processed.exists():
+            for item in seed_processed.glob("*"):
+                target = PROCESSED / item.name
+                if not target.exists() and item.is_file():
+                    try: shutil.copy2(item, target)
+                    except Exception: pass
+        seed_raw = ROOT / "data" / "raw"
+        if seed_raw.exists():
+            for item in seed_raw.glob("*"):
+                target = RAW / item.name
+                if not target.exists() and item.is_file():
+                    try: shutil.copy2(item, target)
+                    except Exception: pass
+        seed_report = ROOT / "report"
+        if seed_report.exists():
+            for item in seed_report.glob("*"):
+                target = REPORT / item.name
+                if not target.exists() and item.is_file():
+                    try: shutil.copy2(item, target)
+                    except Exception: pass
+else:
+    PROCESSED, REPORT = ROOT / "data" / "processed", ROOT / "report"
+    RAW = ROOT / "data" / "raw"
 CASE_PATH, NOTES_PATH, REVIEWS_PATH, AUDIT_PATH = (PROCESSED / "case.json", PROCESSED / "notes.json", PROCESSED / "reviews.json", PROCESSED / "audit.jsonl")
 STATUS_UPDATES_PATH = PROCESSED / "status_updates.json"
 APPROVALS_PATH = PROCESSED / "approvals.json"

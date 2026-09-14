@@ -17,7 +17,7 @@ STEPS = [("Generate synthetic evidence", "data/generate_data.py"), ("Ingest and 
 st.set_page_config(page_title="SETU", page_icon="🌉", layout="wide")
 st.markdown("""<style>.stApp{background:#0b0e13;color:#f5f7fa}.mono{font-family:monospace}.risk{padding:2px 8px;border-radius:4px;font-family:monospace}.HIGH{background:#521717;color:#ff9b9b}.MEDIUM{background:#4b3810;color:#ffd36e}.LOW{background:#153820;color:#8ce5a8}</style>""", unsafe_allow_html=True)
 st.title("🌉 SETU")
-st.caption("Digital Evidence Correlation & Triage Engine · CASE REF: SETU-DEMO-001")
+st.caption("Digital Evidence Correlation & Triage Engine")
 
 with st.sidebar:
     st.subheader("Pipeline")

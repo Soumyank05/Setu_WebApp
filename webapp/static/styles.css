@@ -1567,7 +1567,7 @@ tbody tr:hover {
 .graph-container {
   position: relative;
   min-width: 0;
-  min-height: 580px;
+  min-height: 600px;
   background-color: #060a10;
   background-image: radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px);
   background-size: 24px 24px;
@@ -1577,8 +1577,269 @@ tbody tr:hover {
   position: relative;
   width: 100%;
   height: 100%;
-  min-height: 580px;
+  min-height: 600px;
   overflow: hidden;
+  cursor: grab;
+}
+
+.graph:active {
+  cursor: grabbing;
+}
+
+/* Floating Graph HUD (Navigation, Zoom & Physics) */
+.graph-hud {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: rgba(9, 13, 20, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.hud-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.hud-btn {
+  background: var(--surface-2);
+  border: 1px solid var(--line-light);
+  color: var(--text-secondary);
+  font: 500 11px 'DM Mono', monospace;
+  padding: 5px 9px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1.2;
+}
+
+.hud-btn:hover {
+  background: var(--surface-3);
+  color: #ffffff;
+  border-color: var(--accent);
+}
+
+.hud-btn.active {
+  background: rgba(56, 189, 248, 0.18);
+  color: var(--accent);
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+.hud-divider {
+  width: 1px;
+  height: 18px;
+  background: var(--line);
+  margin: 0 2px;
+}
+
+/* Floating Mule Path Tracer Panel */
+.path-tracer-hud {
+  position: absolute;
+  top: 60px;
+  right: 14px;
+  z-index: 25;
+  width: 390px;
+  max-width: calc(100% - 28px);
+  background: rgba(10, 15, 24, 0.96);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 10px;
+  padding: 14px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.65), 0 0 24px rgba(56, 189, 248, 0.12);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.path-tracer-hud.hidden {
+  display: none;
+}
+
+.path-tracer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.path-tracer-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.path-tracer-icon {
+  font-size: 16px;
+  color: var(--accent);
+}
+
+.path-tracer-title strong {
+  display: block;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.path-tracer-title small {
+  display: block;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.hud-btn-close {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 4px;
+}
+
+.hud-btn-close:hover {
+  color: var(--text-primary);
+}
+
+.path-tracer-form {
+  margin-bottom: 12px;
+}
+
+.path-tracer-inputs {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.path-tracer-field {
+  flex: 1;
+  min-width: 120px;
+}
+
+.path-tracer-field label {
+  display: block;
+  font: 600 10px 'DM Mono', monospace;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  letter-spacing: 0.05em;
+}
+
+.path-tracer-field select {
+  width: 100%;
+  padding: 6px 8px;
+  font: 500 11px 'DM Mono', monospace;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--text-primary);
+  border-radius: 6px;
+}
+
+.path-tracer-arrow {
+  padding-bottom: 8px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.path-tracer-submit {
+  padding: 6px 14px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.path-tracer-clear {
+  padding: 6px 10px;
+  font-size: 11px;
+}
+
+.path-tracer-results {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.path-tracer-results.hidden {
+  display: none;
+}
+
+.path-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.path-metric {
+  background: var(--surface-2);
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+}
+
+.path-metric.bottleneck {
+  border-color: rgba(244, 63, 94, 0.4);
+  background: rgba(244, 63, 94, 0.08);
+}
+
+.path-metric span {
+  display: block;
+  font: 500 10px 'DM Mono', monospace;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+
+.path-metric strong {
+  display: block;
+  font: 700 13px 'DM Mono', monospace;
+  color: var(--text-primary);
+}
+
+.path-metric.bottleneck strong {
+  color: #f43f5e;
+}
+
+.path-chain-view {
+  border-top: 1px solid var(--line);
+  padding-top: 8px;
+}
+
+.path-chain-view .eyebrow {
+  margin-bottom: 6px;
+  font-size: 9px;
+}
+
+.path-chain-nodes {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font: 500 11px 'DM Mono', monospace;
+}
+
+.path-chain-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface-2);
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--line);
+  color: var(--accent);
+}
+
+.path-chain-arrow {
+  color: var(--text-muted);
+  font-size: 10px;
 }
 
 .graph-legend {
@@ -1596,6 +1857,7 @@ tbody tr:hover {
   color: var(--text-secondary);
   font: 500 11px 'DM Mono', monospace;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  z-index: 15;
 }
 
 .legend-title {
@@ -1623,6 +1885,28 @@ tbody tr:hover {
 
 .legend-dot.low {
   background: #10b981;
+}
+
+.legend-line {
+  display: inline-block;
+  width: 14px;
+  height: 3px;
+  margin-right: 4px;
+  border-radius: 2px;
+  vertical-align: middle;
+}
+
+.legend-line.in {
+  background: #38bdf8;
+}
+
+.legend-line.out {
+  background: #f59e0b;
+}
+
+.legend-line.path {
+  background: #c084fc;
+  box-shadow: 0 0 6px rgba(192, 132, 252, 0.6);
 }
 
 .legend-divider {
@@ -2138,20 +2422,20 @@ tbody tr:hover {
 }
 
 .login-hero-logo {
-  width: 120px;
-  height: 120px;
-  border-radius: 24px;
+  width: 180px;
+  height: 180px;
+  border-radius: 30px;
   object-fit: cover;
-  border: 1px solid rgba(56, 189, 248, 0.38);
-  box-shadow: 0 0 36px rgba(56, 189, 248, 0.22), 0 12px 28px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(56, 189, 248, 0.42);
+  box-shadow: 0 0 48px rgba(56, 189, 248, 0.26), 0 16px 36px rgba(0, 0, 0, 0.55);
   background: #05080e;
-  margin-bottom: 24px;
+  margin-bottom: 28px;
   transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
 .login-hero-logo:hover {
   transform: scale(1.03);
-  box-shadow: 0 0 44px rgba(56, 189, 248, 0.32), 0 14px 32px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 0 58px rgba(56, 189, 248, 0.38), 0 20px 42px rgba(0, 0, 0, 0.65);
 }
 
 .login-brand-meta {
@@ -2349,9 +2633,10 @@ tbody tr:hover {
     max-width: none;
   }
   .login-hero-logo {
-    width: 96px;
-    height: 96px;
-    border-radius: 20px;
+    width: 130px;
+    height: 130px;
+    border-radius: 24px;
+    margin-bottom: 20px;
   }
 }
 
@@ -2423,6 +2708,24 @@ tbody tr:hover {
   }
   .login-card {
     padding: 24px 18px;
+  }
+  .graph-hud {
+    top: 8px;
+    right: 8px;
+    padding: 4px 6px;
+    gap: 4px;
+    flex-wrap: wrap;
+    max-width: calc(100% - 16px);
+  }
+  .hud-btn {
+    padding: 4px 6px;
+    font-size: 10px;
+  }
+  .path-tracer-hud {
+    top: 80px;
+    right: 8px;
+    left: 8px;
+    width: auto;
   }
   .hero {
     padding: 30px 0 20px;

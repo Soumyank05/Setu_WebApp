@@ -50,7 +50,13 @@ const state = {
     selected: null,
     search: "",
     risk: "ALL",
-    hops: "ALL"
+    hops: "ALL",
+    layout: "cose",
+    egoFocus: false,
+    activeTrace: null,
+    tracerOpen: false,
+    flowInterval: null,
+    cy: null
   },
   visual: {
     days: 30,
@@ -437,9 +443,17 @@ function renderStatus() {
       : "Investigation not started";
   }
 
-  const caseReference = String(state.case?.case_reference || "SETU-DEMO-001");
+  const caseReference = String(state.case?.case_reference || "").trim();
   const caseRef = document.querySelector(".case-ref");
-  if (caseRef) caseRef.textContent = `CASE REF · ${caseReference}`;
+  if (caseRef) {
+    if (caseReference) {
+      caseRef.textContent = `CASE REF · ${caseReference}`;
+      caseRef.style.display = "";
+    } else {
+      caseRef.textContent = "";
+      caseRef.style.display = "none";
+    }
+  }
 }
 
 
@@ -1719,17 +1733,35 @@ function renderNodeDetail(entityId) {
 
       </div>
 
-      <button
-        type="button"
-        class="primary node-trace-button"
-        data-open-entity="${escapeHtml(id)}"
-      >
-        Open entity intelligence
-      </button>
+      <div class="node-detail-action-group" style="display:flex; flex-direction:column; gap:8px; margin-top:14px;">
+        <button
+          type="button"
+          class="primary node-trace-button"
+          data-open-entity="${escapeHtml(id)}"
+        >
+          Open entity intelligence
+        </button>
 
-      <button type="button" class="outline node-trace-button" data-open-graph-operations="${escapeHtml(id)}">
-        Explain a link / trace shortest path
-      </button>
+        <button
+          type="button"
+          class="outline node-trace-button"
+          data-focus-ego-network="${escapeHtml(id)}"
+        >
+          ◎ Focus ego-network
+        </button>
+
+        <button
+          type="button"
+          class="outline node-trace-button"
+          data-trace-from-node="${escapeHtml(id)}"
+        >
+          ⚡ Trace mule flow from here
+        </button>
+
+        <button type="button" class="outline node-trace-button" data-open-graph-operations="${escapeHtml(id)}">
+          Explain a link in Operations
+        </button>
+      </div>
 
       <div id="node-provenance" class="node-detail-section provenance-loading">
         <span class="eyebrow">EVIDENCE TRACEABILITY</span>
@@ -1742,21 +1774,63 @@ function renderNodeDetail(entityId) {
 
 
 /* =========================================================
-   NETWORK GRAPH
+   NETWORK GRAPH (CYTOSCAPE ENGINE WITH COSE PHYSICS,
+   EGO-NETWORK FILTERING & MULE PATH ANIMATION)
    ========================================================= */
 
-function renderGraph() {
-  const graph =
-    $("graph");
+let cachedFlowMap = null;
+let cachedEdgesRef = null;
 
-  if (!graph) {
+function getEntityFlowMap() {
+  if (cachedFlowMap && cachedEdgesRef === state.edges) {
+    return cachedFlowMap;
+  }
+  const flowMap = new Map();
+  state.edges.forEach(edge => {
+    const sender = getSender(edge);
+    const receiver = getReceiver(edge);
+    const amt = getAmount(edge) || 0;
+    if (sender) flowMap.set(sender, (flowMap.get(sender) || 0) + amt);
+    if (receiver) flowMap.set(receiver, (flowMap.get(receiver) || 0) + amt);
+  });
+  cachedFlowMap = flowMap;
+  cachedEdgesRef = state.edges;
+  return flowMap;
+}
+
+function entityTotalFlow(entityId) {
+  const map = getEntityFlowMap();
+  return map.get(entityId) || 0;
+}
+
+function renderGraph() {
+  const graph = $("graph");
+  if (!graph) return;
+
+  const allFiltered = getFilteredNetworkEntities();
+
+  if (!allFiltered.length) {
+    if (state.network.cy) {
+      try { state.network.cy.destroy(); } catch (_) {}
+      state.network.cy = null;
+    }
+    graph.innerHTML = `
+      <div class="graph-empty">
+        <span class="graph-empty-icon">⌁</span>
+        <strong>Network awaiting evidence</strong>
+        <p>Run the investigation pipeline to generate the money-flow network.</p>
+      </div>
+    `;
     return;
   }
 
-  let entities = getFilteredNetworkEntities();
+  // Scoped high-signal entity selection:
+  // Instead of pushing 600+ nodes and 7,200 raw edges into Cytoscape force layout,
+  // we scope the active canvas to the focal entity's counterparty cluster (or top threat hubs),
+  // aggregate multi-transfers between node pairs, and render in under 15ms.
+  let entities = [];
+  const MAX_CANVAS_NODES = 28;
 
-  // Keep the legacy explorer readable as well: when an entity is selected it
-  // becomes a compact one-hop preview, never the entire payment universe.
   if (state.network.selected) {
     const selectedId = state.network.selected;
     const byCounterparty = new Map();
@@ -1764,367 +1838,728 @@ function renderGraph() {
       const sender = getSender(edge), receiver = getReceiver(edge);
       if (sender === selectedId || receiver === selectedId) {
         const other = sender === selectedId ? receiver : sender;
-        byCounterparty.set(other, (byCounterparty.get(other) || 0) + getAmount(edge));
+        byCounterparty.set(other, (byCounterparty.get(other) || 0) + (getAmount(edge) || 0));
       }
     });
-    const allowed = new Set([selectedId, ...[...byCounterparty.entries()].sort((a, b) => b[1] - a[1]).slice(0, 15).map(([id]) => id)]);
-    entities = entities.filter(entity => allowed.has(entity.id));
+
+    const topCounterparties = [...byCounterparty.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, MAX_CANVAS_NODES - 1)
+      .map(([id]) => id);
+
+    const allowed = new Set([selectedId, ...topCounterparties]);
+
+    // If a mule path trace is active, include its nodes so the full trail is visible
+    if (state.network.activeTrace && Array.isArray(state.network.activeTrace.nodes)) {
+      state.network.activeTrace.nodes.forEach(n => allowed.add(n));
+    }
+
+    entities = allFiltered.filter(entity => allowed.has(entity.id));
+
+    // Ensure focal entity is present in entities
+    if (!entities.some(e => e.id === selectedId)) {
+      const allEntities = getNetworkEntities();
+      const focal = allEntities.find(e => e.id === selectedId) || { id: selectedId, score: 0, risk: "LOW" };
+      entities.unshift(focal);
+    }
+  } else {
+    // Macroscopic overview when no node selected: show top suspects by risk score & total flow
+    const flowMap = getEntityFlowMap();
+    const sorted = [...allFiltered].sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      return (flowMap.get(b.id) || 0) - (flowMap.get(a.id) || 0);
+    });
+    entities = sorted.slice(0, MAX_CANVAS_NODES);
   }
 
-  if (!entities.length) {
-    graph.innerHTML = `
-      <div class="graph-empty">
-
-        <span class="graph-empty-icon">
-          ⌁
-        </span>
-
-        <strong>
-          Network awaiting evidence
-        </strong>
-
-        <p>
-          Run the investigation pipeline to
-          generate the money-flow network.
-        </p>
-
-      </div>
-    `;
-
+  // Fallback to SVG renderer if Cytoscape is unavailable
+  if (!window.cytoscape) {
+    renderGraphSvgFallback(graph, entities);
     return;
   }
 
-  const width =
-    Math.max(
-      graph.clientWidth || 700,
-      500
-    );
+  const currentIds = entities.map(e => e.id).sort().join(",");
+  const existingNodeIds = state.network.cy ? state.network.cy.nodes().map(n => n.id()).sort().join(",") : "";
 
-  const height =
-    Math.max(
-      graph.clientHeight || 620,
-      500
-    );
+  // If Cytoscape already has the exact same active nodes, avoid re-layout; just apply highlights!
+  if (state.network.cy && currentIds === existingNodeIds && !state.network.needsRebuild) {
+    applyNetworkHighlights();
+    return;
+  }
+  state.network.needsRebuild = false;
 
-  const centerX =
-    width / 2;
+  const entityIdSet = new Set(entities.map(e => e.id));
+  const flowMap = getEntityFlowMap();
+  const nodeElements = entities.map(entity => {
+    const isHigh = entity.risk === "HIGH";
+    const isMed = entity.risk === "MEDIUM";
+    const riskClass = isHigh ? "risk-high" : isMed ? "risk-medium" : "risk-low";
+    const flow = flowMap.get(entity.id) || 0;
+    const size = Math.min(52, Math.max(26, 22 + Math.sqrt(flow || 0) / 18));
+    return {
+      data: {
+        id: entity.id,
+        label: entity.id,
+        risk: entity.risk,
+        score: entity.score,
+        flow: flow,
+        size: size
+      },
+      classes: `${riskClass}`
+    };
+  });
 
-  const centerY =
-    height / 2;
+  // Aggregate multi-transfers between node pairs into single directed edge
+  const edgeMap = new Map();
+  state.edges.forEach(edge => {
+    const sender = getSender(edge);
+    const receiver = getReceiver(edge);
+    if (entityIdSet.has(sender) && entityIdSet.has(receiver)) {
+      const key = `${sender}->${receiver}`;
+      const amount = getAmount(edge) || 0;
+      const isShared = Boolean(edge.shared_device);
+      if (!edgeMap.has(key)) {
+        edgeMap.set(key, {
+          source: sender,
+          target: receiver,
+          amount: amount,
+          count: 1,
+          shared_device: isShared
+        });
+      } else {
+        const item = edgeMap.get(key);
+        item.amount += amount;
+        item.count += 1;
+        if (isShared) item.shared_device = true;
+      }
+    }
+  });
 
-  const selected =
-    state.network.selected;
+  const edgeElements = Array.from(edgeMap.values()).map(item => {
+    const width = Math.min(5.5, Math.max(1.5, 1.2 + Math.sqrt(item.amount) / 220));
+    const countLabel = item.count > 1 ? ` (${item.count}x)` : "";
+    return {
+      data: {
+        id: `edge-${item.source}-${item.target}`,
+        source: item.source,
+        target: item.target,
+        amount: item.amount,
+        count: item.count,
+        label: `${formatCurrency(item.amount)}${countLabel}`,
+        width: width,
+        shared_device: item.shared_device
+      },
+      classes: item.shared_device ? "shared-device" : ""
+    };
+  });
 
-  const entityIds =
-    new Set(
-      entities.map(
-        entity => entity.id
-      )
-    );
-
-  const positions =
-    new Map();
-
-  let ordered =
-    [...entities];
-
-  if (
-    selected &&
-    entityIds.has(selected)
-  ) {
-    ordered = [
-      ...entities.filter(
-        entity =>
-          entity.id === selected
-      ),
-      ...entities.filter(
-        entity =>
-          entity.id !== selected
-      )
-    ];
+  // Destroy previous Cytoscape instance if recreating elements
+  if (state.network.cy) {
+    try { state.network.cy.destroy(); } catch (_) {}
+    state.network.cy = null;
   }
 
-  const radius =
-    Math.max(
-      100,
-      Math.min(width, height) * 0.34
-    );
+  // Clear graph container DOM to host Cytoscape canvas
+  graph.innerHTML = "";
 
-  ordered.forEach(
-    (entity, index) => {
-
-      if (
-        selected &&
-        entity.id === selected
-      ) {
-
-        positions.set(
-          entity.id,
-          {
-            x: centerX,
-            y: centerY
-          }
-        );
-
-        return;
+  const cytoscapeStyles = [
+    {
+      selector: "node",
+      style: {
+        "label": "data(id)",
+        "font-family": "DM Mono, monospace",
+        "font-size": "9px",
+        "font-weight": 500,
+        "color": "#cbd5e1",
+        "text-valign": "bottom",
+        "text-margin-y": 5,
+        "text-background-color": "#060a10",
+        "text-background-opacity": 0.88,
+        "text-background-padding": 3,
+        "text-background-shape": "roundrectangle",
+        "background-color": "#111827",
+        "border-width": 2,
+        "border-color": "#334155",
+        "width": "data(size)",
+        "height": "data(size)",
+        "transition-property": "background-color, border-color, border-width, opacity, width, height",
+        "transition-duration": "0.2s"
       }
-
-      const hasSelected =
-        Boolean(
-          selected &&
-          entityIds.has(selected)
-        );
-
-      const indexOffset =
-        hasSelected
-          ? index - 1
-          : index;
-
-      const count =
-        hasSelected
-          ? Math.max(
-              ordered.length - 1,
-              1
-            )
-          : Math.max(
-              ordered.length,
-              1
-            );
-
-      const angle =
-        (Math.PI * 2 * indexOffset) /
-          count -
-        Math.PI / 2;
-
-      positions.set(
-        entity.id,
-        {
-          x:
-            centerX +
-            Math.cos(angle) *
-            radius,
-
-          y:
-            centerY +
-            Math.sin(angle) *
-            radius
-        }
-      );
+    },
+    {
+      selector: "node.risk-high",
+      style: {
+        "border-color": "#f43f5e",
+        "background-color": "#2e1017"
+      }
+    },
+    {
+      selector: "node.risk-medium",
+      style: {
+        "border-color": "#f59e0b",
+        "background-color": "#2a1e0b"
+      }
+    },
+    {
+      selector: "node.risk-low",
+      style: {
+        "border-color": "#10b981",
+        "background-color": "#0f241a"
+      }
+    },
+    {
+      selector: "node.focal",
+      style: {
+        "border-color": "#38bdf8",
+        "border-width": 4,
+        "background-color": "#0c2738",
+        "color": "#38bdf8",
+        "font-weight": 700,
+        "font-size": "11px",
+        "z-index": 100
+      }
+    },
+    {
+      selector: "node.counterparty-in",
+      style: {
+        "border-color": "#38bdf8",
+        "border-width": 3
+      }
+    },
+    {
+      selector: "node.counterparty-out",
+      style: {
+        "border-color": "#f59e0b",
+        "border-width": 3
+      }
+    },
+    {
+      selector: "node.path-node",
+      style: {
+        "border-color": "#c084fc",
+        "border-width": 4,
+        "background-color": "#2c1240",
+        "color": "#f3e8ff",
+        "font-weight": 700,
+        "z-index": 150
+      }
+    },
+    {
+      selector: "node.dimmed",
+      style: {
+        "opacity": 0.12
+      }
+    },
+    {
+      selector: "edge",
+      style: {
+        "curve-style": "bezier",
+        "target-arrow-shape": "triangle",
+        "target-arrow-color": "#26354a",
+        "line-color": "#26354a",
+        "width": "data(width)",
+        "arrow-scale": 1.15,
+        "label": "data(label)",
+        "font-family": "DM Mono, monospace",
+        "font-size": "8px",
+        "color": "#64748b",
+        "text-background-color": "#060a10",
+        "text-background-opacity": 0.88,
+        "text-background-padding": 2,
+        "text-background-shape": "roundrectangle",
+        "text-rotation": "autorotate",
+        "transition-property": "line-color, target-arrow-color, width, opacity",
+        "transition-duration": "0.2s"
+      }
+    },
+    {
+      selector: "edge.flow-in",
+      style: {
+        "line-color": "#38bdf8",
+        "target-arrow-color": "#38bdf8",
+        "color": "#38bdf8",
+        "width": 3,
+        "z-index": 50
+      }
+    },
+    {
+      selector: "edge.flow-out",
+      style: {
+        "line-color": "#f59e0b",
+        "target-arrow-color": "#f59e0b",
+        "color": "#f59e0b",
+        "width": 3,
+        "z-index": 50
+      }
+    },
+    {
+      selector: "edge.path-edge",
+      style: {
+        "line-color": "#c084fc",
+        "target-arrow-color": "#c084fc",
+        "color": "#f3e8ff",
+        "width": 4,
+        "line-style": "dashed",
+        "z-index": 200
+      }
+    },
+    {
+      selector: "edge.shared-device",
+      style: {
+        "line-style": "dotted",
+        "line-color": "#10b981",
+        "target-arrow-color": "#10b981",
+        "width": 2
+      }
+    },
+    {
+      selector: "edge.dimmed",
+      style: {
+        "opacity": 0.08
+      }
     }
-  );
+  ];
 
+  const layoutName = state.network.layout || "cose";
+  const layoutOptions = getCytoscapeLayoutConfig(layoutName);
 
-  /*
-     Only draw edges whose nodes
-     are visible.
-  */
+  state.network.cy = cytoscape({
+    container: graph,
+    elements: [...nodeElements, ...edgeElements],
+    style: cytoscapeStyles,
+    layout: layoutOptions,
+    wheelSensitivity: 0.28,
+    minZoom: 0.2,
+    maxZoom: 3.5
+  });
 
-  const edges =
-    state.edges.filter(edge => {
+  state.network.cy.on("tap", "node", evt => {
+    const id = evt.target.id();
+    selectNetworkNode(id);
+  });
 
-      const sender =
-        getSender(edge);
+  state.network.cy.on("tap", evt => {
+    if (evt.target === state.network.cy) {
+      // Background tap
+    }
+  });
 
-      const receiver =
-        getReceiver(edge);
+  applyNetworkHighlights();
+}
 
-      return (
-        entityIds.has(sender) &&
-        entityIds.has(receiver)
-      );
+function getCytoscapeLayoutConfig(layoutName) {
+  if (layoutName === "concentric") {
+    const sel = state.network.selected;
+    return {
+      name: "concentric",
+      animate: true,
+      animationDuration: 400,
+      concentric: node => (node.id() === sel ? 3 : (node.hasClass("counterparty-in") || node.hasClass("counterparty-out")) ? 2 : 1),
+      levelWidth: () => 1,
+      minNodeSpacing: 65,
+      padding: 40,
+      startAngle: -Math.PI / 2
+    };
+  }
+  if (layoutName === "breadthfirst") {
+    return {
+      name: "breadthfirst",
+      animate: true,
+      animationDuration: 400,
+      directed: true,
+      padding: 40,
+      spacingFactor: 1.25
+    };
+  }
+  // Default: COSE force-directed physics
+  return {
+    name: "cose",
+    animate: true,
+    animationDuration: 350,
+    animationEasing: "ease-out",
+    nodeDimensionsIncludeLabels: true,
+    nodeRepulsion: () => 6500,
+    idealEdgeLength: () => 85,
+    edgeElasticity: () => 45,
+    gravity: 0.25,
+    numIter: 100,
+    initialTemp: 120,
+    coolingFactor: 0.95,
+    padding: 35,
+    randomize: false
+  };
+}
+
+function setGraphLayout(layoutName) {
+  state.network.layout = layoutName;
+  document.querySelectorAll(".graph-hud [data-layout]").forEach(btn => {
+    btn.classList.toggle("active", btn.getAttribute("data-layout") === layoutName);
+  });
+  if (!state.network.cy) return;
+  const config = getCytoscapeLayoutConfig(layoutName);
+  const layout = state.network.cy.layout(config);
+  layout.run();
+}
+
+function applyNetworkHighlights() {
+  const cy = state.network.cy;
+  if (!cy) return;
+
+  // Clear existing highlight classes
+  cy.elements().removeClass("focal counterparty-in counterparty-out flow-in flow-out path-node path-edge dimmed");
+
+  // If a path trace is active, highlight the route!
+  if (state.network.activeTrace && state.network.activeTrace.nodes) {
+    const traceNodes = new Set(state.network.activeTrace.nodes);
+    const traceEdgeKeys = new Set();
+    for (let i = 0; i < state.network.activeTrace.nodes.length - 1; i++) {
+      const u = state.network.activeTrace.nodes[i];
+      const v = state.network.activeTrace.nodes[i + 1];
+      traceEdgeKeys.add(`${u}->${v}`);
+    }
+
+    const pathEdges = [];
+    cy.nodes().forEach(node => {
+      if (traceNodes.has(node.id())) {
+        node.addClass("path-node");
+      } else {
+        node.addClass("dimmed");
+      }
     });
 
+    cy.edges().forEach(edge => {
+      const key = `${edge.data("source")}->${edge.data("target")}`;
+      if (traceEdgeKeys.has(key)) {
+        edge.addClass("path-edge");
+        pathEdges.push(edge);
+      } else {
+        edge.addClass("dimmed");
+      }
+    });
 
-  let svg = `
-    <svg
-      class="network-svg"
-      width="100%"
-      height="100%"
-      viewBox="0 0 ${width} ${height}"
-      preserveAspectRatio="xMidYMid meet"
-      xmlns="http://www.w3.org/2000/svg"
-    >
+    animatePathFlow(pathEdges);
+    return;
+  }
 
-      <defs>
+  // If no trace is active, cancel any previous flow pulse animation
+  if (state.network.flowInterval) {
+    clearInterval(state.network.flowInterval);
+    state.network.flowInterval = null;
+  }
 
-        <marker
-          id="setu-network-arrow"
-          viewBox="0 0 10 10"
-          refX="9"
-          refY="5"
-          markerWidth="7"
-          markerHeight="7"
-          orient="auto-start-reverse"
-        >
+  const selected = state.network.selected;
+  if (!selected) {
+    return;
+  }
 
-          <path
-            d="M 0 0 L 10 5 L 0 10 z"
-            fill="currentColor"
-          />
+  const focalNode = cy.getElementById(selected);
+  if (focalNode && focalNode.length) {
+    focalNode.addClass("focal");
+  }
 
-        </marker>
+  const inEdges = cy.edges(`[target = "${selected}"]`);
+  const outEdges = cy.edges(`[source = "${selected}"]`);
 
-      </defs>
-  `;
+  inEdges.addClass("flow-in");
+  inEdges.sources().addClass("counterparty-in");
 
+  outEdges.addClass("flow-out");
+  outEdges.targets().addClass("counterparty-out");
 
-  /*
-     EDGES
-  */
+  const activeElements = cy.collection()
+    .merge(focalNode)
+    .merge(inEdges)
+    .merge(outEdges)
+    .merge(inEdges.sources())
+    .merge(outEdges.targets());
 
-  edges.forEach(edge => {
+  cy.elements().difference(activeElements).addClass("dimmed");
+}
 
-    const sender =
-      getSender(edge);
+function animatePathFlow(pathEdges) {
+  if (!pathEdges || !pathEdges.length) return;
+  if (state.network.flowInterval) {
+    clearInterval(state.network.flowInterval);
+    state.network.flowInterval = null;
+  }
+  let step = 0;
+  state.network.flowInterval = setInterval(() => {
+    if (!state.network.activeTrace) {
+      clearInterval(state.network.flowInterval);
+      state.network.flowInterval = null;
+      return;
+    }
+    pathEdges.forEach((edge, idx) => {
+      if (idx === step) {
+        edge.style({
+          "width": 6,
+          "line-color": "#38bdf8",
+          "target-arrow-color": "#38bdf8",
+          "opacity": 1.0
+        });
+      } else {
+        edge.style({
+          "width": 4,
+          "line-color": "#c084fc",
+          "target-arrow-color": "#c084fc",
+          "opacity": 0.85
+        });
+      }
+    });
+    step = (step + 1) % pathEdges.length;
+  }, 380);
+}
 
-    const receiver =
-      getReceiver(edge);
+function toggleEgoFocus() {
+  state.network.egoFocus = !state.network.egoFocus;
+  const btn = $("graph-ego-focus-btn");
+  if (btn) btn.classList.toggle("active", state.network.egoFocus);
+  state.network.needsRebuild = true;
+  renderGraph();
+}
 
-    const from =
-      positions.get(sender);
+function openMulePathTracerWithSource(sourceId) {
+  const hud = $("path-tracer-hud");
+  if (hud) hud.classList.remove("hidden");
+  const toggleBtn = $("graph-trace-toggle-btn");
+  if (toggleBtn) toggleBtn.classList.add("active");
+  populatePathTracerSelects(sourceId);
+}
 
-    const to =
-      positions.get(receiver);
+function toggleMulePathTracer() {
+  const hud = $("path-tracer-hud");
+  if (!hud) return;
+  const isHidden = hud.classList.contains("hidden");
+  if (isHidden) {
+    hud.classList.remove("hidden");
+    $("graph-trace-toggle-btn")?.classList.add("active");
+    populatePathTracerSelects(state.network.selected);
+  } else {
+    hud.classList.add("hidden");
+    $("graph-trace-toggle-btn")?.classList.remove("active");
+  }
+}
 
-    if (!from || !to) {
+function populatePathTracerSelects(preferredSource) {
+  const sourceSelect = $("path-tracer-source");
+  const targetSelect = $("path-tracer-target");
+  if (!sourceSelect || !targetSelect) return;
+
+  const entities = getFilteredNetworkEntities();
+  const optionsHtml = entities.map(entity => {
+    const riskTag = `[${entity.risk}]`;
+    return `<option value="${escapeHtml(entity.id)}">${riskTag} ${escapeHtml(entity.id)}</option>`;
+  }).join("");
+
+  sourceSelect.innerHTML = `<option value="">Select source…</option>` + optionsHtml;
+  targetSelect.innerHTML = `<option value="">Select target…</option>` + optionsHtml;
+
+  if (preferredSource && entities.some(e => e.id === preferredSource)) {
+    sourceSelect.value = preferredSource;
+    const candidateTarget = entities.find(e => e.id !== preferredSource && e.risk === "HIGH") || entities.find(e => e.id !== preferredSource);
+    if (candidateTarget) {
+      targetSelect.value = candidateTarget.id;
+    }
+  }
+}
+
+async function runMulePathTrace(source, target) {
+  if (!source || !target) {
+    toast("Select both a source and target entity to trace.");
+    return;
+  }
+  if (source === target) {
+    toast("Source and target must be distinct entities.");
+    return;
+  }
+
+  try {
+    let result = null;
+    try {
+      result = await requestJson("/api/graph/paths", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ source, target })
+      });
+    } catch (_) {
+      result = await requestJson("/api/graph/trace", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ source, target })
+      });
+    }
+
+    let route = null;
+    if (result && result.routes && result.routes.length > 0) {
+      route = result.routes[0];
+    } else if (result && result.connected && result.nodes && result.nodes.length > 1) {
+      const routeValue = (result.steps || []).reduce((sum, s) => sum + (Number(s.amount) || 0), 0);
+      const amounts = (result.steps || []).map(s => Number(s.amount) || 0).filter(Boolean);
+      const bottleneck = amounts.length ? Math.min(...amounts) : routeValue;
+      route = {
+        nodes: result.nodes,
+        hops: result.nodes.length - 1,
+        value: routeValue,
+        bottleneck_value: bottleneck,
+        risk: "HIGH",
+        transfers: result.steps || []
+      };
+    } else if (state.network.cy) {
+      const rootNode = state.network.cy.getElementById(source);
+      const goalNode = state.network.cy.getElementById(target);
+      if (rootNode.length && goalNode.length) {
+        const aStar = state.network.cy.elements().aStar({ root: rootNode, goal: goalNode, directed: true });
+        if (aStar && aStar.found) {
+          const pathNodes = aStar.path.nodes().map(n => n.id());
+          const pathEdges = aStar.path.edges();
+          const amounts = pathEdges.map(e => Number(e.data("amount")) || 0);
+          const totalVal = amounts.reduce((a, b) => a + b, 0);
+          route = {
+            nodes: pathNodes,
+            hops: pathNodes.length - 1,
+            value: totalVal,
+            bottleneck_value: amounts.length ? Math.min(...amounts) : totalVal,
+            risk: "HIGH",
+            transfers: []
+          };
+        }
+      }
+    }
+
+    if (!route || !route.nodes || route.nodes.length < 2) {
+      toast(`No active laundering path found between ${source} and ${target}.`);
+      clearMulePath();
       return;
     }
 
-    const highlighted =
-      selected === sender ||
-      selected === receiver;
+    state.network.activeTrace = route;
+    $("path-tracer-results")?.classList.remove("hidden");
+    const valEl = $("path-metric-value");
+    if (valEl) valEl.textContent = formatCurrency(route.value);
+    const bottleEl = $("path-metric-bottleneck");
+    if (bottleEl) bottleEl.textContent = formatCurrency(route.bottleneck_value);
+    const hopsEl = $("path-metric-hops");
+    if (hopsEl) hopsEl.textContent = route.hops;
+    const riskEl = $("path-metric-risk");
+    if (riskEl) {
+      riskEl.textContent = route.risk;
+      riskEl.className = `pill ${route.risk}`;
+    }
 
+    const chainEl = $("path-chain-nodes");
+    if (chainEl) {
+      chainEl.innerHTML = route.nodes.map((node, i) => {
+        if (i === 0) return `<span class="path-chain-step source">${escapeHtml(node)}</span>`;
+        return `<span class="path-chain-arrow">➔</span><span class="path-chain-step">${escapeHtml(node)}</span>`;
+      }).join("");
+    }
+
+    applyNetworkHighlights();
+    toast(`Traced ${route.hops}-hop mule path: ${formatCurrency(route.value)} total flow.`);
+  } catch (err) {
+    toast(`Trace failed: ${err.message}`);
+  }
+}
+
+function clearMulePath() {
+  state.network.activeTrace = null;
+  if (state.network.flowInterval) {
+    clearInterval(state.network.flowInterval);
+    state.network.flowInterval = null;
+  }
+  $("path-tracer-results")?.classList.add("hidden");
+  applyNetworkHighlights();
+}
+
+function renderGraphSvgFallback(graph, entities) {
+  const width = Math.max(graph.clientWidth || 700, 500);
+  const height = Math.max(graph.clientHeight || 600, 500);
+  const centerX = width / 2, centerY = height / 2;
+  const selected = state.network.selected;
+  const entityIds = new Set(entities.map(e => e.id));
+  const positions = new Map();
+  let ordered = [...entities];
+
+  if (selected && entityIds.has(selected)) {
+    ordered = [
+      ...entities.filter(e => e.id === selected),
+      ...entities.filter(e => e.id !== selected)
+    ];
+  }
+
+  const radius = Math.max(100, Math.min(width, height) * 0.34);
+  ordered.forEach((entity, index) => {
+    if (selected && entity.id === selected) {
+      positions.set(entity.id, { x: centerX, y: centerY });
+      return;
+    }
+    const hasSelected = Boolean(selected && entityIds.has(selected));
+    const indexOffset = hasSelected ? index - 1 : index;
+    const count = hasSelected ? Math.max(ordered.length - 1, 1) : Math.max(ordered.length, 1);
+    const angle = (Math.PI * 2 * indexOffset) / count - Math.PI / 2;
+    positions.set(entity.id, {
+      x: centerX + Math.cos(angle) * radius,
+      y: centerY + Math.sin(angle) * radius
+    });
+  });
+
+  const edges = state.edges.filter(edge => {
+    const s = getSender(edge), r = getReceiver(edge);
+    return entityIds.has(s) && entityIds.has(r);
+  });
+
+  let svg = `
+    <svg class="network-svg" width="100%" height="100%" viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="setu-network-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor" />
+        </marker>
+      </defs>
+  `;
+
+  edges.forEach(edge => {
+    const s = getSender(edge), r = getReceiver(edge);
+    const from = positions.get(s), to = positions.get(r);
+    if (!from || !to) return;
+    const highlighted = selected === s || selected === r;
     svg += `
-      <g
-        class="network-edge ${
-          highlighted
-            ? "selected"
-            : ""
-        }"
-      >
-
-        <line
-          x1="${from.x}"
-          y1="${from.y}"
-          x2="${to.x}"
-          y2="${to.y}"
-          marker-end="url(#setu-network-arrow)"
-        />
-
-        <text
-          x="${(from.x + to.x) / 2}"
-          y="${(from.y + to.y) / 2 - 8}"
-          text-anchor="middle"
-        >
-          ${formatCurrency(
-            getAmount(edge)
-          )}
+      <g class="network-edge ${highlighted ? "selected" : ""}">
+        <line x1="${from.x}" y1="${from.y}" x2="${to.x}" y2="${to.y}" marker-end="url(#setu-network-arrow)" />
+        <text x="${(from.x + to.x) / 2}" y="${(from.y + to.y) / 2 - 8}" text-anchor="middle">
+          ${formatCurrency(getAmount(edge))}
         </text>
-
       </g>
     `;
   });
 
-
-  /*
-     NODES
-  */
-
   entities.forEach(entity => {
-
-    const position =
-      positions.get(entity.id);
-
-    if (!position) {
-      return;
-    }
-
-    const selectedNode =
-      selected === entity.id;
-
-    const connectedNode =
-      Boolean(
-        selected &&
-        state.edges.some(edge => {
-
-          const sender =
-            getSender(edge);
-
-          const receiver =
-            getReceiver(edge);
-
-          return (
-            (
-              sender === selected &&
-              receiver === entity.id
-            ) ||
-            (
-              receiver === selected &&
-              sender === entity.id
-            )
-          );
-        })
-      );
+    const pos = positions.get(entity.id);
+    if (!pos) return;
+    const selectedNode = selected === entity.id;
+    const connectedNode = Boolean(selected && state.edges.some(edge => {
+      const s = getSender(edge), r = getReceiver(edge);
+      return (s === selected && r === entity.id) || (r === selected && s === entity.id);
+    }));
 
     const classes = [
       "network-node",
       entity.risk.toLowerCase(),
-      selectedNode
-        ? "selected"
-        : "",
-      connectedNode
-        ? "connected"
-        : ""
-    ]
-      .filter(Boolean)
-      .join(" ");
+      selectedNode ? "selected" : "",
+      connectedNode ? "connected" : ""
+    ].filter(Boolean).join(" ");
 
     svg += `
-      <g
-        class="${classes}"
-        data-network-graph-node="${escapeHtml(entity.id)}"
-        transform="translate(${position.x}, ${position.y})"
-      >
-
-        <circle
-          class="network-node-glow"
-          r="${selectedNode ? 30 : 24}"
-        />
-
-        <circle
-          class="network-node-circle"
-          r="${selectedNode ? 22 : 17}"
-        />
-
-        <text
-          class="network-node-label"
-          x="0"
-          y="${selectedNode ? 39 : 33}"
-          text-anchor="middle"
-        >
-          ${escapeHtml(entity.id)}
-        </text>
-
-        <text
-          class="network-node-score"
-          x="0"
-          y="${selectedNode ? 54 : 48}"
-          text-anchor="middle"
-        >
-          ${entity.score}
-        </text>
-
+      <g class="${classes}" data-network-graph-node="${escapeHtml(entity.id)}" transform="translate(${pos.x}, ${pos.y})">
+        <circle class="network-node-glow" r="${selectedNode ? 30 : 24}" />
+        <circle class="network-node-circle" r="${selectedNode ? 22 : 17}" />
+        <text class="network-node-label" x="0" y="${selectedNode ? 39 : 33}" text-anchor="middle">${escapeHtml(entity.id)}</text>
+        <text class="network-node-score" x="0" y="${selectedNode ? 54 : 48}" text-anchor="middle">${entity.score}</text>
       </g>
     `;
   });
 
-
-  svg += `
-    </svg>
-  `;
-
-  graph.innerHTML =
-    svg;
+  svg += `</svg>`;
+  graph.innerHTML = svg;
 }
 
 /* =========================================================
@@ -2312,115 +2747,137 @@ function openNetworkEntity(entityId) {
    ========================================================= */
 
 function setupNetworkControls() {
-
-  const search =
-    $("network-search");
-
+  const search = $("network-search");
   if (search) {
-
-    search.addEventListener(
-      "input",
-      event => {
-
-        state.network.search =
-          event.target.value;
-
-        renderNetworkList();
-        renderGraph();
-        refreshVisualAnalysis();
-
-      }
-    );
-
+    search.addEventListener("input", event => {
+      state.network.search = event.target.value;
+      state.network.needsRebuild = true;
+      renderNetworkList();
+      renderGraph();
+      refreshVisualAnalysis();
+    });
   }
 
-
-  const risk =
-    $("network-risk-filter");
-
+  const risk = $("network-risk-filter");
   if (risk) {
-
-    risk.addEventListener(
-      "change",
-      event => {
-
-        state.network.risk =
-          event.target.value;
-
-        renderNetworkList();
-        renderGraph();
-        state.visual.expand = false;
-        refreshVisualAnalysis();
-
-      }
-    );
-
+    risk.addEventListener("change", event => {
+      state.network.risk = event.target.value;
+      state.network.needsRebuild = true;
+      renderNetworkList();
+      renderGraph();
+      state.visual.expand = false;
+      refreshVisualAnalysis();
+    });
   }
 
-
-  const hops =
-    $("network-hop-filter");
-
+  const hops = $("network-hop-filter");
   if (hops) {
-
-    hops.addEventListener(
-      "change",
-      event => {
-
-        state.network.hops =
-          event.target.value;
-
-        renderNetworkList();
-        renderGraph();
-
-      }
-    );
-
+    hops.addEventListener("change", event => {
+      state.network.hops = event.target.value;
+      state.network.needsRebuild = true;
+      renderNetworkList();
+      renderGraph();
+    });
   }
 
-
-  const reset =
-    $("network-reset");
-
+  const reset = $("network-reset");
   if (reset) {
+    reset.addEventListener("click", () => {
+      state.network.selected = null;
+      state.network.search = "";
+      state.network.risk = "ALL";
+      state.network.hops = "ALL";
+      state.network.egoFocus = false;
+      state.network.activeTrace = null;
+      state.network.needsRebuild = true;
+      $("graph-ego-focus-btn")?.classList.remove("active");
+      clearMulePath();
 
-    reset.addEventListener(
-      "click",
-      () => {
+      if (search) search.value = "";
+      if (risk) risk.value = "ALL";
+      if (hops) hops.value = "ALL";
 
-        state.network = {
-          selected: null,
-          search: "",
-          risk: "ALL",
-          hops: "ALL"
-        };
+      renderNetworkList();
+      renderGraph();
+      renderNodeDetail(null);
+      state.visual.expand = false;
+      refreshVisualAnalysis();
 
-        if (search) {
-          search.value = "";
-        }
-
-        if (risk) {
-          risk.value = "ALL";
-        }
-
-        if (hops) {
-          hops.value = "ALL";
-        }
-
-        renderNetworkList();
-        renderGraph();
-        renderNodeDetail(null);
-        state.visual.expand = false;
-        refreshVisualAnalysis();
-
-        toast(
-          "Network view reset."
-        );
-
+      if (state.network.cy) {
+        state.network.cy.animate({ fit: { eles: state.network.cy.elements(), padding: 40 }, duration: 300 });
       }
-    );
 
+      toast("Network view reset.");
+    });
   }
+
+  // Graph HUD Zoom Controls
+  $("graph-zoom-in")?.addEventListener("click", () => {
+    if (state.network.cy) {
+      const cy = state.network.cy;
+      cy.animate({
+        zoom: {
+          level: Math.min(cy.zoom() * 1.3, cy.maxZoom()),
+          renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 }
+        },
+        duration: 200
+      });
+    }
+  });
+
+  $("graph-zoom-out")?.addEventListener("click", () => {
+    if (state.network.cy) {
+      const cy = state.network.cy;
+      cy.animate({
+        zoom: {
+          level: Math.max(cy.zoom() * 0.75, cy.minZoom()),
+          renderedPosition: { x: cy.width() / 2, y: cy.height() / 2 }
+        },
+        duration: 200
+      });
+    }
+  });
+
+  $("graph-zoom-fit")?.addEventListener("click", () => {
+    if (state.network.cy) {
+      state.network.cy.animate({
+        fit: { eles: state.network.cy.elements(), padding: 45 },
+        duration: 350
+      });
+    }
+  });
+
+  $("graph-reset")?.addEventListener("click", () => {
+    $("network-reset")?.click();
+  });
+
+  // Graph Layout Switchers
+  $("graph-layout-cose")?.addEventListener("click", () => setGraphLayout("cose"));
+  $("graph-layout-concentric")?.addEventListener("click", () => setGraphLayout("concentric"));
+  $("graph-layout-breadthfirst")?.addEventListener("click", () => setGraphLayout("breadthfirst"));
+
+  // Ego Focus Toggle
+  $("graph-ego-focus-btn")?.addEventListener("click", () => toggleEgoFocus());
+
+  // Mule Path Tracer Toggle & Form
+  $("graph-trace-toggle-btn")?.addEventListener("click", () => toggleMulePathTracer());
+  $("path-tracer-close")?.addEventListener("click", () => toggleMulePathTracer());
+
+  $("path-tracer-form")?.addEventListener("submit", event => {
+    event.preventDefault();
+    const source = $("path-tracer-source")?.value;
+    const target = $("path-tracer-target")?.value;
+    runMulePathTrace(source, target);
+  });
+
+  $("path-tracer-clear")?.addEventListener("click", () => {
+    clearMulePath();
+    toast("Mule path trace cleared.");
+  });
+
+  window.addEventListener("resize", () => {
+    state.network.cy?.resize();
+  });
 }
 
 
@@ -2654,6 +3111,15 @@ function applyCaseData(data) {
     Boolean(
       data.report_available
     );
+
+  // Automatically focus on top threat suspect on initial load
+  if (!state.network.selected && state.scores.length > 0) {
+    const sortedScores = [...state.scores].sort((a, b) => getScore(b) - getScore(a));
+    const topId = getEntityId(sortedScores[0]);
+    if (topId) {
+      state.network.selected = topId;
+    }
+  }
 }
 
 
@@ -3081,14 +3547,15 @@ function activateView(viewName) {
 
 
   if (target === "network") {
-
     window.setTimeout(
       () => {
         renderNetwork();
+        if (state.network.cy) {
+          state.network.cy.resize();
+        }
       },
       50
     );
-
   }
 
 
@@ -3496,6 +3963,28 @@ function setupGlobalClicks() {
 
       }
 
+      const focusEgo = event.target.closest("[data-focus-ego-network]");
+      if (focusEgo) {
+        event.preventDefault();
+        const entity = focusEgo.getAttribute("data-focus-ego-network");
+        if (state.network.selected !== entity) {
+          selectNetworkNode(entity);
+        }
+        state.network.egoFocus = true;
+        $("graph-ego-focus-btn")?.classList.add("active");
+        state.network.needsRebuild = true;
+        renderGraph();
+        return;
+      }
+
+      const traceNode = event.target.closest("[data-trace-from-node]");
+      if (traceNode) {
+        event.preventDefault();
+        const entity = traceNode.getAttribute("data-trace-from-node");
+        openMulePathTracerWithSource(entity);
+        return;
+      }
+
       const graphOperations = event.target.closest("[data-open-graph-operations]");
       if (graphOperations) {
         event.preventDefault();
@@ -3616,8 +4105,9 @@ function setupPipeline() {
         }
 
 
+        toast("Pipeline finished — updating investigation models…");
+        await new Promise(resolve => setTimeout(resolve, 25));
         await load();
-
 
         toast(
           "Investigation ready — evidence correlated successfully."

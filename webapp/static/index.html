@@ -15,7 +15,7 @@
     rel="stylesheet"
   >
 
-  <link rel="stylesheet" href="/static/styles.css?v=20260915-3">
+  <link rel="stylesheet" href="/static/styles.css?v=20260915-7">
   <link rel="stylesheet" href="/static/casework.css?v=20260915-3">
   <link rel="stylesheet" href="/static/operations.css?v=20260915-3">
   <link rel="stylesheet" href="/static/workspace.css?v=20260915-3">
@@ -48,10 +48,6 @@
     </div>
 
     <div class="topbar-actions">
-
-      <div class="case-ref">
-        CASE REF · SETU-DEMO-001
-      </div>
 
       <span id="auth-user" class="auth-user"></span>
 
@@ -1005,6 +1001,91 @@
       </aside>
 
       <div class="graph-container">
+        <!-- Graph Navigation & Physics HUD -->
+        <div class="graph-hud" aria-label="Graph canvas controls">
+          <div class="hud-group" aria-label="Zoom controls">
+            <button id="graph-zoom-in" type="button" class="hud-btn" title="Zoom In (+)" aria-label="Zoom in">+</button>
+            <button id="graph-zoom-out" type="button" class="hud-btn" title="Zoom Out (−)" aria-label="Zoom out">−</button>
+            <button id="graph-zoom-fit" type="button" class="hud-btn" title="Fit to Viewport" aria-label="Fit graph to viewport">⊡</button>
+            <button id="graph-reset" type="button" class="hud-btn" title="Reset View" aria-label="Reset graph view">↺</button>
+          </div>
+
+          <div class="hud-divider"></div>
+
+          <div class="hud-group" aria-label="Layout controls">
+            <button id="graph-layout-cose" type="button" class="hud-btn active" title="Force-Directed Physics (COSE)" data-layout="cose">Physics</button>
+            <button id="graph-layout-concentric" type="button" class="hud-btn" title="Ego-Centric Radial Rings" data-layout="concentric">Ego</button>
+            <button id="graph-layout-breadthfirst" type="button" class="hud-btn" title="Hierarchical Flow Hierarchy" data-layout="breadthfirst">Flow</button>
+          </div>
+
+          <div class="hud-divider"></div>
+
+          <div class="hud-group" aria-label="Analysis tools">
+            <button id="graph-ego-focus-btn" type="button" class="hud-btn" title="Filter and dim non-counterparties">◎ Ego Focus</button>
+            <button id="graph-trace-toggle-btn" type="button" class="hud-btn" title="Open Bottleneck & Mule Path Tracer">⚡ Trace Path</button>
+          </div>
+        </div>
+
+        <!-- Floating Bottleneck & Mule Path Tracer Panel -->
+        <div id="path-tracer-hud" class="path-tracer-hud hidden" aria-label="Mule path tracer">
+          <div class="path-tracer-header">
+            <div class="path-tracer-title">
+              <span class="path-tracer-icon">⚡</span>
+              <div>
+                <strong>Mule Flow &amp; Bottleneck Tracer</strong>
+                <small>Shortest multi-hop laundering routes</small>
+              </div>
+            </div>
+            <button id="path-tracer-close" type="button" class="hud-btn-close" aria-label="Close tracer">✕</button>
+          </div>
+
+          <form id="path-tracer-form" class="path-tracer-form">
+            <div class="path-tracer-inputs">
+              <div class="path-tracer-field">
+                <label for="path-tracer-source">Source entity</label>
+                <select id="path-tracer-source" name="source" required>
+                  <option value="">Select source…</option>
+                </select>
+              </div>
+              <span class="path-tracer-arrow">➔</span>
+              <div class="path-tracer-field">
+                <label for="path-tracer-target">Target entity</label>
+                <select id="path-tracer-target" name="target" required>
+                  <option value="">Select target…</option>
+                </select>
+              </div>
+              <button id="path-tracer-run" type="submit" class="primary path-tracer-submit">Trace</button>
+              <button id="path-tracer-clear" type="button" class="outline path-tracer-clear">Clear</button>
+            </div>
+          </form>
+
+          <div id="path-tracer-results" class="path-tracer-results hidden">
+            <div class="path-metrics-grid">
+              <div class="path-metric">
+                <span>Route Value</span>
+                <strong id="path-metric-value">₹0</strong>
+              </div>
+              <div class="path-metric bottleneck">
+                <span>Bottleneck Capacity</span>
+                <strong id="path-metric-bottleneck">₹0</strong>
+              </div>
+              <div class="path-metric">
+                <span>Hops</span>
+                <strong id="path-metric-hops">0</strong>
+              </div>
+              <div class="path-metric">
+                <span>Risk Tier</span>
+                <span id="path-metric-risk" class="pill HIGH">HIGH</span>
+              </div>
+            </div>
+
+            <div class="path-chain-view">
+              <span class="eyebrow">LAUNDERING CHAIN</span>
+              <div id="path-chain-nodes" class="path-chain-nodes"></div>
+            </div>
+          </div>
+        </div>
+
         <div id="graph" class="graph">
 
         <p class="empty">
@@ -1026,6 +1107,11 @@
           <span><i class="legend-dot high"></i>High</span>
           <span><i class="legend-dot medium"></i>Medium</span>
           <span><i class="legend-dot low"></i>Low</span>
+          <span class="legend-divider"></span>
+          <span class="legend-title">FLOW</span>
+          <span class="legend-flow-in"><i class="legend-line in"></i>Inbound</span>
+          <span class="legend-flow-out"><i class="legend-line out"></i>Outbound</span>
+          <span class="legend-flow-path"><i class="legend-line path"></i>Mule Path</span>
         </div>
       </div>
 
@@ -1523,7 +1609,7 @@
      SCRIPTS
      ===================================================== -->
 
-<script src="/static/app.js?v=20260913-3"></script>
+<script src="/static/app.js?v=20260915-7"></script>
 <script src="/static/operations.js?v=20260913-1"></script>
 <script src="/static/advanced-operations.js?v=20260912-1"></script>
 <script src="/static/workspace.js?v=20260911-4"></script>
