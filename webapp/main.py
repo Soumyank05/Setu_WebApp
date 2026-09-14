@@ -1205,6 +1205,29 @@ def evidence_chain(user: dict = Depends(get_current_user)) -> list[dict]:
     return read_json(CUSTODY_PATH, [])
 
 
+def execute_pipeline_step(step_target: str) -> str:
+    import importlib
+    import io
+    import contextlib
+    mod_name = step_target.replace("/", ".").replace("\\", ".")
+    if mod_name.endswith(".py"):
+        mod_name = mod_name[:-3]
+    module = importlib.import_module(mod_name)
+    if hasattr(module, "RAW_DIR"):
+        module.RAW_DIR = RAW
+    if hasattr(module, "PROCESSED_DIR"):
+        module.PROCESSED_DIR = PROCESSED
+    if hasattr(module, "REPORT_DIR"):
+        module.REPORT_DIR = REPORT
+    if hasattr(module, "OUT_DIR"):
+        module.OUT_DIR = RAW
+
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        module.main()
+    return buf.getvalue().strip()
+
+
 @app.post("/api/pipeline")
 def run_pipeline(user: dict = Depends(require_supervisor)) -> dict:
     telecom, upi = RAW / "telecom_cdr.csv", RAW / "upi_settlement.csv"
@@ -1220,11 +1243,14 @@ def run_pipeline(user: dict = Depends(require_supervisor)) -> dict:
     steps = STEPS if not all(available) else STEPS[1:]
     completed = []
     for label, script in steps:
-        result = subprocess.run([sys.executable, str(ROOT / script)], capture_output=True, text=True, cwd=ROOT)
-        if result.returncode:
-            raise HTTPException(status_code=500, detail={"step": label, "error": result.stderr[-1_500:]})
-        completed.append({"step": label, "output": result.stdout.strip()})
-        audit("pipeline_step_completed", {"step": label})
+        try:
+            output = execute_pipeline_step(script)
+            completed.append({"step": label, "output": output})
+            audit("pipeline_step_completed", {"step": label})
+        except Exception as exc:
+            import traceback
+            error_msg = traceback.format_exc()[-1_500:]
+            raise HTTPException(status_code=500, detail={"step": label, "error": str(exc) or error_msg})
     source = "staged evidence" if all(available) else "new synthetic evidence"
     manifest = read_json(PROCESSED / "manifest.json", {})
     prior = read_json(CUSTODY_PATH, [])
