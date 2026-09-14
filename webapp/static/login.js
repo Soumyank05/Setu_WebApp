@@ -20,26 +20,44 @@ async function submitAuth(url, form) {
   return requestJson(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    credentials: "same-origin",
     body: JSON.stringify(Object.fromEntries(new FormData(form)))
   });
 }
 
 async function initialiseLogin() {
   const login = document.getElementById("login-form");
+  const loginBtn = login.querySelector("button[type='submit']");
   login.addEventListener("submit", async event => {
     event.preventDefault();
+    if (loginBtn) { loginBtn.disabled = true; loginBtn.textContent = "Signing In…"; }
     try {
       const user = await submitAuth("/api/auth/login", login);
       if (user.force_password_reset) {
+        if (loginBtn) { loginBtn.disabled = false; loginBtn.textContent = "Sign In"; }
         login.hidden = true;
         document.getElementById("password-reset-form").hidden = false;
         message("A password change is required before you can enter the workspace.");
-      } else window.location.replace("/");
-    } catch (error) { message(error.message); }
+      } else {
+        window.location.replace("/");
+      }
+    } catch (error) {
+      message(error.message);
+      if (loginBtn) { loginBtn.disabled = false; loginBtn.textContent = "Sign In"; }
+    }
   });
-  document.getElementById("password-reset-form").addEventListener("submit", async event => {
+  const resetForm = document.getElementById("password-reset-form");
+  const resetBtn = resetForm.querySelector("button[type='submit']");
+  resetForm.addEventListener("submit", async event => {
     event.preventDefault();
-    try { await submitAuth("/api/auth/change-password", event.currentTarget); window.location.replace("/"); } catch (error) { message(error.message); }
+    if (resetBtn) { resetBtn.disabled = true; resetBtn.textContent = "Updating Password…"; }
+    try {
+      await submitAuth("/api/auth/change-password", event.currentTarget);
+      window.location.replace("/");
+    } catch (error) {
+      message(error.message);
+      if (resetBtn) { resetBtn.disabled = false; resetBtn.textContent = "Set New Password"; }
+    }
   });
   try {
     const status = await requestJson("/api/auth/setup-status");

@@ -3171,7 +3171,7 @@ function render() {
    ========================================================= */
 
 async function requestJson(url, options = {}) {
-  const response = await fetch(url, options);
+  const response = await fetch(url, { credentials: "same-origin", ...options });
   const body = await response.json().catch(() => ({}));
   if (response.status === 401) {
     window.location.replace("/login");
@@ -3196,7 +3196,7 @@ function renderAuthenticatedUser() {
 }
 
 async function authenticateSession() {
-  const response = await fetch("/api/auth/me", { cache: "no-store" });
+  const response = await fetch("/api/auth/me", { cache: "no-store", credentials: "same-origin" });
   if (!response.ok) {
     window.location.replace("/login");
     return false;
@@ -3436,7 +3436,8 @@ async function load() {
       await fetch(
         "/api/case",
         {
-          cache: "no-store"
+          cache: "no-store",
+          credentials: "same-origin"
         }
       );
 

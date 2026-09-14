@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import hashlib
 import hmac
+import base64
 import os
 import secrets
 import sqlite3
@@ -91,6 +92,7 @@ AUTH_DB = PROCESSED / "users.sqlite3"
 SESSION_COOKIE = "setu_session"
 SESSION_LIFETIME_HOURS = int(os.getenv("SETU_SESSION_LIFETIME_HOURS", "8"))
 COOKIE_SECURE = os.getenv("SETU_COOKIE_SECURE", "false").lower() == "true"
+SETU_SECRET_KEY = os.getenv("SETU_SECRET_KEY", "setu-secure-investigator-hmac-session-token-secret-2026")
 PRODUCTION_MODE = os.getenv("SETU_PRODUCTION", "false").lower() == "true"
 IDENTITY_PROVIDER = os.getenv("SETU_IDENTITY_PROVIDER", "")
 IMMUTABLE_AUDIT_URI = os.getenv("SETU_IMMUTABLE_AUDIT_URI", "")
@@ -412,34 +414,156 @@ def public_user(row: sqlite3.Row) -> dict:
     return {"id": row["id"], "username": row["username"], "role": row["role"]}
 
 
+def is_request_secure(request: Request) -> bool:
+    if COOKIE_SECURE:
+        return True
+    if os.getenv("VERCEL") or os.getenv("AWS_LAMBDA_FUNCTION_NAME"):
+        return True
+    if request.headers.get("x-forwarded-proto", "").lower() == "https":
+        return True
+    return request.url.scheme == "https"
+
+
+def generate_signed_session_token(payload: dict) -> str:
+    """Generate a tamper-proof HMAC-SHA256 signed session token."""
+    payload_json = json.dumps(payload, separators=(",", ":"), sort_keys=True).encode("utf-8")
+    payload_b64 = base64.urlsafe_b64encode(payload_json).decode("utf-8").rstrip("=")
+    signature = hmac.new(SETU_SECRET_KEY.encode("utf-8"), payload_b64.encode("utf-8"), hashlib.sha256).digest()
+    sig_b64 = base64.urlsafe_b64encode(signature).decode("utf-8").rstrip("=")
+    return f"{payload_b64}.{sig_b64}"
+
+
+def verify_signed_session_token(token: str) -> Optional[dict]:
+    """Verify an HMAC-SHA256 signed session token and return the payload if valid."""
+    try:
+        if not token or "." not in token:
+            return None
+        payload_b64, sig_b64 = token.split(".", 1)
+        expected_sig = hmac.new(SETU_SECRET_KEY.encode("utf-8"), payload_b64.encode("utf-8"), hashlib.sha256).digest()
+        sig_padding = 4 - (len(sig_b64) % 4)
+        if sig_padding != 4:
+            sig_b64 += "=" * sig_padding
+        actual_sig = base64.urlsafe_b64decode(sig_b64.encode("utf-8"))
+        if not hmac.compare_digest(expected_sig, actual_sig):
+            return None
+        payload_padding = 4 - (len(payload_b64) % 4)
+        if payload_padding != 4:
+            payload_b64 += "=" * payload_padding
+        payload_data = base64.urlsafe_b64decode(payload_b64.encode("utf-8")).decode("utf-8")
+        payload = json.loads(payload_data)
+        if payload.get("exp", 0) < datetime.now(timezone.utc).timestamp():
+            return None
+        return payload
+    except Exception:
+        return None
+
+
 def session_token_hash(token: str) -> str:
     return hashlib.sha256(token.encode()).hexdigest()
 
 
-def create_session(response: Response, user_id: int, request: Request) -> None:
-    token = secrets.token_urlsafe(48)
+def create_session(response: Response, user_id: int, request: Request, user_info: Optional[dict] = None) -> str:
     now = datetime.now(timezone.utc)
     expires = now + timedelta(hours=SESSION_LIFETIME_HOURS)
-    with db() as connection:
-        connection.execute("DELETE FROM sessions WHERE expires_at <= ?", (now.isoformat(),))
-        connection.execute("INSERT INTO sessions (token_hash, user_id, expires_at, created_at, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?)",
-                           (session_token_hash(token), user_id, expires.isoformat(), now.isoformat(), request.client.host if request.client else "", request.headers.get("user-agent", "")[:300]))
-    response.set_cookie(SESSION_COOKIE, token, max_age=int(timedelta(hours=SESSION_LIFETIME_HOURS).total_seconds()),
-                        httponly=True, secure=COOKIE_SECURE, samesite="lax", path="/")
+    if not user_info:
+        try:
+            with db() as connection:
+                row = connection.execute("SELECT username, role, force_password_reset FROM users WHERE id = ?", (user_id,)).fetchone()
+                if row:
+                    user_info = {
+                        "username": row["username"],
+                        "role": row["role"],
+                        "force_password_reset": bool(row["force_password_reset"]),
+                    }
+        except Exception:
+            pass
+    if not user_info:
+        user_info = {"username": "", "role": "investigator", "force_password_reset": False}
+
+    payload = {
+        "user_id": user_id,
+        "username": user_info.get("username", ""),
+        "role": user_info.get("role", "investigator"),
+        "force_password_reset": bool(user_info.get("force_password_reset", False)),
+        "exp": expires.timestamp(),
+    }
+    token = generate_signed_session_token(payload)
+    try:
+        with db() as connection:
+            connection.execute("DELETE FROM sessions WHERE expires_at <= ?", (now.isoformat(),))
+            connection.execute(
+                "INSERT INTO sessions (token_hash, user_id, expires_at, created_at, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?)",
+                (session_token_hash(token), user_id, expires.isoformat(), now.isoformat(),
+                 request.client.host if request.client else "", request.headers.get("user-agent", "")[:300])
+            )
+    except Exception:
+        pass
+    response.set_cookie(
+        SESSION_COOKIE,
+        token,
+        max_age=int(timedelta(hours=SESSION_LIFETIME_HOURS).total_seconds()),
+        httponly=True,
+        secure=is_request_secure(request),
+        samesite="lax",
+        path="/"
+    )
+    return token
 
 
 def get_current_user(session: Optional[str] = Cookie(default=None, alias=SESSION_COOKIE)) -> dict:
     if not session:
         raise HTTPException(status_code=401, detail="Sign in is required.")
-    with db() as connection:
-        row = connection.execute("""
-            SELECT users.id, users.username, users.role FROM sessions
-            JOIN users ON users.id = sessions.user_id
-            WHERE sessions.token_hash = ? AND sessions.expires_at > ? AND users.is_active = 1
-        """, (session_token_hash(session), datetime.now(timezone.utc).isoformat())).fetchone()
-    if not row:
-        raise HTTPException(status_code=401, detail="Your session has expired. Please sign in again.")
-    return public_user(row)
+
+    # 1. First verify cryptographically signed token (works seamlessly across serverless instances)
+    payload = verify_signed_session_token(session)
+    if payload:
+        user_id = payload.get("user_id")
+        user_data = {
+            "id": user_id,
+            "username": payload.get("username", ""),
+            "role": payload.get("role", "investigator"),
+            "force_password_reset": bool(payload.get("force_password_reset", False)),
+        }
+        try:
+            with db() as connection:
+                row = connection.execute(
+                    "SELECT id, username, role, is_active, force_password_reset FROM users WHERE id = ?",
+                    (user_id,)
+                ).fetchone()
+                if row:
+                    if not row["is_active"]:
+                        raise HTTPException(status_code=401, detail="Account is deactivated.")
+                    return {
+                        "id": row["id"],
+                        "username": row["username"],
+                        "role": row["role"],
+                        "force_password_reset": bool(row["force_password_reset"]),
+                    }
+        except HTTPException:
+            raise
+        except Exception:
+            pass
+        return user_data
+
+    # 2. Backward-compatible fallback: check sessions table for raw token hash
+    try:
+        with db() as connection:
+            row = connection.execute("""
+                SELECT users.id, users.username, users.role, users.force_password_reset FROM sessions
+                JOIN users ON users.id = sessions.user_id
+                WHERE sessions.token_hash = ? AND sessions.expires_at > ? AND users.is_active = 1
+            """, (session_token_hash(session), datetime.now(timezone.utc).isoformat())).fetchone()
+            if row:
+                return {
+                    "id": row["id"],
+                    "username": row["username"],
+                    "role": row["role"],
+                    "force_password_reset": bool(row["force_password_reset"]),
+                }
+    except Exception:
+        pass
+
+    raise HTTPException(status_code=401, detail="Your session has expired. Please sign in again.")
 
 
 def require_admin(user: dict = Depends(get_current_user)) -> dict:
@@ -772,7 +896,13 @@ def login(credentials: Credentials, response: Response, request: Request) -> dic
             raise HTTPException(status_code=401, detail="Invalid username or password.")
         connection.execute("UPDATE users SET failed_login_attempts = 0 WHERE id = ?", (row["id"],))
     user = public_user(row)
-    create_session(response, user["id"], request)
+    user_info = {
+        "id": user["id"],
+        "username": user["username"],
+        "role": user["role"],
+        "force_password_reset": bool(row["force_password_reset"]),
+    }
+    create_session(response, user["id"], request, user_info=user_info)
     audit("user_logged_in", {"user_id": user["id"], "username": user["username"]})
     return {**user, "force_password_reset": bool(row["force_password_reset"])}
 
@@ -783,12 +913,19 @@ class PasswordChange(BaseModel):
 
 
 @app.post("/api/auth/change-password")
-def change_password(change: PasswordChange, user: dict = Depends(get_current_user)) -> dict:
+def change_password(change: PasswordChange, response: Response, request: Request, user: dict = Depends(get_current_user)) -> dict:
     with db() as connection:
         row = connection.execute("SELECT password_hash FROM users WHERE id = ?", (user["id"],)).fetchone()
         if not row or not verify_password(change.current_password, row["password_hash"]):
             raise HTTPException(status_code=401, detail="Current password is incorrect.")
         connection.execute("UPDATE users SET password_hash = ?, force_password_reset = 0, failed_login_attempts = 0, locked_at = NULL WHERE id = ?", (hash_password(change.new_password), user["id"]))
+    user_info = {
+        "id": user["id"],
+        "username": user["username"],
+        "role": user["role"],
+        "force_password_reset": False,
+    }
+    create_session(response, user["id"], request, user_info=user_info)
     audit("password_changed", {"username": user["username"], "self_service": True})
     return {"message": "Password updated."}
 
@@ -802,26 +939,49 @@ def logout(response: Response, session: Optional[str] = Cookie(default=None, ali
     """
     user = None
     if session:
-        with db() as connection:
-            row = connection.execute("""
-                SELECT users.id, users.username, users.role FROM sessions
-                JOIN users ON users.id = sessions.user_id
-                WHERE sessions.token_hash = ?
-            """, (session_token_hash(session),)).fetchone()
-            connection.execute("DELETE FROM sessions WHERE token_hash = ?", (session_token_hash(session),))
-            user = public_user(row) if row else None
+        payload = verify_signed_session_token(session)
+        if payload:
+            user = {"id": payload.get("user_id"), "username": payload.get("username")}
+        else:
+            try:
+                with db() as connection:
+                    row = connection.execute("""
+                        SELECT users.id, users.username FROM sessions
+                        JOIN users ON users.id = sessions.user_id
+                        WHERE sessions.token_hash = ?
+                    """, (session_token_hash(session),)).fetchone()
+                    if row:
+                        user = {"id": row["id"], "username": row["username"]}
+            except Exception:
+                pass
+        try:
+            with db() as connection:
+                connection.execute("DELETE FROM sessions WHERE token_hash = ?", (session_token_hash(session),))
+        except Exception:
+            pass
     response.delete_cookie(SESSION_COOKIE, path="/")
-    if user:
-        audit("user_logged_out", {"user_id": user["id"], "username": user["username"]})
+    if user and user.get("username"):
+        audit("user_logged_out", {"user_id": user.get("id"), "username": user.get("username")})
     response.status_code = 204
     return response
 
 
 @app.get("/api/auth/me")
 def current_user(user: dict = Depends(get_current_user)) -> dict:
-    with db() as connection:
-        reset = connection.execute("SELECT force_password_reset FROM users WHERE id = ?", (user["id"],)).fetchone()
-    return {**user, "force_password_reset": bool(reset and reset["force_password_reset"])}
+    reset_required = bool(user.get("force_password_reset", False))
+    try:
+        with db() as connection:
+            row = connection.execute("SELECT force_password_reset FROM users WHERE id = ?", (user["id"],)).fetchone()
+            if row is not None:
+                reset_required = bool(row["force_password_reset"])
+    except Exception:
+        pass
+    return {
+        "id": user["id"],
+        "username": user["username"],
+        "role": user["role"],
+        "force_password_reset": reset_required,
+    }
 
 
 @app.get("/api/security/sessions")
