@@ -1,0 +1,603 @@
+node,in_degree,out_degree,incoming_transactions,outgoing_transactions,total_in_amount,total_out_amount,shared_device,multi_hop_routing,pass_through_ratio,max_fanout_counterparties,high_velocity_fanout,high_in_degree,high_value_flow,anomaly_flag,anomaly_score,risk_score,risk_reasons,risk_tier,scoring_model_version
+9889801878,1,2,1,2,48000.0,47000.0,True,True,0.979,2,True,False,True,-1,0.2435,85,shared device; rapid pass through; rapid fanout; high value flow; behavioural outlier,HIGH,2026.09.1
+9120560038,1,1,1,1,22000.0,21000.0,True,True,0.955,1,False,False,False,-1,0.2107,60,shared device; rapid pass through; behavioural outlier,HIGH,2026.09.1
+9453985457,9,18,9,18,8750.0,21520.0,False,True,0.8,2,True,False,False,-1,0.0181,55,rapid pass through; rapid fanout; behavioural outlier,HIGH,2026.09.1
+9105343128,16,12,16,12,32935.0,10025.0,False,False,0.0,2,True,True,True,-1,0.0206,50,rapid fanout; unusually high fanin; high value flow; behavioural outlier,MEDIUM,2026.09.1
+9821259825,16,7,16,7,17060.0,3375.0,False,True,1.098,1,False,True,False,1,-0.0695,45,rapid pass through; unusually high fanin,MEDIUM,2026.09.1
+9368290911,17,10,17,10,18060.0,6930.0,False,False,0.0,2,True,True,False,-1,0.0001,40,rapid fanout; unusually high fanin; behavioural outlier,MEDIUM,2026.09.1
+9533492995,21,11,21,11,17160.0,7975.0,False,False,0.0,2,True,True,False,-1,0.0451,40,rapid fanout; unusually high fanin; behavioural outlier,MEDIUM,2026.09.1
+9000812852,12,8,12,9,6405.0,28800.0,False,False,0.0,2,True,False,True,-1,0.0416,35,rapid fanout; high value flow; behavioural outlier,MEDIUM,2026.09.1
+9052116857,12,16,12,16,6890.0,17835.0,False,True,0.802,1,False,False,False,1,-0.1495,30,rapid pass through,MEDIUM,2026.09.1
+9257827965,11,15,11,15,20640.0,12245.0,False,True,0.791,1,False,False,False,1,-0.1476,30,rapid pass through,MEDIUM,2026.09.1
+9998681300,10,14,10,14,9595.0,15920.0,False,True,1.173,1,False,False,False,1,-0.1713,30,rapid pass through,MEDIUM,2026.09.1
+9028267486,16,4,16,4,21800.0,4730.0,False,False,0.0,1,False,True,False,-1,0.0239,25,unusually high fanin; behavioural outlier,LOW,2026.09.1
+9035922148,7,16,7,16,7975.0,15640.0,False,False,0.0,2,True,False,False,-1,0.0183,25,rapid fanout; behavioural outlier,LOW,2026.09.1
+9040444112,18,6,18,6,37980.0,7490.0,False,False,0.0,1,False,True,True,1,-0.0052,25,unusually high fanin; high value flow,LOW,2026.09.1
+9120335120,17,5,19,5,18910.0,1865.0,False,False,0.0,1,False,True,False,-1,0.0568,25,unusually high fanin; behavioural outlier,LOW,2026.09.1
+9189008337,19,9,19,9,30285.0,5470.0,False,False,0.0,1,False,True,True,1,-0.0536,25,unusually high fanin; high value flow,LOW,2026.09.1
+9200375438,22,12,22,12,43605.0,7180.0,False,False,0.0,1,False,True,True,1,-0.0142,25,unusually high fanin; high value flow,LOW,2026.09.1
+9233839146,20,12,20,12,32120.0,12440.0,False,False,0.0,1,False,True,True,1,-0.0606,25,unusually high fanin; high value flow,LOW,2026.09.1
+9333160902,26,9,26,9,19340.0,4460.0,False,False,0.0,1,False,True,False,-1,0.0052,25,unusually high fanin; behavioural outlier,LOW,2026.09.1
+9353907400,15,17,15,17,20060.0,14280.0,False,False,0.0,2,True,False,False,-1,0.0118,25,rapid fanout; behavioural outlier,LOW,2026.09.1
+9402819790,5,8,5,8,2395.0,4830.0,False,False,0.0,2,True,False,False,-1,0.1041,25,rapid fanout; behavioural outlier,LOW,2026.09.1
+9539773000,21,12,22,13,33450.0,7800.0,False,False,0.0,1,False,True,True,1,-0.0316,25,unusually high fanin; high value flow,LOW,2026.09.1
+9641643119,10,19,10,19,16290.0,21830.0,False,False,0.0,2,True,False,False,-1,0.0421,25,rapid fanout; behavioural outlier,LOW,2026.09.1
+9695618974,18,11,18,11,29540.0,15580.0,False,False,0.0,1,False,True,True,1,-0.0927,25,unusually high fanin; high value flow,LOW,2026.09.1
+9743555336,7,14,7,14,8150.0,9505.0,False,False,0.0,2,True,False,False,-1,0.0092,25,rapid fanout; behavioural outlier,LOW,2026.09.1
+9819214001,18,12,18,12,11670.0,36140.0,False,False,3.143,1,False,True,True,1,-0.0783,25,unusually high fanin; high value flow,LOW,2026.09.1
+9834003292,9,18,9,18,11360.0,19655.0,False,False,0.0,2,True,False,False,-1,0.0123,25,rapid fanout; behavioural outlier,LOW,2026.09.1
+9837704899,16,15,16,16,11390.0,31025.0,False,False,0.0,1,False,True,True,1,-0.1098,25,unusually high fanin; high value flow,LOW,2026.09.1
+9127592756,0,1,0,1,0.0,48000.0,False,False,0.0,1,False,False,True,-1,0.2516,20,high value flow; behavioural outlier,LOW,2026.09.1
+finalpoint.cashout@upi,2,0,2,0,46000.0,0.0,False,False,0.0,0,False,False,True,-1,0.2635,20,high value flow; behavioural outlier,LOW,2026.09.1
+9026954613,19,14,19,14,22130.0,19235.0,False,False,0.0,1,False,True,False,1,-0.0954,15,unusually high fanin,LOW,2026.09.1
+9048184584,12,11,12,11,11665.0,14140.0,False,False,0.0,2,True,False,False,1,-0.0359,15,rapid fanout,LOW,2026.09.1
+9054186775,17,12,17,12,15875.0,13825.0,False,False,0.0,1,False,True,False,1,-0.1482,15,unusually high fanin,LOW,2026.09.1
+9067351927,20,11,21,12,19285.0,16105.0,False,False,0.0,1,False,True,False,1,-0.0791,15,unusually high fanin,LOW,2026.09.1
+9078522433,16,13,16,13,17960.0,18745.0,False,False,0.0,1,False,True,False,1,-0.1417,15,unusually high fanin,LOW,2026.09.1
+9090925546,18,12,18,12,21885.0,14600.0,False,False,0.0,1,False,True,False,1,-0.1227,15,unusually high fanin,LOW,2026.09.1
+9098471173,16,14,16,14,14605.0,10355.0,False,False,0.0,1,False,True,False,1,-0.1573,15,unusually high fanin,LOW,2026.09.1
+9106672436,19,11,19,11,22770.0,16415.0,False,False,0.0,1,False,True,False,1,-0.1016,15,unusually high fanin,LOW,2026.09.1
+9111007715,16,11,16,11,11120.0,8845.0,False,False,0.0,1,False,True,False,1,-0.1683,15,unusually high fanin,LOW,2026.09.1
+9167649836,16,12,16,12,15010.0,7810.0,False,False,0.0,1,False,True,False,1,-0.1625,15,unusually high fanin,LOW,2026.09.1
+9177920452,17,12,18,12,15270.0,7000.0,False,False,0.0,1,False,True,False,1,-0.134,15,unusually high fanin,LOW,2026.09.1
+9188404618,16,9,16,9,14155.0,10165.0,False,False,0.0,1,False,True,False,1,-0.1509,15,unusually high fanin,LOW,2026.09.1
+9207971522,16,10,16,10,13565.0,11235.0,False,False,0.487,1,False,True,False,1,-0.1588,15,unusually high fanin,LOW,2026.09.1
+9249363568,16,12,16,13,19005.0,9750.0,False,False,0.0,1,False,True,False,1,-0.1569,15,unusually high fanin,LOW,2026.09.1
+9252995406,17,15,17,15,24630.0,17355.0,False,False,0.0,1,False,True,False,1,-0.1022,15,unusually high fanin,LOW,2026.09.1
+9256575052,16,20,16,20,10510.0,12845.0,False,False,0.0,1,False,True,False,1,-0.0662,15,unusually high fanin,LOW,2026.09.1
+9258558771,16,12,16,12,16315.0,12200.0,False,False,0.0,1,False,True,False,1,-0.1592,15,unusually high fanin,LOW,2026.09.1
+9265230098,18,9,19,9,12830.0,7900.0,False,False,0.514,1,False,True,False,1,-0.1216,15,unusually high fanin,LOW,2026.09.1
+9271401903,20,18,21,18,21995.0,22190.0,False,False,0.0,1,False,True,False,1,-0.0249,15,unusually high fanin,LOW,2026.09.1
+9274610699,21,18,21,18,21720.0,13300.0,False,False,0.0,1,False,True,False,1,-0.0213,15,unusually high fanin,LOW,2026.09.1
+9293480844,22,10,22,10,19855.0,5840.0,False,False,0.0,1,False,True,False,1,-0.0464,15,unusually high fanin,LOW,2026.09.1
+9325983817,18,13,18,13,15245.0,20625.0,False,False,15.391,1,False,True,False,1,-0.1158,15,unusually high fanin,LOW,2026.09.1
+9330833334,17,16,17,16,15485.0,11775.0,False,False,0.0,1,False,True,False,1,-0.1259,15,unusually high fanin,LOW,2026.09.1
+9339899280,16,17,16,17,13335.0,13395.0,False,False,0.0,1,False,True,False,1,-0.1216,15,unusually high fanin,LOW,2026.09.1
+9342606616,12,12,12,12,12140.0,5555.0,False,False,0.182,2,True,False,False,1,-0.0103,15,rapid fanout,LOW,2026.09.1
+9352364431,20,17,20,19,18890.0,26305.0,False,False,0.0,1,False,True,False,1,-0.0154,15,unusually high fanin,LOW,2026.09.1
+9374975071,16,14,16,14,10235.0,13200.0,False,False,0.0,1,False,True,False,1,-0.1573,15,unusually high fanin,LOW,2026.09.1
+9375742874,18,7,18,7,18790.0,3250.0,False,False,0.0,1,False,True,False,1,-0.0346,15,unusually high fanin,LOW,2026.09.1
+9384008626,17,12,18,14,9790.0,23725.0,False,False,0.0,1,False,True,False,1,-0.1018,15,unusually high fanin,LOW,2026.09.1
+9419499003,16,6,17,6,15770.0,7690.0,False,False,0.0,1,False,True,False,1,-0.0719,15,unusually high fanin,LOW,2026.09.1
+9438228471,22,15,22,15,28115.0,10085.0,False,False,0.0,1,False,True,False,1,-0.037,15,unusually high fanin,LOW,2026.09.1
+9446485809,17,12,17,12,22020.0,11240.0,False,False,0.0,1,False,True,False,1,-0.1442,15,unusually high fanin,LOW,2026.09.1
+9451525376,16,13,16,13,14295.0,10170.0,False,False,0.0,1,False,True,False,1,-0.1614,15,unusually high fanin,LOW,2026.09.1
+9451862998,18,16,18,16,10175.0,9060.0,False,False,0.0,1,False,True,False,1,-0.0984,15,unusually high fanin,LOW,2026.09.1
+9460888817,16,20,16,20,14160.0,21235.0,False,False,0.0,1,False,True,False,1,-0.0586,15,unusually high fanin,LOW,2026.09.1
+9490684265,17,16,17,16,14945.0,8545.0,False,False,0.0,1,False,True,False,1,-0.1217,15,unusually high fanin,LOW,2026.09.1
+9511976381,18,9,18,9,23415.0,19825.0,False,False,0.0,1,False,True,False,1,-0.0772,15,unusually high fanin,LOW,2026.09.1
+9527246581,16,18,17,18,12730.0,23450.0,False,False,0.0,1,False,True,False,1,-0.0869,15,unusually high fanin,LOW,2026.09.1
+9543282721,19,13,20,14,23260.0,11320.0,False,False,0.0,1,False,True,False,1,-0.1019,15,unusually high fanin,LOW,2026.09.1
+9563850020,16,7,16,7,19550.0,5680.0,False,False,0.0,1,False,True,False,1,-0.1005,15,unusually high fanin,LOW,2026.09.1
+9566917456,18,13,18,13,13360.0,11130.0,False,False,0.0,1,False,True,False,1,-0.1369,15,unusually high fanin,LOW,2026.09.1
+9587103048,16,10,16,10,20415.0,9935.0,False,False,0.198,1,False,True,False,1,-0.15,15,unusually high fanin,LOW,2026.09.1
+9616289158,18,6,18,6,25125.0,3935.0,False,False,0.0,1,False,True,False,1,-0.01,15,unusually high fanin,LOW,2026.09.1
+9620805495,20,11,20,11,12150.0,9855.0,False,False,0.0,1,False,True,False,1,-0.0986,15,unusually high fanin,LOW,2026.09.1
+9636952352,18,13,19,13,20315.0,12420.0,False,False,0.0,1,False,True,False,1,-0.1204,15,unusually high fanin,LOW,2026.09.1
+9641445280,17,16,17,16,21870.0,12430.0,False,False,0.0,1,False,True,False,1,-0.1118,15,unusually high fanin,LOW,2026.09.1
+9661642277,10,13,10,15,7770.0,15345.0,False,False,0.0,2,True,False,False,1,-0.0191,15,rapid fanout,LOW,2026.09.1
+9662136738,11,15,11,15,7120.0,26210.0,False,False,0.0,2,True,False,False,1,-0.0013,15,rapid fanout,LOW,2026.09.1
+9662883030,12,14,12,15,23665.0,11610.0,False,False,0.0,2,True,False,False,1,-0.0058,15,rapid fanout,LOW,2026.09.1
+9666442915,17,7,17,7,16415.0,5515.0,False,False,0.0,1,False,True,False,1,-0.0923,15,unusually high fanin,LOW,2026.09.1
+9676650588,12,11,12,11,13190.0,8615.0,False,False,0.0,2,True,False,False,1,-0.0242,15,rapid fanout,LOW,2026.09.1
+9683847079,22,11,22,11,13700.0,10735.0,False,False,0.0,1,False,True,False,1,-0.0717,15,unusually high fanin,LOW,2026.09.1
+9688853201,17,8,17,8,14880.0,4725.0,False,False,0.0,1,False,True,False,1,-0.1079,15,unusually high fanin,LOW,2026.09.1
+9694458096,16,9,18,9,12800.0,12280.0,False,False,0.0,1,False,True,False,1,-0.1204,15,unusually high fanin,LOW,2026.09.1
+9707711861,19,8,20,8,18240.0,8795.0,False,False,0.0,1,False,True,False,1,-0.0691,15,unusually high fanin,LOW,2026.09.1
+9712239771,16,12,16,12,10125.0,8730.0,False,False,0.0,1,False,True,False,1,-0.1668,15,unusually high fanin,LOW,2026.09.1
+9727226471,22,10,23,10,11570.0,15950.0,False,False,0.0,1,False,True,False,1,-0.0441,15,unusually high fanin,LOW,2026.09.1
+9754074724,16,11,16,11,27400.0,7520.0,False,False,0.0,1,False,True,False,1,-0.1331,15,unusually high fanin,LOW,2026.09.1
+9763462687,19,14,19,14,12335.0,8995.0,False,False,0.0,1,False,True,False,1,-0.1131,15,unusually high fanin,LOW,2026.09.1
+9781338414,18,8,19,8,11470.0,5655.0,False,False,0.0,1,False,True,False,1,-0.0874,15,unusually high fanin,LOW,2026.09.1
+9784533346,16,10,17,10,14065.0,13420.0,False,False,0.0,1,False,True,False,1,-0.1396,15,unusually high fanin,LOW,2026.09.1
+9785939510,21,14,21,14,23820.0,10600.0,False,False,0.0,1,False,True,False,1,-0.0676,15,unusually high fanin,LOW,2026.09.1
+9792178365,19,14,19,14,17275.0,7880.0,False,False,0.0,1,False,True,False,1,-0.1074,15,unusually high fanin,LOW,2026.09.1
+9794873598,9,12,9,12,5455.0,15080.0,False,False,0.0,2,True,False,False,1,-0.0116,15,rapid fanout,LOW,2026.09.1
+9810056905,18,11,18,11,9725.0,8455.0,False,False,0.0,1,False,True,False,1,-0.1309,15,unusually high fanin,LOW,2026.09.1
+9814488986,17,14,17,14,9830.0,12210.0,False,False,0.0,1,False,True,False,1,-0.1398,15,unusually high fanin,LOW,2026.09.1
+9822092764,16,10,16,11,19090.0,7950.0,False,False,2.458,1,False,True,False,1,-0.1557,15,unusually high fanin,LOW,2026.09.1
+9829662079,20,16,20,17,18690.0,14000.0,False,False,0.0,1,False,True,False,1,-0.0593,15,unusually high fanin,LOW,2026.09.1
+9863248414,17,9,17,9,20290.0,9715.0,False,False,0.0,1,False,True,False,1,-0.129,15,unusually high fanin,LOW,2026.09.1
+9934372835,16,5,16,5,10825.0,9900.0,False,False,0.0,1,False,True,False,1,-0.0393,15,unusually high fanin,LOW,2026.09.1
+9950780803,20,14,21,14,23600.0,8280.0,False,False,0.0,1,False,True,False,1,-0.0727,15,unusually high fanin,LOW,2026.09.1
+9967256212,16,10,16,10,15120.0,7630.0,False,False,8.382,1,False,True,False,1,-0.1596,15,unusually high fanin,LOW,2026.09.1
+9974289528,16,17,17,17,14575.0,14585.0,False,False,0.0,1,False,True,False,1,-0.104,15,unusually high fanin,LOW,2026.09.1
+9988853930,17,11,17,11,19120.0,7415.0,False,False,0.0,1,False,True,False,1,-0.1443,15,unusually high fanin,LOW,2026.09.1
+9993223299,18,19,18,20,21925.0,17045.0,False,False,0.66,1,False,True,False,1,-0.0386,15,unusually high fanin,LOW,2026.09.1
+9021612144,6,6,6,6,2420.0,6975.0,False,False,0.0,1,False,False,False,-1,0.0079,10,behavioural outlier,LOW,2026.09.1
+9052248897,9,4,9,4,12555.0,1750.0,False,False,0.0,1,False,False,False,-1,0.0744,10,behavioural outlier,LOW,2026.09.1
+9096395260,7,13,7,13,8705.0,30340.0,False,False,0.0,1,False,False,True,1,-0.0995,10,high value flow,LOW,2026.09.1
+9113894274,3,16,3,16,3190.0,10795.0,False,False,0.0,1,False,False,False,-1,0.049,10,behavioural outlier,LOW,2026.09.1
+9118141811,14,13,14,13,34125.0,9990.0,False,False,0.0,1,False,False,True,1,-0.1125,10,high value flow,LOW,2026.09.1
+9127967516,11,18,11,18,15775.0,30590.0,False,False,0.0,1,False,False,True,1,-0.0924,10,high value flow,LOW,2026.09.1
+9153514440,12,20,13,20,29215.0,22295.0,False,False,0.0,1,False,False,True,1,-0.0274,10,high value flow,LOW,2026.09.1
+9163673270,13,12,13,12,29760.0,12265.0,False,False,0.0,1,False,False,True,1,-0.1316,10,high value flow,LOW,2026.09.1
+9241105711,7,12,7,13,7235.0,28270.0,False,False,0.0,1,False,False,True,1,-0.1044,10,high value flow,LOW,2026.09.1
+9260117805,13,16,13,16,12455.0,35165.0,False,False,0.0,1,False,False,True,1,-0.1143,10,high value flow,LOW,2026.09.1
+9279851207,6,5,6,5,3085.0,5710.0,False,False,0.0,1,False,False,False,-1,0.0371,10,behavioural outlier,LOW,2026.09.1
+9291807385,2,12,2,12,645.0,10885.0,False,False,0.0,1,False,False,False,-1,0.0903,10,behavioural outlier,LOW,2026.09.1
+9308845429,3,14,3,14,1830.0,5400.0,False,False,0.0,1,False,False,False,-1,0.0728,10,behavioural outlier,LOW,2026.09.1
+9318467976,3,10,3,10,1345.0,9425.0,False,False,0.0,1,False,False,False,-1,0.0645,10,behavioural outlier,LOW,2026.09.1
+9343853185,8,12,8,12,17860.0,30380.0,False,False,0.0,1,False,False,True,1,-0.1003,10,high value flow,LOW,2026.09.1
+9420515785,12,16,12,16,12750.0,29090.0,False,False,0.0,1,False,False,True,1,-0.1349,10,high value flow,LOW,2026.09.1
+9432789553,9,12,9,12,12600.0,29960.0,False,False,0.0,1,False,False,True,1,-0.1308,10,high value flow,LOW,2026.09.1
+9482868447,12,16,12,16,14000.0,30385.0,False,False,0.0,1,False,False,True,1,-0.1266,10,high value flow,LOW,2026.09.1
+9485267539,11,19,11,20,36395.0,12645.0,False,False,0.0,1,False,False,True,1,-0.0397,10,high value flow,LOW,2026.09.1
+9542905882,7,3,7,3,5210.0,2510.0,False,False,0.0,1,False,False,False,-1,0.0974,10,behavioural outlier,LOW,2026.09.1
+9587008315,14,19,15,19,18005.0,28820.0,False,False,0.0,1,False,False,True,1,-0.0709,10,high value flow,LOW,2026.09.1
+9592735921,9,14,9,14,9720.0,30720.0,False,False,0.0,1,False,False,True,1,-0.1315,10,high value flow,LOW,2026.09.1
+9648241344,9,4,9,4,6425.0,8330.0,False,False,0.0,1,False,False,False,-1,0.0006,10,behavioural outlier,LOW,2026.09.1
+9648698389,11,11,11,11,11600.0,29100.0,False,False,0.0,1,False,False,True,1,-0.1384,10,high value flow,LOW,2026.09.1
+9706517113,5,7,5,7,1435.0,6715.0,False,False,0.0,1,False,False,False,-1,0.0278,10,behavioural outlier,LOW,2026.09.1
+9736840619,13,5,13,5,14070.0,2395.0,False,False,0.0,1,False,False,False,-1,0.0048,10,behavioural outlier,LOW,2026.09.1
+9808579845,4,5,4,5,8760.0,4430.0,False,False,0.0,1,False,False,False,-1,0.0701,10,behavioural outlier,LOW,2026.09.1
+9828083255,9,11,9,11,33170.0,5900.0,False,False,0.0,1,False,False,True,1,-0.0842,10,high value flow,LOW,2026.09.1
+9872545071,6,12,6,12,2130.0,33425.0,False,False,0.0,1,False,False,True,1,-0.0033,10,high value flow,LOW,2026.09.1
+9915684975,5,17,5,17,1890.0,18290.0,False,False,0.0,1,False,False,False,-1,0.0107,10,behavioural outlier,LOW,2026.09.1
+9983671609,14,14,14,14,30435.0,15730.0,False,False,0.0,1,False,False,True,1,-0.1192,10,high value flow,LOW,2026.09.1
+9001971594,8,7,8,7,4700.0,6035.0,False,False,0.0,1,False,False,False,1,-0.103,0,,LOW,2026.09.1
+9002468794,13,8,13,9,11255.0,9220.0,False,False,0.0,1,False,False,False,1,-0.1632,0,,LOW,2026.09.1
+9002978753,15,11,15,11,20655.0,11030.0,False,False,0.0,1,False,False,False,1,-0.1619,0,,LOW,2026.09.1
+9003474782,13,13,13,13,13465.0,23480.0,False,False,0.0,1,False,False,False,1,-0.1566,0,,LOW,2026.09.1
+9007309220,11,13,11,13,8425.0,10600.0,False,False,0.0,1,False,False,False,1,-0.1821,0,,LOW,2026.09.1
+9007836490,15,21,15,21,12585.0,13280.0,False,False,0.0,1,False,False,False,1,-0.0653,0,,LOW,2026.09.1
+9008584061,15,14,16,14,17340.0,11545.0,False,False,0.0,1,False,False,False,1,-0.1582,0,,LOW,2026.09.1
+9008722810,11,9,11,9,10300.0,8290.0,False,False,2.141,1,False,False,False,1,-0.1731,0,,LOW,2026.09.1
+9013502707,11,12,11,13,8330.0,11965.0,False,False,0.0,1,False,False,False,1,-0.1834,0,,LOW,2026.09.1
+9014685172,11,11,11,12,10785.0,13180.0,False,False,0.0,1,False,False,False,1,-0.1829,0,,LOW,2026.09.1
+9015589230,8,11,8,11,11550.0,20330.0,False,False,0.0,1,False,False,False,1,-0.1462,0,,LOW,2026.09.1
+9021337833,8,12,8,12,12985.0,15150.0,False,False,0.0,1,False,False,False,1,-0.1572,0,,LOW,2026.09.1
+9023392439,15,14,15,14,11475.0,16870.0,False,False,0.0,1,False,False,False,1,-0.162,0,,LOW,2026.09.1
+9024452049,14,14,14,14,15565.0,10150.0,False,False,0.0,1,False,False,False,1,-0.1688,0,,LOW,2026.09.1
+9024707036,9,10,9,10,9695.0,11680.0,False,False,0.0,1,False,False,False,1,-0.1718,0,,LOW,2026.09.1
+9025067408,12,16,12,16,8010.0,12030.0,False,False,0.0,1,False,False,False,1,-0.1587,0,,LOW,2026.09.1
+9026804519,9,14,9,14,4570.0,11300.0,False,False,0.0,1,False,False,False,1,-0.1486,0,,LOW,2026.09.1
+9027410813,11,15,11,15,6025.0,16925.0,False,False,0.0,1,False,False,False,1,-0.1536,0,,LOW,2026.09.1
+9027966628,11,14,11,14,14005.0,15225.0,False,False,0.0,1,False,False,False,1,-0.171,0,,LOW,2026.09.1
+9029380964,11,16,11,16,18755.0,23995.0,False,False,0.0,1,False,False,False,1,-0.1264,0,,LOW,2026.09.1
+9031225357,10,6,10,6,11380.0,5815.0,False,False,0.0,1,False,False,False,1,-0.0918,0,,LOW,2026.09.1
+9032926051,13,16,13,16,21855.0,16530.0,False,False,0.0,1,False,False,False,1,-0.1321,0,,LOW,2026.09.1
+9036057232,10,11,10,11,6470.0,8790.0,False,False,0.0,1,False,False,False,1,-0.18,0,,LOW,2026.09.1
+9037548430,12,16,12,16,5285.0,17055.0,False,False,0.0,1,False,False,False,1,-0.1363,0,,LOW,2026.09.1
+9048233130,15,15,15,15,13650.0,12150.0,False,False,0.0,1,False,False,False,1,-0.1573,0,,LOW,2026.09.1
+9048671311,11,8,11,8,10740.0,10390.0,False,False,0.0,1,False,False,False,1,-0.1557,0,,LOW,2026.09.1
+9050884189,12,12,12,12,8325.0,8670.0,False,False,0.0,1,False,False,False,1,-0.1835,0,,LOW,2026.09.1
+9052861995,11,20,11,20,7480.0,24385.0,False,False,0.0,1,False,False,False,1,-0.0697,0,,LOW,2026.09.1
+9053036677,11,11,11,11,8845.0,8200.0,False,False,0.0,1,False,False,False,1,-0.1855,0,,LOW,2026.09.1
+9057062130,12,11,12,11,11630.0,4360.0,False,False,0.0,1,False,False,False,1,-0.1547,0,,LOW,2026.09.1
+9063565541,11,6,13,7,18680.0,6915.0,False,False,0.0,1,False,False,False,1,-0.1052,0,,LOW,2026.09.1
+9065105025,12,12,12,12,11805.0,7685.0,False,False,0.0,1,False,False,False,1,-0.1835,0,,LOW,2026.09.1
+9065301484,10,10,10,10,14435.0,6575.0,False,False,0.0,1,False,False,False,1,-0.1611,0,,LOW,2026.09.1
+9067973962,11,18,11,18,8560.0,15560.0,False,False,0.0,1,False,False,False,1,-0.134,0,,LOW,2026.09.1
+9070145149,9,17,9,18,5530.0,23390.0,False,False,3.804,1,False,False,False,1,-0.1089,0,,LOW,2026.09.1
+9075020416,11,12,11,12,8905.0,9825.0,False,False,0.0,1,False,False,False,1,-0.1877,0,,LOW,2026.09.1
+9075311300,10,13,10,13,8715.0,25765.0,False,False,0.0,1,False,False,False,1,-0.1545,0,,LOW,2026.09.1
+9076549771,10,7,10,7,9780.0,3625.0,False,False,0.0,1,False,False,False,1,-0.0999,0,,LOW,2026.09.1
+9081392335,9,10,9,10,16500.0,7875.0,False,False,0.0,1,False,False,False,1,-0.1553,0,,LOW,2026.09.1
+9084209783,7,17,8,17,5260.0,12375.0,False,False,0.0,1,False,False,False,1,-0.0973,0,,LOW,2026.09.1
+9088410525,13,6,13,6,12595.0,4605.0,False,False,0.0,1,False,False,False,1,-0.0956,0,,LOW,2026.09.1
+9089204157,7,12,7,12,3965.0,24905.0,False,False,0.0,1,False,False,False,1,-0.0941,0,,LOW,2026.09.1
+9095950087,13,7,13,7,8600.0,7460.0,False,False,0.0,1,False,False,False,1,-0.1277,0,,LOW,2026.09.1
+9098713669,15,12,15,13,11210.0,11840.0,False,False,0.0,1,False,False,False,1,-0.17,0,,LOW,2026.09.1
+9103825652,15,23,15,23,15940.0,25740.0,False,False,0.0,1,False,False,False,1,-0.0167,0,,LOW,2026.09.1
+9108252674,11,9,11,9,11670.0,12505.0,False,False,0.0,1,False,False,False,1,-0.1663,0,,LOW,2026.09.1
+9108870955,12,18,12,18,10815.0,17645.0,False,False,0.0,1,False,False,False,1,-0.1321,0,,LOW,2026.09.1
+9113920361,9,19,9,19,8425.0,14285.0,False,False,0.0,1,False,False,False,1,-0.1073,0,,LOW,2026.09.1
+9114542068,10,11,10,11,11805.0,13910.0,False,False,0.0,1,False,False,False,1,-0.1791,0,,LOW,2026.09.1
+9114968431,10,13,10,13,11200.0,15090.0,False,False,0.0,1,False,False,False,1,-0.1766,0,,LOW,2026.09.1
+9119689122,9,19,9,19,9155.0,22080.0,False,False,0.0,1,False,False,False,1,-0.098,0,,LOW,2026.09.1
+9119797995,11,9,11,9,6125.0,7150.0,False,False,0.0,1,False,False,False,1,-0.1563,0,,LOW,2026.09.1
+9123825217,14,8,14,8,16825.0,4620.0,False,False,0.0,1,False,False,False,1,-0.1341,0,,LOW,2026.09.1
+9127329558,15,11,15,11,12550.0,9315.0,False,False,0.0,1,False,False,False,1,-0.1786,0,,LOW,2026.09.1
+9129555777,12,13,12,13,11115.0,17460.0,False,False,0.0,1,False,False,False,1,-0.1757,0,,LOW,2026.09.1
+9130186709,10,6,10,6,8200.0,6350.0,False,False,0.0,1,False,False,False,1,-0.0871,0,,LOW,2026.09.1
+9137678825,9,12,9,12,9090.0,9850.0,False,False,0.0,1,False,False,False,1,-0.1813,0,,LOW,2026.09.1
+9148804543,9,17,9,17,3475.0,11265.0,False,False,0.0,1,False,False,False,1,-0.0975,0,,LOW,2026.09.1
+9156043823,14,10,14,10,11090.0,12285.0,False,False,0.0,1,False,False,False,1,-0.1711,0,,LOW,2026.09.1
+9156490709,9,11,9,12,3980.0,12285.0,False,False,0.0,1,False,False,False,1,-0.1411,0,,LOW,2026.09.1
+9158252827,11,12,11,12,8430.0,10175.0,False,False,0.0,1,False,False,False,1,-0.1873,0,,LOW,2026.09.1
+9161202577,13,12,13,12,14310.0,17530.0,False,False,0.0,1,False,False,False,1,-0.1712,0,,LOW,2026.09.1
+9169655864,8,6,8,6,7185.0,2175.0,False,False,0.0,1,False,False,False,1,-0.005,0,,LOW,2026.09.1
+9174427652,7,10,7,10,7725.0,7780.0,False,False,0.0,1,False,False,False,1,-0.1436,0,,LOW,2026.09.1
+9175658769,10,11,10,11,9035.0,6825.0,False,False,2.359,1,False,False,False,1,-0.1753,0,,LOW,2026.09.1
+9182010086,15,13,15,13,24145.0,10040.0,False,False,0.0,1,False,False,False,1,-0.1461,0,,LOW,2026.09.1
+9182077024,12,8,12,8,13710.0,7570.0,False,False,0.0,1,False,False,False,1,-0.1555,0,,LOW,2026.09.1
+9183357251,6,13,6,13,2590.0,15535.0,False,False,0.0,1,False,False,False,1,-0.0562,0,,LOW,2026.09.1
+9183540946,8,10,8,10,8460.0,8150.0,False,False,0.0,1,False,False,False,1,-0.1655,0,,LOW,2026.09.1
+9183586783,12,14,12,14,12345.0,12135.0,False,False,6.022,1,False,False,False,1,-0.1783,0,,LOW,2026.09.1
+9188180702,14,17,14,17,11495.0,12755.0,False,False,0.0,1,False,False,False,1,-0.1434,0,,LOW,2026.09.1
+9190777522,10,13,10,13,7360.0,16775.0,False,False,0.0,1,False,False,False,1,-0.1701,0,,LOW,2026.09.1
+9192035917,13,8,13,8,6150.0,6940.0,False,False,0.0,1,False,False,False,1,-0.1336,0,,LOW,2026.09.1
+9193547286,9,14,9,14,10250.0,8270.0,False,False,0.0,1,False,False,False,1,-0.1668,0,,LOW,2026.09.1
+9193850480,13,9,13,9,12415.0,5480.0,False,False,0.0,1,False,False,False,1,-0.1612,0,,LOW,2026.09.1
+9198393549,10,13,10,13,5855.0,11020.0,False,False,0.0,1,False,False,False,1,-0.168,0,,LOW,2026.09.1
+9199512086,9,15,9,15,6810.0,17535.0,False,False,0.0,1,False,False,False,1,-0.1559,0,,LOW,2026.09.1
+9199646627,12,9,12,9,10830.0,6825.0,False,False,0.0,1,False,False,False,1,-0.1671,0,,LOW,2026.09.1
+9200139158,9,12,10,12,10150.0,14525.0,False,False,0.0,1,False,False,False,1,-0.1715,0,,LOW,2026.09.1
+9200234695,14,16,15,16,19855.0,25605.0,False,False,0.0,1,False,False,False,1,-0.111,0,,LOW,2026.09.1
+9200842411,14,10,14,10,10025.0,4860.0,False,False,0.0,1,False,False,False,1,-0.1492,0,,LOW,2026.09.1
+9202854808,14,17,14,17,6275.0,19565.0,False,False,0.0,1,False,False,False,1,-0.1179,0,,LOW,2026.09.1
+9204267814,14,11,14,11,9095.0,8920.0,False,False,0.0,1,False,False,False,1,-0.1817,0,,LOW,2026.09.1
+9204871729,10,9,10,9,7850.0,11535.0,False,False,0.0,1,False,False,False,1,-0.1607,0,,LOW,2026.09.1
+9206752746,9,7,9,7,3715.0,7635.0,False,False,0.0,1,False,False,False,1,-0.0942,0,,LOW,2026.09.1
+9210244612,12,11,12,12,14720.0,14070.0,False,False,0.0,1,False,False,False,1,-0.1732,0,,LOW,2026.09.1
+9213278016,13,11,13,12,7545.0,11795.0,False,False,0.0,1,False,False,False,1,-0.1715,0,,LOW,2026.09.1
+9213297993,12,11,12,11,13910.0,4440.0,False,False,0.0,1,False,False,False,1,-0.149,0,,LOW,2026.09.1
+9213633365,10,14,10,14,9875.0,18515.0,False,False,0.0,1,False,False,False,1,-0.1664,0,,LOW,2026.09.1
+9215138019,10,22,10,22,7930.0,22285.0,False,False,0.0,1,False,False,False,1,-0.0332,0,,LOW,2026.09.1
+9217455501,13,9,13,9,18440.0,6185.0,False,False,0.0,1,False,False,False,1,-0.1519,0,,LOW,2026.09.1
+9218695154,15,7,15,7,8505.0,5865.0,False,False,0.0,1,False,False,False,1,-0.1057,0,,LOW,2026.09.1
+9220969700,11,9,11,11,10190.0,14240.0,False,False,0.0,1,False,False,False,1,-0.1698,0,,LOW,2026.09.1
+9222717235,13,19,13,19,12085.0,25780.0,False,False,0.0,1,False,False,False,1,-0.0987,0,,LOW,2026.09.1
+9227813809,14,12,14,12,12035.0,15560.0,False,False,0.0,1,False,False,False,1,-0.179,0,,LOW,2026.09.1
+9231347176,12,13,12,13,12340.0,14535.0,False,False,0.0,1,False,False,False,1,-0.1797,0,,LOW,2026.09.1
+9232997749,12,16,12,16,9885.0,19830.0,False,False,0.0,1,False,False,False,1,-0.1581,0,,LOW,2026.09.1
+9234395369,10,11,11,11,9175.0,4390.0,False,False,0.0,1,False,False,False,1,-0.1466,0,,LOW,2026.09.1
+9235973021,9,17,9,17,8045.0,20520.0,False,False,0.0,1,False,False,False,1,-0.1321,0,,LOW,2026.09.1
+9240686122,14,10,14,10,13330.0,6230.0,False,False,0.0,1,False,False,False,1,-0.1648,0,,LOW,2026.09.1
+9245911056,13,9,13,9,9980.0,6540.0,False,False,0.0,1,False,False,False,1,-0.1644,0,,LOW,2026.09.1
+9246656522,13,14,13,14,12230.0,16810.0,False,False,0.0,1,False,False,False,1,-0.1737,0,,LOW,2026.09.1
+9248477233,13,6,13,6,15535.0,4040.0,False,False,0.0,1,False,False,False,1,-0.0817,0,,LOW,2026.09.1
+9251924510,7,11,7,12,9585.0,8860.0,False,False,0.0,1,False,False,False,1,-0.1457,0,,LOW,2026.09.1
+9253232817,12,12,12,12,6815.0,10625.0,False,False,0.0,1,False,False,False,1,-0.1767,0,,LOW,2026.09.1
+9254819907,14,19,14,19,11920.0,14480.0,False,False,0.0,1,False,False,False,1,-0.1163,0,,LOW,2026.09.1
+9257114068,14,12,14,12,10630.0,12390.0,False,False,0.0,1,False,False,False,1,-0.1806,0,,LOW,2026.09.1
+9259995536,13,8,13,8,19990.0,16085.0,False,False,0.0,1,False,False,False,1,-0.1177,0,,LOW,2026.09.1
+9260628721,6,12,6,12,4580.0,8495.0,False,False,0.0,1,False,False,False,1,-0.0943,0,,LOW,2026.09.1
+9266407928,7,11,7,11,4185.0,9200.0,False,False,0.0,1,False,False,False,1,-0.1302,0,,LOW,2026.09.1
+9271253582,11,8,11,8,10160.0,7170.0,False,False,0.0,1,False,False,False,1,-0.1562,0,,LOW,2026.09.1
+9273451778,7,15,7,15,6065.0,11185.0,False,False,0.0,1,False,False,False,1,-0.124,0,,LOW,2026.09.1
+9274004854,13,17,13,17,9940.0,20335.0,False,False,0.0,1,False,False,False,1,-0.1384,0,,LOW,2026.09.1
+9274895219,13,7,15,7,25400.0,8010.0,False,False,0.0,1,False,False,False,1,-0.0966,0,,LOW,2026.09.1
+9278250200,15,10,15,10,10100.0,10440.0,False,False,0.0,1,False,False,False,1,-0.1662,0,,LOW,2026.09.1
+9279052515,12,11,12,12,8110.0,12300.0,False,False,0.0,1,False,False,False,1,-0.1789,0,,LOW,2026.09.1
+9279542355,10,9,10,9,17860.0,8570.0,False,False,0.0,1,False,False,False,1,-0.1484,0,,LOW,2026.09.1
+9282096728,15,12,16,12,10685.0,10985.0,False,False,0.0,1,False,False,False,1,-0.1735,0,,LOW,2026.09.1
+9284186415,10,11,10,11,9105.0,6105.0,False,False,0.527,1,False,False,False,1,-0.1679,0,,LOW,2026.09.1
+9287968855,13,10,13,10,13540.0,10290.0,False,False,0.0,1,False,False,False,1,-0.1745,0,,LOW,2026.09.1
+9290181585,8,10,8,10,4835.0,22650.0,False,False,0.0,1,False,False,False,1,-0.1177,0,,LOW,2026.09.1
+9290816302,13,13,13,13,17255.0,17640.0,False,False,0.0,1,False,False,False,1,-0.1608,0,,LOW,2026.09.1
+9291560480,9,15,9,15,10970.0,22185.0,False,False,0.0,1,False,False,False,1,-0.1492,0,,LOW,2026.09.1
+9292869007,12,14,12,14,9485.0,12305.0,False,False,0.0,1,False,False,False,1,-0.1804,0,,LOW,2026.09.1
+9295361047,9,15,9,16,9620.0,16335.0,False,False,0.0,1,False,False,False,1,-0.1583,0,,LOW,2026.09.1
+9297302785,12,17,12,17,8910.0,14660.0,False,False,3.6,1,False,False,False,1,-0.1463,0,,LOW,2026.09.1
+9299090911,9,6,9,6,5025.0,5015.0,False,False,0.0,1,False,False,False,1,-0.0613,0,,LOW,2026.09.1
+9309176245,15,11,15,11,11295.0,13060.0,False,False,0.0,1,False,False,False,1,-0.1696,0,,LOW,2026.09.1
+9315946182,13,9,13,9,24660.0,13005.0,False,False,0.0,1,False,False,False,1,-0.1259,0,,LOW,2026.09.1
+9317391614,13,12,13,12,8265.0,14560.0,False,False,0.0,1,False,False,False,1,-0.1755,0,,LOW,2026.09.1
+9320016462,9,13,9,13,6750.0,12405.0,False,False,0.0,1,False,False,False,1,-0.1727,0,,LOW,2026.09.1
+9323048675,11,12,11,12,14060.0,12730.0,False,False,0.0,1,False,False,False,1,-0.1789,0,,LOW,2026.09.1
+9323687193,14,7,14,7,13690.0,9120.0,False,False,0.0,1,False,False,False,1,-0.1281,0,,LOW,2026.09.1
+9327371243,10,12,10,12,5895.0,10080.0,False,False,0.0,1,False,False,False,1,-0.1762,0,,LOW,2026.09.1
+9327888369,8,8,8,8,17625.0,4555.0,False,False,0.0,1,False,False,False,1,-0.1037,0,,LOW,2026.09.1
+9328566276,8,11,8,11,6645.0,13140.0,False,False,0.0,1,False,False,False,1,-0.1674,0,,LOW,2026.09.1
+9328570169,13,11,13,11,12640.0,7255.0,False,False,0.0,1,False,False,False,1,-0.1806,0,,LOW,2026.09.1
+9328742878,11,12,11,12,7105.0,12115.0,False,False,0.0,1,False,False,False,1,-0.1826,0,,LOW,2026.09.1
+9330434633,11,12,12,12,19815.0,18005.0,False,False,0.0,1,False,False,False,1,-0.1479,0,,LOW,2026.09.1
+9331760225,13,8,13,8,21045.0,11895.0,False,False,0.0,1,False,False,False,1,-0.1296,0,,LOW,2026.09.1
+9334017043,12,11,12,11,9570.0,10805.0,False,False,0.0,1,False,False,False,1,-0.1881,0,,LOW,2026.09.1
+9336062305,14,12,14,12,9915.0,17885.0,False,False,0.0,1,False,False,False,1,-0.1688,0,,LOW,2026.09.1
+9337047649,10,11,10,11,8320.0,8615.0,False,False,0.0,1,False,False,False,1,-0.1844,0,,LOW,2026.09.1
+9337468903,5,10,5,10,4260.0,11385.0,False,False,0.0,1,False,False,False,1,-0.0645,0,,LOW,2026.09.1
+9343646379,7,14,7,15,4180.0,16375.0,False,False,0.0,1,False,False,False,1,-0.103,0,,LOW,2026.09.1
+9343802201,12,6,12,6,12035.0,3965.0,False,False,0.0,1,False,False,False,1,-0.0829,0,,LOW,2026.09.1
+9347052967,14,8,14,8,14600.0,4245.0,False,False,0.0,1,False,False,False,1,-0.1308,0,,LOW,2026.09.1
+9349060795,11,9,11,9,7070.0,9660.0,False,False,0.0,1,False,False,False,1,-0.1676,0,,LOW,2026.09.1
+9349352957,11,10,11,10,7225.0,16400.0,False,False,0.0,1,False,False,False,1,-0.1615,0,,LOW,2026.09.1
+9349613120,14,9,14,9,13555.0,15595.0,False,False,0.0,1,False,False,False,1,-0.1519,0,,LOW,2026.09.1
+9350335680,8,17,8,17,11540.0,20880.0,False,False,0.0,1,False,False,False,1,-0.1159,0,,LOW,2026.09.1
+9354125779,10,15,10,15,11625.0,26870.0,False,False,0.0,1,False,False,False,1,-0.1413,0,,LOW,2026.09.1
+9362272684,10,12,10,12,13600.0,8475.0,False,False,0.0,1,False,False,False,1,-0.1719,0,,LOW,2026.09.1
+9364091457,9,13,9,13,6500.0,9125.0,False,False,4.436,1,False,False,False,1,-0.1687,0,,LOW,2026.09.1
+9364540204,12,7,12,7,9290.0,4145.0,False,False,0.0,1,False,False,False,1,-0.1149,0,,LOW,2026.09.1
+9366850427,11,16,12,16,11980.0,19640.0,False,False,0.0,1,False,False,False,1,-0.1571,0,,LOW,2026.09.1
+9373613848,13,15,13,15,15590.0,11340.0,False,False,0.0,1,False,False,False,1,-0.1607,0,,LOW,2026.09.1
+9378012248,11,16,11,16,8700.0,15240.0,False,False,0.0,1,False,False,False,1,-0.1629,0,,LOW,2026.09.1
+9383027006,9,7,9,7,8150.0,7660.0,False,False,0.0,1,False,False,False,1,-0.1255,0,,LOW,2026.09.1
+9383110351,6,9,6,10,3215.0,8365.0,False,False,0.0,1,False,False,False,1,-0.0587,0,,LOW,2026.09.1
+9386371955,13,8,14,8,8965.0,7940.0,False,False,0.0,1,False,False,False,1,-0.1465,0,,LOW,2026.09.1
+9386896000,13,12,13,12,14110.0,7390.0,False,False,0.0,1,False,False,False,1,-0.1762,0,,LOW,2026.09.1
+9388850469,9,11,9,11,7220.0,11625.0,False,False,0.0,1,False,False,False,1,-0.1799,0,,LOW,2026.09.1
+9389276201,13,15,14,15,15645.0,9680.0,False,False,0.0,1,False,False,False,1,-0.151,0,,LOW,2026.09.1
+9391101258,14,12,14,12,7320.0,15105.0,False,False,0.0,1,False,False,False,1,-0.166,0,,LOW,2026.09.1
+9391686645,9,9,9,9,13040.0,6120.0,False,False,0.012,1,False,False,False,1,-0.1502,0,,LOW,2026.09.1
+9394154958,10,7,10,7,15875.0,15200.0,False,False,0.0,1,False,False,False,1,-0.0994,0,,LOW,2026.09.1
+9395008160,10,8,10,8,13490.0,10670.0,False,False,0.0,1,False,False,False,1,-0.1424,0,,LOW,2026.09.1
+9396454436,10,12,10,12,6320.0,6490.0,False,False,0.0,1,False,False,False,1,-0.1577,0,,LOW,2026.09.1
+9402438050,12,10,13,10,12735.0,11555.0,False,False,0.0,1,False,False,False,1,-0.1771,0,,LOW,2026.09.1
+9404914720,14,13,14,13,9475.0,8010.0,False,False,0.0,1,False,False,False,1,-0.1689,0,,LOW,2026.09.1
+9406125313,10,10,10,10,8765.0,11505.0,False,False,0.0,1,False,False,False,1,-0.1768,0,,LOW,2026.09.1
+9406454159,5,10,5,10,1595.0,16140.0,False,False,0.0,1,False,False,False,1,-0.0063,0,,LOW,2026.09.1
+9408119185,10,15,10,15,8405.0,11580.0,False,False,0.0,1,False,False,False,1,-0.1664,0,,LOW,2026.09.1
+9411207999,5,12,5,13,4245.0,9800.0,False,False,0.0,1,False,False,False,1,-0.0592,0,,LOW,2026.09.1
+9413409595,9,17,9,17,10350.0,14425.0,False,False,0.0,1,False,False,False,1,-0.1393,0,,LOW,2026.09.1
+9416151222,14,8,14,8,18320.0,8540.0,False,False,0.0,1,False,False,False,1,-0.1468,0,,LOW,2026.09.1
+9420863611,10,15,11,15,12805.0,21085.0,False,False,0.0,1,False,False,False,1,-0.1499,0,,LOW,2026.09.1
+9423639948,14,15,14,15,20420.0,18295.0,False,False,0.0,1,False,False,False,1,-0.1415,0,,LOW,2026.09.1
+9427417325,11,9,11,9,7230.0,7015.0,False,False,0.0,1,False,False,False,1,-0.1638,0,,LOW,2026.09.1
+9428025968,14,11,14,11,16070.0,11995.0,False,False,0.0,1,False,False,False,1,-0.1729,0,,LOW,2026.09.1
+9429522889,13,13,13,13,14335.0,8475.0,False,False,0.0,1,False,False,False,1,-0.1709,0,,LOW,2026.09.1
+9431862585,12,10,13,10,17415.0,6870.0,False,False,0.0,1,False,False,False,1,-0.1598,0,,LOW,2026.09.1
+9432465738,14,15,14,15,15675.0,15330.0,False,False,0.0,1,False,False,False,1,-0.1621,0,,LOW,2026.09.1
+9432473370,11,15,12,15,8635.0,11290.0,False,False,0.0,1,False,False,False,1,-0.1698,0,,LOW,2026.09.1
+9437723988,12,14,12,14,9000.0,10835.0,False,False,0.0,1,False,False,False,1,-0.1799,0,,LOW,2026.09.1
+9440101408,14,15,14,16,6095.0,17665.0,False,False,0.0,1,False,False,False,1,-0.1371,0,,LOW,2026.09.1
+9457706949,11,13,12,13,7525.0,7550.0,False,False,0.0,1,False,False,False,1,-0.1683,0,,LOW,2026.09.1
+9459563596,10,13,10,13,5565.0,22665.0,False,False,0.0,1,False,False,False,1,-0.1459,0,,LOW,2026.09.1
+9462451088,15,11,16,11,26020.0,7360.0,False,False,0.0,1,False,False,False,1,-0.1355,0,,LOW,2026.09.1
+9462913511,8,9,8,9,7690.0,7645.0,False,False,0.0,1,False,False,False,1,-0.1543,0,,LOW,2026.09.1
+9468349143,12,16,13,16,13240.0,19425.0,False,False,0.0,1,False,False,False,1,-0.1517,0,,LOW,2026.09.1
+9468692379,8,7,8,7,11780.0,7780.0,False,False,0.0,1,False,False,False,1,-0.1197,0,,LOW,2026.09.1
+9468748835,12,14,12,14,16385.0,21125.0,False,False,0.0,1,False,False,False,1,-0.1543,0,,LOW,2026.09.1
+9469763439,13,19,14,19,18530.0,12265.0,False,False,0.0,1,False,False,False,1,-0.0972,0,,LOW,2026.09.1
+9470138106,12,9,12,9,7475.0,6405.0,False,False,0.0,1,False,False,False,1,-0.1534,0,,LOW,2026.09.1
+9471958575,8,13,8,13,7925.0,9615.0,False,False,0.0,1,False,False,False,1,-0.165,0,,LOW,2026.09.1
+9472817397,14,14,14,14,11920.0,13180.0,False,False,0.0,1,False,False,False,1,-0.1769,0,,LOW,2026.09.1
+9476572146,13,14,13,14,6980.0,27910.0,False,False,0.0,1,False,False,False,1,-0.1328,0,,LOW,2026.09.1
+9476913647,12,13,12,13,15190.0,8250.0,False,False,9.211,1,False,False,False,1,-0.1676,0,,LOW,2026.09.1
+9480993572,8,14,8,14,10660.0,9060.0,False,False,0.0,1,False,False,False,1,-0.1591,0,,LOW,2026.09.1
+9481010893,11,8,11,8,11050.0,10850.0,False,False,0.0,1,False,False,False,1,-0.1561,0,,LOW,2026.09.1
+9481103002,7,13,7,13,3955.0,12120.0,False,False,0.0,1,False,False,False,1,-0.1211,0,,LOW,2026.09.1
+9481905306,10,14,10,14,10275.0,11370.0,False,False,0.0,1,False,False,False,1,-0.1754,0,,LOW,2026.09.1
+9484655639,12,14,12,14,11345.0,23550.0,False,False,0.0,1,False,False,False,1,-0.1642,0,,LOW,2026.09.1
+9485847011,15,8,15,8,11535.0,4765.0,False,False,0.0,1,False,False,False,1,-0.1313,0,,LOW,2026.09.1
+9487170800,7,10,7,10,9080.0,11475.0,False,False,0.0,1,False,False,False,1,-0.1456,0,,LOW,2026.09.1
+9487658493,10,12,10,12,13425.0,8610.0,False,False,0.0,1,False,False,False,1,-0.1733,0,,LOW,2026.09.1
+9489144098,13,7,13,7,15970.0,3450.0,False,False,0.0,1,False,False,False,1,-0.0962,0,,LOW,2026.09.1
+9495274785,14,15,14,15,8330.0,9545.0,False,False,0.0,1,False,False,False,1,-0.1551,0,,LOW,2026.09.1
+9495458890,11,15,11,15,10855.0,9280.0,False,False,0.0,1,False,False,False,1,-0.1682,0,,LOW,2026.09.1
+9495481440,9,13,9,13,5625.0,14320.0,False,False,0.0,1,False,False,False,1,-0.1609,0,,LOW,2026.09.1
+9500923243,9,18,9,18,9400.0,10560.0,False,False,0.0,1,False,False,False,1,-0.1212,0,,LOW,2026.09.1
+9502624719,9,11,9,11,6395.0,9930.0,False,False,0.0,1,False,False,False,1,-0.1787,0,,LOW,2026.09.1
+9504320487,11,9,11,9,18925.0,7365.0,False,False,0.0,1,False,False,False,1,-0.1499,0,,LOW,2026.09.1
+9507598515,15,14,15,15,11505.0,10975.0,False,False,0.0,1,False,False,False,1,-0.1635,0,,LOW,2026.09.1
+9508938741,14,17,15,17,18035.0,14080.0,False,False,0.0,1,False,False,False,1,-0.126,0,,LOW,2026.09.1
+9514716369,15,12,15,12,14675.0,13835.0,False,False,0.0,1,False,False,False,1,-0.1685,0,,LOW,2026.09.1
+9514856229,15,9,15,10,12915.0,10345.0,False,False,0.0,1,False,False,False,1,-0.1636,0,,LOW,2026.09.1
+9515434515,10,8,10,8,4385.0,4340.0,False,False,0.0,1,False,False,False,1,-0.0964,0,,LOW,2026.09.1
+9517600235,12,18,12,18,6090.0,12015.0,False,False,0.0,1,False,False,False,1,-0.1092,0,,LOW,2026.09.1
+9521573651,8,6,8,6,11295.0,3125.0,False,False,0.0,1,False,False,False,1,-0.0473,0,,LOW,2026.09.1
+9521820994,15,13,15,14,11625.0,22425.0,False,False,0.0,1,False,False,False,1,-0.146,0,,LOW,2026.09.1
+9522749968,10,11,10,11,7015.0,8480.0,False,False,0.0,1,False,False,False,1,-0.1813,0,,LOW,2026.09.1
+9524417224,10,14,10,14,11385.0,16825.0,False,False,0.123,1,False,False,False,1,-0.1674,0,,LOW,2026.09.1
+9524486938,9,6,9,6,15730.0,4575.0,False,False,0.0,1,False,False,False,1,-0.0753,0,,LOW,2026.09.1
+9525089424,12,17,13,17,11205.0,12970.0,False,False,0.0,1,False,False,False,1,-0.1472,0,,LOW,2026.09.1
+9526824044,15,20,16,21,12465.0,21930.0,False,False,0.0,1,False,False,False,1,-0.0564,0,,LOW,2026.09.1
+9527600495,11,12,11,13,17620.0,12435.0,False,False,0.0,1,False,False,False,1,-0.1679,0,,LOW,2026.09.1
+9528657624,15,14,15,14,11955.0,15490.0,False,False,0.0,1,False,False,False,1,-0.167,0,,LOW,2026.09.1
+9535106651,5,9,5,9,6745.0,7455.0,False,False,0.0,1,False,False,False,1,-0.0543,0,,LOW,2026.09.1
+9539232741,11,10,11,10,6880.0,6630.0,False,False,0.0,1,False,False,False,1,-0.1661,0,,LOW,2026.09.1
+9540384926,13,17,13,17,17555.0,25880.0,False,False,0.0,1,False,False,False,1,-0.1132,0,,LOW,2026.09.1
+9541651533,8,12,9,12,13960.0,6630.0,False,False,0.0,1,False,False,False,1,-0.1478,0,,LOW,2026.09.1
+9544975157,11,11,11,11,11480.0,5325.0,False,False,0.0,1,False,False,False,1,-0.1666,0,,LOW,2026.09.1
+9551393227,14,9,14,9,13810.0,7340.0,False,False,0.0,1,False,False,False,1,-0.1637,0,,LOW,2026.09.1
+9552337763,7,10,7,10,5470.0,9370.0,False,False,0.0,1,False,False,False,1,-0.138,0,,LOW,2026.09.1
+9555807068,11,11,11,11,12490.0,14675.0,False,False,0.0,1,False,False,False,1,-0.1771,0,,LOW,2026.09.1
+9556161246,12,13,12,13,12350.0,11385.0,False,False,0.0,1,False,False,False,1,-0.1826,0,,LOW,2026.09.1
+9556214443,9,17,9,19,6435.0,23925.0,False,False,0.0,1,False,False,False,1,-0.1038,0,,LOW,2026.09.1
+9558401725,12,15,12,15,10090.0,22200.0,False,False,0.0,1,False,False,False,1,-0.1577,0,,LOW,2026.09.1
+9559321940,10,12,10,12,5565.0,11765.0,False,False,0.0,1,False,False,False,1,-0.1682,0,,LOW,2026.09.1
+9562254266,8,12,8,12,20180.0,9410.0,False,False,0.0,1,False,False,False,1,-0.1379,0,,LOW,2026.09.1
+9562679527,15,11,15,11,15615.0,4900.0,False,False,0.0,1,False,False,False,1,-0.1468,0,,LOW,2026.09.1
+9564099477,13,8,13,8,23895.0,8145.0,False,False,0.0,1,False,False,False,1,-0.1319,0,,LOW,2026.09.1
+9565803308,14,9,14,9,7035.0,11305.0,False,False,0.0,1,False,False,False,1,-0.1498,0,,LOW,2026.09.1
+9568945147,11,13,11,14,6070.0,10940.0,False,False,0.0,1,False,False,False,1,-0.1681,0,,LOW,2026.09.1
+9569076123,9,9,10,9,11525.0,12380.0,False,False,0.0,1,False,False,False,1,-0.1556,0,,LOW,2026.09.1
+9569898253,13,19,13,19,14435.0,17175.0,False,False,0.0,1,False,False,False,1,-0.1104,0,,LOW,2026.09.1
+9572427103,15,15,15,15,21060.0,21875.0,False,False,0.0,1,False,False,False,1,-0.1274,0,,LOW,2026.09.1
+9573060504,9,15,9,15,11080.0,17595.0,False,False,0.0,1,False,False,False,1,-0.1587,0,,LOW,2026.09.1
+9576172543,11,18,11,19,7780.0,16425.0,False,False,0.0,1,False,False,False,1,-0.1221,0,,LOW,2026.09.1
+9576957454,10,11,10,11,8295.0,9180.0,False,False,0.0,1,False,False,False,1,-0.1856,0,,LOW,2026.09.1
+9580143749,14,13,14,15,13295.0,14590.0,False,False,0.0,1,False,False,False,1,-0.1647,0,,LOW,2026.09.1
+9581891703,14,7,14,7,11075.0,6950.0,False,False,0.0,1,False,False,False,1,-0.1311,0,,LOW,2026.09.1
+9582184249,10,9,11,9,6045.0,23875.0,False,False,0.0,1,False,False,False,1,-0.1191,0,,LOW,2026.09.1
+9582938523,14,15,14,15,9565.0,11380.0,False,False,0.0,1,False,False,False,1,-0.1658,0,,LOW,2026.09.1
+9584242489,9,8,9,8,7005.0,6785.0,False,False,0.0,1,False,False,False,1,-0.1419,0,,LOW,2026.09.1
+9585932222,7,11,8,11,6325.0,12960.0,False,False,0.0,1,False,False,False,1,-0.153,0,,LOW,2026.09.1
+9586592627,15,11,15,11,14185.0,9205.0,False,False,0.0,1,False,False,False,1,-0.1743,0,,LOW,2026.09.1
+9586623614,14,10,14,11,13025.0,12760.0,False,False,0.0,1,False,False,False,1,-0.1758,0,,LOW,2026.09.1
+9587463342,13,8,13,9,12980.0,6205.0,False,False,0.0,1,False,False,False,1,-0.1588,0,,LOW,2026.09.1
+9588489595,12,15,12,15,15170.0,8720.0,False,False,0.0,1,False,False,False,1,-0.157,0,,LOW,2026.09.1
+9589598530,8,12,8,12,8380.0,7485.0,False,False,0.0,1,False,False,False,1,-0.1653,0,,LOW,2026.09.1
+9590637250,7,20,7,21,6360.0,16400.0,False,False,0.0,1,False,False,False,1,-0.0248,0,,LOW,2026.09.1
+9591218852,11,14,11,14,8045.0,11495.0,False,False,0.0,1,False,False,False,1,-0.1777,0,,LOW,2026.09.1
+9594924991,9,12,9,12,7615.0,8455.0,False,False,0.0,1,False,False,False,1,-0.1772,0,,LOW,2026.09.1
+9595026413,15,11,15,12,9580.0,8430.0,False,False,0.0,1,False,False,False,1,-0.1696,0,,LOW,2026.09.1
+9597122314,14,15,14,15,23775.0,8615.0,False,False,0.0,1,False,False,False,1,-0.1358,0,,LOW,2026.09.1
+9597685625,10,8,10,8,16940.0,10530.0,False,False,0.0,1,False,False,False,1,-0.1312,0,,LOW,2026.09.1
+9601311183,13,11,13,11,24445.0,6185.0,False,False,0.0,1,False,False,False,1,-0.1396,0,,LOW,2026.09.1
+9602015781,15,10,15,11,6950.0,20865.0,False,False,0.0,1,False,False,False,1,-0.1186,0,,LOW,2026.09.1
+9602138521,11,10,11,10,10970.0,11225.0,False,False,0.0,1,False,False,False,1,-0.1825,0,,LOW,2026.09.1
+9603424007,14,10,14,10,16000.0,10845.0,False,False,0.0,1,False,False,False,1,-0.1706,0,,LOW,2026.09.1
+9603548538,8,9,8,9,8795.0,4685.0,False,False,0.0,1,False,False,False,1,-0.1302,0,,LOW,2026.09.1
+9613098257,13,8,13,8,13540.0,6120.0,False,False,0.0,1,False,False,False,1,-0.1519,0,,LOW,2026.09.1
+9613879165,14,7,14,7,9675.0,12765.0,False,False,0.0,1,False,False,False,1,-0.1142,0,,LOW,2026.09.1
+9614873003,11,17,11,17,14345.0,13875.0,False,False,0.0,1,False,False,False,1,-0.1424,0,,LOW,2026.09.1
+9615796546,13,8,13,8,12065.0,4660.0,False,False,0.0,1,False,False,False,1,-0.1454,0,,LOW,2026.09.1
+9619076686,14,11,14,11,11140.0,15115.0,False,False,0.0,1,False,False,False,1,-0.1748,0,,LOW,2026.09.1
+9622469420,9,8,9,8,11150.0,11730.0,False,False,0.0,1,False,False,False,1,-0.1394,0,,LOW,2026.09.1
+9622739459,5,8,5,8,14150.0,8275.0,False,False,0.0,1,False,False,False,1,-0.0366,0,,LOW,2026.09.1
+9623068655,9,11,9,11,10635.0,8575.0,False,False,0.0,1,False,False,False,1,-0.1812,0,,LOW,2026.09.1
+9623092322,13,12,13,12,12320.0,6720.0,False,False,0.0,1,False,False,False,1,-0.1744,0,,LOW,2026.09.1
+9623121500,8,11,9,11,9215.0,8305.0,False,False,0.0,1,False,False,False,1,-0.1715,0,,LOW,2026.09.1
+9623701950,11,5,11,5,11835.0,5790.0,False,False,0.0,1,False,False,False,1,-0.0482,0,,LOW,2026.09.1
+9623871285,13,12,14,13,13805.0,5975.0,False,False,0.0,1,False,False,False,1,-0.154,0,,LOW,2026.09.1
+9626296040,9,16,9,16,10600.0,12685.0,False,False,0.0,1,False,False,False,1,-0.1565,0,,LOW,2026.09.1
+9631036891,10,12,10,12,15000.0,13490.0,False,False,0.0,1,False,False,False,1,-0.1674,0,,LOW,2026.09.1
+9636579261,9,16,9,16,7550.0,16285.0,False,False,0.0,1,False,False,False,1,-0.153,0,,LOW,2026.09.1
+9638941365,13,8,13,8,12530.0,7205.0,False,False,0.0,1,False,False,False,1,-0.1578,0,,LOW,2026.09.1
+9640649508,10,12,10,12,11715.0,26980.0,False,False,0.0,1,False,False,False,1,-0.1506,0,,LOW,2026.09.1
+9647059068,7,8,7,8,10385.0,5100.0,False,False,0.0,1,False,False,False,1,-0.0975,0,,LOW,2026.09.1
+9650960181,12,11,12,11,6755.0,17935.0,False,False,0.0,1,False,False,False,1,-0.1622,0,,LOW,2026.09.1
+9651614051,14,18,14,18,18810.0,12915.0,False,False,0.0,1,False,False,False,1,-0.1174,0,,LOW,2026.09.1
+9651699247,9,12,9,12,5455.0,9720.0,False,False,0.0,1,False,False,False,1,-0.1678,0,,LOW,2026.09.1
+9654919306,14,8,15,8,15225.0,4700.0,False,False,0.0,1,False,False,False,1,-0.1285,0,,LOW,2026.09.1
+9655734481,8,12,8,13,8150.0,21265.0,False,False,0.062,1,False,False,False,1,-0.1464,0,,LOW,2026.09.1
+9656939039,15,11,15,11,10045.0,13595.0,False,False,5.457,1,False,False,False,1,-0.1674,0,,LOW,2026.09.1
+9657812846,14,11,14,11,14760.0,10970.0,False,False,0.0,1,False,False,False,1,-0.1803,0,,LOW,2026.09.1
+9658966573,9,18,9,18,4530.0,25435.0,False,False,0.0,1,False,False,False,1,-0.0824,0,,LOW,2026.09.1
+9661970877,14,12,14,12,11295.0,9480.0,False,False,0.0,1,False,False,False,1,-0.1852,0,,LOW,2026.09.1
+9664047688,12,8,12,8,16375.0,5125.0,False,False,0.0,1,False,False,False,1,-0.1374,0,,LOW,2026.09.1
+9664697473,13,12,13,12,8355.0,9265.0,False,False,0.0,1,False,False,False,1,-0.1805,0,,LOW,2026.09.1
+9665069854,14,13,14,13,18120.0,7380.0,False,False,0.0,1,False,False,False,1,-0.1597,0,,LOW,2026.09.1
+9673261224,15,16,15,16,9270.0,8625.0,False,False,0.0,1,False,False,False,1,-0.1419,0,,LOW,2026.09.1
+9673417670,10,10,10,10,6720.0,7475.0,False,False,0.0,1,False,False,False,1,-0.1711,0,,LOW,2026.09.1
+9677217388,13,10,13,10,13070.0,5810.0,False,False,0.0,1,False,False,False,1,-0.1642,0,,LOW,2026.09.1
+9678920670,11,14,11,14,10100.0,15260.0,False,False,0.0,1,False,False,False,1,-0.1788,0,,LOW,2026.09.1
+9680479553,12,7,12,7,15525.0,6625.0,False,False,0.0,1,False,False,False,1,-0.1317,0,,LOW,2026.09.1
+9681618901,8,12,8,12,12845.0,14375.0,False,False,0.0,1,False,False,False,1,-0.1569,0,,LOW,2026.09.1
+9683509307,11,8,11,8,10935.0,6140.0,False,False,0.0,1,False,False,False,1,-0.1522,0,,LOW,2026.09.1
+9691846146,9,7,9,7,10265.0,12755.0,False,False,0.0,1,False,False,False,1,-0.1146,0,,LOW,2026.09.1
+9691975020,14,11,14,11,15980.0,10335.0,False,False,0.0,1,False,False,False,1,-0.1789,0,,LOW,2026.09.1
+9692552797,12,13,12,13,7510.0,15490.0,False,False,0.0,1,False,False,False,1,-0.173,0,,LOW,2026.09.1
+9695427713,14,11,14,11,12760.0,7090.0,False,False,0.0,1,False,False,False,1,-0.1762,0,,LOW,2026.09.1
+9699709622,8,15,8,15,7745.0,10320.0,False,False,0.0,1,False,False,False,1,-0.1481,0,,LOW,2026.09.1
+9704583586,8,12,8,12,7215.0,5970.0,False,False,0.0,1,False,False,False,1,-0.147,0,,LOW,2026.09.1
+9705629519,9,10,9,10,7570.0,8630.0,False,False,0.0,1,False,False,False,1,-0.1733,0,,LOW,2026.09.1
+9706566616,13,12,14,13,16885.0,9870.0,False,False,0.0,1,False,False,False,1,-0.1678,0,,LOW,2026.09.1
+9707126885,6,11,6,11,6990.0,8200.0,False,False,0.0,1,False,False,False,1,-0.1038,0,,LOW,2026.09.1
+9714201071,13,11,13,11,10300.0,10265.0,False,False,0.0,1,False,False,False,1,-0.1866,0,,LOW,2026.09.1
+9714322405,5,10,5,10,2990.0,6195.0,False,False,0.0,1,False,False,False,1,-0.0354,0,,LOW,2026.09.1
+9717964393,11,17,11,17,7975.0,13840.0,False,False,0.0,1,False,False,False,1,-0.1486,0,,LOW,2026.09.1
+9720831826,11,13,11,13,6275.0,9995.0,False,False,0.0,1,False,False,False,1,-0.1726,0,,LOW,2026.09.1
+9723948025,12,9,13,9,8715.0,9555.0,False,False,0.0,1,False,False,False,1,-0.1658,0,,LOW,2026.09.1
+9726000597,12,17,12,17,15280.0,13430.0,False,False,0.0,1,False,False,False,1,-0.1387,0,,LOW,2026.09.1
+9731033395,9,14,9,14,6595.0,9940.0,False,False,0.0,1,False,False,False,1,-0.1678,0,,LOW,2026.09.1
+9735076512,12,7,12,7,13440.0,4805.0,False,False,0.0,1,False,False,False,1,-0.1258,0,,LOW,2026.09.1
+9738711379,15,9,16,9,12850.0,7555.0,False,False,0.0,1,False,False,False,1,-0.1573,0,,LOW,2026.09.1
+9739047311,7,11,8,11,4425.0,17450.0,False,False,0.0,1,False,False,False,1,-0.1282,0,,LOW,2026.09.1
+9744013158,12,11,12,11,12775.0,10750.0,False,False,2.218,1,False,False,False,1,-0.1856,0,,LOW,2026.09.1
+9744055026,8,13,8,13,6700.0,9150.0,False,False,0.0,1,False,False,False,1,-0.1646,0,,LOW,2026.09.1
+9745052567,9,13,10,14,10525.0,8940.0,False,False,0.0,1,False,False,False,1,-0.1728,0,,LOW,2026.09.1
+9745386561,12,8,12,8,5380.0,11850.0,False,False,0.0,1,False,False,False,1,-0.1208,0,,LOW,2026.09.1
+9750044653,12,12,12,12,8105.0,14415.0,False,False,0.0,1,False,False,False,1,-0.1798,0,,LOW,2026.09.1
+9752820266,11,10,11,10,8425.0,7490.0,False,False,0.0,1,False,False,False,1,-0.177,0,,LOW,2026.09.1
+9757105317,10,12,10,12,7990.0,15535.0,False,False,0.0,1,False,False,False,1,-0.176,0,,LOW,2026.09.1
+9763919028,13,19,13,20,11045.0,17880.0,False,False,0.0,1,False,False,False,1,-0.0992,0,,LOW,2026.09.1
+9764126252,9,15,10,16,13470.0,19200.0,False,False,0.0,1,False,False,False,1,-0.1461,0,,LOW,2026.09.1
+9768160718,12,11,12,11,16790.0,7200.0,False,False,0.0,1,False,False,False,1,-0.1678,0,,LOW,2026.09.1
+9770093141,9,12,9,12,4545.0,12670.0,False,False,0.0,1,False,False,False,1,-0.154,0,,LOW,2026.09.1
+9770179112,14,14,15,14,21505.0,17155.0,False,False,0.0,1,False,False,False,1,-0.1419,0,,LOW,2026.09.1
+9770490673,9,9,10,9,7280.0,6145.0,False,False,0.0,1,False,False,False,1,-0.153,0,,LOW,2026.09.1
+9776329597,7,18,7,18,21245.0,16740.0,False,False,0.0,1,False,False,False,1,-0.0483,0,,LOW,2026.09.1
+9780874168,8,11,8,11,5480.0,6885.0,False,False,0.0,1,False,False,False,1,-0.1525,0,,LOW,2026.09.1
+9781499194,9,10,9,10,14725.0,15060.0,False,False,0.0,1,False,False,False,1,-0.1504,0,,LOW,2026.09.1
+9783601253,9,13,10,13,7005.0,7070.0,False,False,0.0,1,False,False,False,1,-0.1587,0,,LOW,2026.09.1
+9784541701,8,12,8,12,5100.0,11200.0,False,False,0.0,1,False,False,False,1,-0.1605,0,,LOW,2026.09.1
+9789162925,10,15,10,15,10175.0,10185.0,False,False,0.0,1,False,False,False,1,-0.1654,0,,LOW,2026.09.1
+9790275345,12,13,12,13,6235.0,15500.0,False,False,0.0,1,False,False,False,1,-0.1652,0,,LOW,2026.09.1
+9793735024,15,15,15,15,20945.0,9280.0,False,False,0.0,1,False,False,False,1,-0.1435,0,,LOW,2026.09.1
+9795042893,12,16,12,16,9635.0,12715.0,False,False,0.0,1,False,False,False,1,-0.1654,0,,LOW,2026.09.1
+9797449946,10,9,10,9,5000.0,7500.0,False,False,0.0,1,False,False,False,1,-0.1472,0,,LOW,2026.09.1
+9797758127,13,13,13,14,10500.0,13115.0,False,False,0.0,1,False,False,False,1,-0.1773,0,,LOW,2026.09.1
+9798271778,14,13,14,13,19865.0,13805.0,False,False,0.0,1,False,False,False,1,-0.162,0,,LOW,2026.09.1
+9798709592,9,18,9,18,6195.0,17775.0,False,False,0.0,1,False,False,False,1,-0.1148,0,,LOW,2026.09.1
+9800529753,9,11,9,11,7680.0,7075.0,False,False,0.0,1,False,False,False,1,-0.1714,0,,LOW,2026.09.1
+9801970920,11,19,11,20,12295.0,20555.0,False,False,0.0,1,False,False,False,1,-0.0975,0,,LOW,2026.09.1
+9804580401,8,10,8,10,7350.0,15600.0,False,False,0.0,1,False,False,False,1,-0.1552,0,,LOW,2026.09.1
+9805487915,14,10,14,10,15425.0,8785.0,False,False,0.0,1,False,False,False,1,-0.1728,0,,LOW,2026.09.1
+9805634296,10,8,10,8,4120.0,10105.0,False,False,0.0,1,False,False,False,1,-0.1197,0,,LOW,2026.09.1
+9806584807,12,11,12,11,10115.0,9345.0,False,False,0.0,1,False,False,False,1,-0.1883,0,,LOW,2026.09.1
+9808594706,11,13,11,13,11010.0,14990.0,False,False,0.0,1,False,False,False,1,-0.1809,0,,LOW,2026.09.1
+9809362966,14,17,14,17,7100.0,16540.0,False,False,0.0,1,False,False,False,1,-0.1264,0,,LOW,2026.09.1
+9814631059,7,13,7,13,7695.0,13805.0,False,False,0.0,1,False,False,False,1,-0.1422,0,,LOW,2026.09.1
+9815172061,10,10,10,10,10760.0,6085.0,False,False,0.0,1,False,False,False,1,-0.1649,0,,LOW,2026.09.1
+9816663121,11,10,11,10,8685.0,10600.0,False,False,0.0,1,False,False,False,1,-0.1815,0,,LOW,2026.09.1
+9818185597,15,12,15,12,15405.0,12640.0,False,False,0.0,1,False,False,False,1,-0.1684,0,,LOW,2026.09.1
+9819709768,11,7,11,7,6900.0,6235.0,False,False,0.0,1,False,False,False,1,-0.1264,0,,LOW,2026.09.1
+9819729399,15,5,15,5,6885.0,3980.0,False,False,0.0,1,False,False,False,1,-0.0123,0,,LOW,2026.09.1
+9820738580,15,13,15,13,16050.0,21240.0,False,False,0.0,1,False,False,False,1,-0.1453,0,,LOW,2026.09.1
+9822745513,10,10,10,10,5235.0,5180.0,False,False,0.0,1,False,False,False,1,-0.1323,0,,LOW,2026.09.1
+9824810215,12,8,12,8,10965.0,11505.0,False,False,0.0,1,False,False,False,1,-0.1542,0,,LOW,2026.09.1
+9826643843,15,10,15,10,11435.0,7965.0,False,False,0.0,1,False,False,False,1,-0.171,0,,LOW,2026.09.1
+9833355085,9,17,9,17,6845.0,18320.0,False,False,0.0,1,False,False,False,1,-0.1314,0,,LOW,2026.09.1
+9833390099,10,12,10,12,11060.0,7610.0,False,False,0.0,1,False,False,False,1,-0.1782,0,,LOW,2026.09.1
+9833592143,8,7,8,7,10330.0,1875.0,False,False,0.0,1,False,False,False,1,-0.0307,0,,LOW,2026.09.1
+9834444548,12,17,12,17,16675.0,15605.0,False,False,0.0,1,False,False,False,1,-0.1357,0,,LOW,2026.09.1
+9834826825,10,14,10,14,15540.0,13030.0,False,False,0.0,1,False,False,False,1,-0.1604,0,,LOW,2026.09.1
+9835358094,15,14,15,15,16460.0,13150.0,False,False,0.0,1,False,False,False,1,-0.1576,0,,LOW,2026.09.1
+9836051835,12,14,12,15,12810.0,10260.0,False,False,0.0,1,False,False,False,1,-0.1704,0,,LOW,2026.09.1
+9841230544,13,16,13,16,8845.0,10870.0,False,False,0.0,1,False,False,False,1,-0.1549,0,,LOW,2026.09.1
+9853795114,12,20,12,20,12375.0,25195.0,False,False,0.0,1,False,False,False,1,-0.0749,0,,LOW,2026.09.1
+9854947319,12,7,12,7,8270.0,3320.0,False,False,0.0,1,False,False,False,1,-0.0905,0,,LOW,2026.09.1
+9855390384,13,9,13,9,14790.0,9935.0,False,False,0.0,1,False,False,False,1,-0.1675,0,,LOW,2026.09.1
+9857618754,8,8,8,8,6725.0,18690.0,False,False,0.0,1,False,False,False,1,-0.1073,0,,LOW,2026.09.1
+9858539967,7,11,7,11,6120.0,8420.0,False,False,0.0,1,False,False,False,1,-0.1472,0,,LOW,2026.09.1
+9859713678,10,10,10,11,16130.0,19655.0,False,False,0.0,1,False,False,False,1,-0.1437,0,,LOW,2026.09.1
+9861985877,11,11,11,11,9030.0,9700.0,False,False,0.0,1,False,False,False,1,-0.1887,0,,LOW,2026.09.1
+9863626383,13,9,13,9,24555.0,5785.0,False,False,0.0,1,False,False,False,1,-0.1244,0,,LOW,2026.09.1
+9865140121,8,10,8,10,8890.0,12750.0,False,False,0.0,1,False,False,False,1,-0.1616,0,,LOW,2026.09.1
+9868498624,7,14,7,14,15090.0,10665.0,False,False,0.0,1,False,False,False,1,-0.1218,0,,LOW,2026.09.1
+9870151534,7,13,7,13,6545.0,10750.0,False,False,0.0,1,False,False,False,1,-0.1439,0,,LOW,2026.09.1
+9871873991,11,15,11,15,8795.0,15480.0,False,False,0.0,1,False,False,False,1,-0.1692,0,,LOW,2026.09.1
+9872663192,10,11,10,11,10585.0,5945.0,False,False,0.0,1,False,False,False,1,-0.1671,0,,LOW,2026.09.1
+9873173192,15,10,15,10,16110.0,4335.0,False,False,0.0,1,False,False,False,1,-0.1329,0,,LOW,2026.09.1
+9873599794,15,15,15,15,11610.0,16410.0,False,False,0.0,1,False,False,False,1,-0.1564,0,,LOW,2026.09.1
+9874249954,8,12,8,12,4745.0,8765.0,False,False,0.092,1,False,False,False,1,-0.1588,0,,LOW,2026.09.1
+9876010337,12,13,12,13,17055.0,20795.0,False,False,0.0,1,False,False,False,1,-0.154,0,,LOW,2026.09.1
+9876475967,5,7,5,7,3800.0,5660.0,False,False,0.0,1,False,False,False,1,-0.0117,0,,LOW,2026.09.1
+9877776348,9,8,9,8,5670.0,8920.0,False,False,0.0,1,False,False,False,1,-0.1376,0,,LOW,2026.09.1
+9879291207,8,11,8,11,4865.0,17610.0,False,False,0.0,1,False,False,False,1,-0.1427,0,,LOW,2026.09.1
+9884354408,9,13,9,13,8065.0,13300.0,False,False,0.0,1,False,False,False,1,-0.1735,0,,LOW,2026.09.1
+9884520326,12,13,12,13,9395.0,11100.0,False,False,0.0,1,False,False,False,1,-0.1847,0,,LOW,2026.09.1
+9886247321,12,18,12,18,15825.0,16340.0,False,False,0.0,1,False,False,False,1,-0.1252,0,,LOW,2026.09.1
+9887832742,15,10,15,10,10270.0,8360.0,False,False,0.0,1,False,False,False,1,-0.1677,0,,LOW,2026.09.1
+9891184672,15,10,15,10,13000.0,11630.0,False,False,0.0,1,False,False,False,1,-0.1659,0,,LOW,2026.09.1
+9891403278,8,9,8,9,9010.0,6460.0,False,False,0.0,1,False,False,False,1,-0.1485,0,,LOW,2026.09.1
+9891712996,12,13,12,13,8560.0,17165.0,False,False,0.0,1,False,False,False,1,-0.172,0,,LOW,2026.09.1
+9892098543,6,12,6,12,5720.0,18885.0,False,False,0.0,1,False,False,False,1,-0.086,0,,LOW,2026.09.1
+9892195305,15,12,15,12,18375.0,9225.0,False,False,0.0,1,False,False,False,1,-0.167,0,,LOW,2026.09.1
+9897114683,11,15,11,15,14460.0,9645.0,False,False,0.0,1,False,False,False,1,-0.1616,0,,LOW,2026.09.1
+9898508685,8,10,8,10,12235.0,5805.0,False,False,0.0,1,False,False,False,1,-0.1455,0,,LOW,2026.09.1
+9904220310,7,16,7,16,4380.0,25280.0,False,False,0.0,1,False,False,False,1,-0.0818,0,,LOW,2026.09.1
+9904845915,12,12,12,12,19260.0,12220.0,False,False,0.0,1,False,False,False,1,-0.1657,0,,LOW,2026.09.1
+9904918041,11,15,11,16,8235.0,10555.0,False,False,0.0,1,False,False,False,1,-0.1671,0,,LOW,2026.09.1
+9905802164,10,11,10,11,10770.0,9400.0,False,False,0.0,1,False,False,False,1,-0.1853,0,,LOW,2026.09.1
+9905828031,10,13,10,13,10525.0,9460.0,False,False,0.0,1,False,False,False,1,-0.1804,0,,LOW,2026.09.1
+9910619958,13,12,13,12,10540.0,12685.0,False,False,0.0,1,False,False,False,1,-0.1852,0,,LOW,2026.09.1
+9911135766,10,7,10,7,8350.0,7080.0,False,False,0.0,1,False,False,False,1,-0.1323,0,,LOW,2026.09.1
+9917643972,13,14,13,14,14235.0,12005.0,False,False,0.0,1,False,False,False,1,-0.1719,0,,LOW,2026.09.1
+9919108073,15,7,15,7,20355.0,6340.0,False,False,0.0,1,False,False,False,1,-0.1079,0,,LOW,2026.09.1
+9920240606,14,11,14,11,10935.0,8990.0,False,False,0.0,1,False,False,False,1,-0.1848,0,,LOW,2026.09.1
+9921873448,14,10,14,10,6080.0,7705.0,False,False,0.0,1,False,False,False,1,-0.1478,0,,LOW,2026.09.1
+9925397865,8,18,8,19,5545.0,11300.0,False,False,0.0,1,False,False,False,1,-0.0889,0,,LOW,2026.09.1
+9925714244,9,10,9,10,12670.0,5055.0,False,False,0.0,1,False,False,False,1,-0.1467,0,,LOW,2026.09.1
+9927033369,9,10,9,10,7880.0,7320.0,False,False,0.0,1,False,False,False,1,-0.1686,0,,LOW,2026.09.1
+9927402184,10,13,10,13,7650.0,14245.0,False,False,0.0,1,False,False,False,1,-0.1755,0,,LOW,2026.09.1
+9929695123,11,7,11,7,14640.0,4950.0,False,False,0.0,1,False,False,False,1,-0.1221,0,,LOW,2026.09.1
+9933390585,10,16,10,16,4835.0,11715.0,False,False,0.0,1,False,False,False,1,-0.1334,0,,LOW,2026.09.1
+9935410186,8,11,8,11,5020.0,10905.0,False,False,0.0,1,False,False,False,1,-0.1621,0,,LOW,2026.09.1
+9941262446,14,8,14,8,11870.0,8235.0,False,False,0.0,1,False,False,False,1,-0.1554,0,,LOW,2026.09.1
+9941508100,9,17,9,17,8750.0,9735.0,False,False,0.0,1,False,False,False,1,-0.1318,0,,LOW,2026.09.1
+9943604188,15,12,16,12,20880.0,13425.0,False,False,0.0,1,False,False,False,1,-0.1553,0,,LOW,2026.09.1
+9947875390,11,10,11,10,8455.0,3840.0,False,False,0.0,1,False,False,False,1,-0.1335,0,,LOW,2026.09.1
+9950712865,15,7,15,7,11830.0,5480.0,False,False,0.0,1,False,False,False,1,-0.1182,0,,LOW,2026.09.1
+9951468336,12,7,12,7,6560.0,6885.0,False,False,0.0,1,False,False,False,1,-0.1208,0,,LOW,2026.09.1
+9953419276,11,10,11,10,7020.0,20355.0,False,False,0.0,1,False,False,False,1,-0.1475,0,,LOW,2026.09.1
+9954882339,10,14,10,15,9235.0,10445.0,False,False,0.0,1,False,False,False,1,-0.1696,0,,LOW,2026.09.1
+9955420533,10,9,10,9,5605.0,14925.0,False,False,0.0,1,False,False,False,1,-0.1404,0,,LOW,2026.09.1
+9955906003,10,7,10,7,13605.0,6555.0,False,False,0.0,1,False,False,False,1,-0.1283,0,,LOW,2026.09.1
+9960574125,13,7,14,7,14645.0,4445.0,False,False,0.0,1,False,False,False,1,-0.1175,0,,LOW,2026.09.1
+9961618335,11,11,11,11,5455.0,15895.0,False,False,0.0,1,False,False,False,1,-0.1586,0,,LOW,2026.09.1
+9963616536,13,10,13,10,13815.0,6450.0,False,False,0.0,1,False,False,False,1,-0.1651,0,,LOW,2026.09.1
+9965191353,14,15,14,15,20665.0,13125.0,False,False,0.0,1,False,False,False,1,-0.154,0,,LOW,2026.09.1
+9967287288,11,14,11,14,5265.0,6745.0,False,False,0.0,1,False,False,False,1,-0.1384,0,,LOW,2026.09.1
+9968318989,11,12,11,13,7635.0,12875.0,False,False,0.0,1,False,False,False,1,-0.1811,0,,LOW,2026.09.1
+9971989169,9,11,9,11,2900.0,9540.0,False,False,0.0,1,False,False,False,1,-0.1193,0,,LOW,2026.09.1
+9971996767,9,19,9,19,7380.0,13550.0,False,False,0.0,1,False,False,False,1,-0.1062,0,,LOW,2026.09.1
+9973381637,5,14,5,14,16965.0,12140.0,False,False,0.0,1,False,False,False,1,-0.0422,0,,LOW,2026.09.1
+9974168056,11,11,11,11,9045.0,9645.0,False,False,0.0,1,False,False,False,1,-0.1887,0,,LOW,2026.09.1
+9974178400,13,8,13,8,8940.0,5515.0,False,False,0.0,1,False,False,False,1,-0.1426,0,,LOW,2026.09.1
+9975975918,11,6,11,6,14670.0,3195.0,False,False,0.0,1,False,False,False,1,-0.0569,0,,LOW,2026.09.1
+9977288139,14,8,16,8,10115.0,7600.0,False,False,0.0,1,False,False,False,1,-0.1374,0,,LOW,2026.09.1
+9981781444,12,10,12,10,6495.0,10380.0,False,False,0.0,1,False,False,False,1,-0.1662,0,,LOW,2026.09.1
+9983142650,9,15,9,15,3605.0,21390.0,False,False,0.0,1,False,False,False,1,-0.1039,0,,LOW,2026.09.1
+9983171750,13,11,14,11,11870.0,12305.0,False,False,0.0,1,False,False,False,1,-0.1775,0,,LOW,2026.09.1
+9983519002,14,7,14,7,9970.0,4700.0,False,False,0.0,1,False,False,False,1,-0.1156,0,,LOW,2026.09.1
+9985200539,11,11,11,11,4350.0,9075.0,False,False,0.0,1,False,False,False,1,-0.1514,0,,LOW,2026.09.1
+9986505771,10,10,10,10,14670.0,7080.0,False,False,0.0,1,False,False,False,1,-0.1624,0,,LOW,2026.09.1
+9988913278,14,10,14,10,16070.0,6250.0,False,False,0.0,1,False,False,False,1,-0.1599,0,,LOW,2026.09.1
+9991205817,9,11,9,11,17185.0,8320.0,False,False,0.0,1,False,False,False,1,-0.1582,0,,LOW,2026.09.1
+9992023872,15,17,15,17,11835.0,8750.0,False,False,0.0,1,False,False,False,1,-0.1294,0,,LOW,2026.09.1
+9992206411,8,11,8,12,12580.0,9390.0,False,False,0.0,1,False,False,False,1,-0.1625,0,,LOW,2026.09.1
+9992557047,10,15,10,15,7500.0,8960.0,False,False,0.0,1,False,False,False,1,-0.1597,0,,LOW,2026.09.1

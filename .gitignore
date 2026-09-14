@@ -2,9 +2,7 @@
 __pycache__/
 *.py[cod]
 .DS_Store
-data/raw/*.csv
-data/processed/*
-!data/processed/.gitkeep
 report/*.html
 report/*.json
 report/*.pdf
+

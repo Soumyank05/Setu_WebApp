@@ -1,0 +1,423 @@
+[
+  {
+    "event": "ingested",
+    "artifact": "telecom_cdr.csv",
+    "at_utc": "2026-09-11T07:02:45.115670+00:00",
+    "source": "staged evidence",
+    "sha256": "e163f0adeca062ed4709c0ac261f2bc52c337826292602dd6b1edd7cb72a83fd",
+    "bytes": 181339,
+    "user_id": 1,
+    "username": "Soumyank",
+    "role": "admin"
+  },
+  {
+    "event": "ingested",
+    "artifact": "upi_settlement.csv",
+    "at_utc": "2026-09-11T07:02:45.115876+00:00",
+    "source": "staged evidence",
+    "sha256": "7b063f714f28e003f4cc5d3d5b64336167fb41efab657a2af78282574480e4a3",
+    "bytes": 25671,
+    "user_id": 1,
+    "username": "Soumyank",
+    "role": "admin"
+  },
+  {
+    "event": "ingested",
+    "artifact": "kyc_mapping.csv",
+    "at_utc": "2026-09-11T07:02:45.116010+00:00",
+    "source": "staged evidence",
+    "sha256": "3f11c93d21a2c62a13fc375750666ae19c46ece3897241fa04aa2b9a62fdb627",
+    "bytes": 13287,
+    "user_id": 1,
+    "username": "Soumyank",
+    "role": "admin"
+  },
+  {
+    "event": "ingested",
+    "artifact": "telecom_cdr.csv",
+    "at_utc": "2026-09-11T11:52:18.286480+00:00",
+    "source": "staged evidence",
+    "sha256": "798e232206445896ab7e9db268c2f9196f4ed078396a375149493460492479dd",
+    "bytes": 158443,
+    "user_id": 1,
+    "username": "Soumyank",
+    "role": "admin"
+  },
+  {
+    "event": "ingested",
+    "artifact": "upi_settlement.csv",
+    "at_utc": "2026-09-11T11:52:18.286884+00:00",
+    "source": "staged evidence",
+    "sha256": "25e286b65103942432718a22f827a5b422c881d073ea69ac8fa4732c6cac28ed",
+    "bytes": 365577,
+    "user_id": 1,
+    "username": "Soumyank",
+    "role": "admin"
+  },
+  {
+    "event": "ingested",
+    "artifact": "kyc_mapping.csv",
+    "at_utc": "2026-09-11T11:52:18.287071+00:00",
+    "source": "staged evidence",
+    "sha256": "bf782eee178469bf6aac49deb8c45022f6ee673307840db5df46ca92806a125d",
+    "bytes": 15920,
+    "user_id": 1,
+    "username": "Soumyank",
+    "role": "admin"
+  },
+  {
+    "event": "accessed",
+    "artifact": "telecom_cdr.csv",
+    "at_utc": "2026-09-11T14:51:54.938183+00:00",
+    "source": "integrity_view",
+    "sha256": "798e232206445896ab7e9db268c2f9196f4ed078396a375149493460492479dd",
+    "user_id": 1,
+    "username": "Soumyank",
+    "role": "admin"
+  },
+  {
+    "event": "accessed",
+    "artifact": "upi_settlement.csv",
+    "at_utc": "2026-09-11T14:51:54.939086+00:00",
+    "source": "integrity_view",
+    "sha256": "25e286b65103942432718a22f827a5b422c881d073ea69ac8fa4732c6cac28ed",
+    "user_id": 1,
+    "username": "Soumyank",
+    "role": "admin"
+  },
+  {
+    "event": "accessed",
+    "artifact": "kyc_mapping.csv",
+    "at_utc": "2026-09-11T14:51:54.939537+00:00",
+    "source": "integrity_view",
+    "sha256": "bf782eee178469bf6aac49deb8c45022f6ee673307840db5df46ca92806a125d",
+    "user_id": 1,
+    "username": "Soumyank",
+    "role": "admin"
+  },
+  {
+    "event": "exported_redacted",
+    "artifact": "visual_analysis.png",
+    "at_utc": "2026-09-11T15:02:30.361299+00:00",
+    "source": "chart_data_export",
+    "filters": {
+      "days": 30,
+      "risk": "ALL",
+      "rail": "ALL",
+      "min_amount": 0.0,
+      "max_amount": null
+    },
+    "user_id": 1,
+    "username": "Soumyank",
+    "role": "admin"
+  },
+  {
+    "event": "ingested",
+    "artifact": "telecom_cdr.csv",
+    "at_utc": "2026-09-11T20:08:18.847281+00:00",
+    "source": "staged evidence",
+    "sha256": "bf4497f61ee3a7d72a41ac63570217da057bd8f26376de5ea195025af4384f33",
+    "bytes": 1582099,
+    "user_id": 1,
+    "username": "Soumyank",
+    "role": "admin"
+  },
+  {
+    "event": "ingested",
+    "artifact": "upi_settlement.csv",
+    "at_utc": "2026-09-11T20:08:18.847635+00:00",
+    "source": "staged evidence",
+    "sha256": "5b535d676cb67bed77829446dc4883ece5c6a77a417d1c6631f7ad1d962b4575",
+    "bytes": 3647407,
+    "user_id": 1,
+    "username": "Soumyank",
+    "role": "admin"
+  },
+  {
+    "event": "ingested",
+    "artifact": "kyc_mapping.csv",
+    "at_utc": "2026-09-11T20:08:18.847857+00:00",
+    "source": "staged evidence",
+    "sha256": "b1b0ab8c442de7b70f225463078cf9c990d85b149ab0f07c1858943ce00eef33",
+    "bytes": 157857,
+    "user_id": 1,
+    "username": "Soumyank",
+    "role": "admin"
+  },
+  {
+    "event": "accessed",
+    "artifact": "telecom_cdr.csv",
+    "at_utc": "2026-09-12T08:31:52.293841+00:00",
+    "source": "integrity_view",
+    "sha256": "bf4497f61ee3a7d72a41ac63570217da057bd8f26376de5ea195025af4384f33",
+    "user_id": 1,
+    "username": "Soumyank",
+    "role": "admin"
+  },
+  {
+    "event": "accessed",
+    "artifact": "upi_settlement.csv",
+    "at_utc": "2026-09-12T08:31:52.295127+00:00",
+    "source": "integrity_view",
+    "sha256": "5b535d676cb67bed77829446dc4883ece5c6a77a417d1c6631f7ad1d962b4575",
+    "user_id": 1,
+    "username": "Soumyank",
+    "role": "admin"
+  },
+  {
+    "event": "accessed",
+    "artifact": "kyc_mapping.csv",
+    "at_utc": "2026-09-12T08:31:52.295722+00:00",
+    "source": "integrity_view",
+    "sha256": "b1b0ab8c442de7b70f225463078cf9c990d85b149ab0f07c1858943ce00eef33",
+    "user_id": 1,
+    "username": "Soumyank",
+    "role": "admin"
+  },
+  {
+    "event": "accessed",
+    "artifact": "telecom_cdr.csv",
+    "at_utc": "2026-09-12T09:48:44.334885+00:00",
+    "source": "integrity_view",
+    "sha256": "bf4497f61ee3a7d72a41ac63570217da057bd8f26376de5ea195025af4384f33",
+    "user_id": 1,
+    "username": "Soumyank",
+    "role": "admin"
+  },
+  {
+    "event": "accessed",
+    "artifact": "upi_settlement.csv",
+    "at_utc": "2026-09-12T09:48:44.336204+00:00",
+    "source": "integrity_view",
+    "sha256": "5b535d676cb67bed77829446dc4883ece5c6a77a417d1c6631f7ad1d962b4575",
+    "user_id": 1,
+    "username": "Soumyank",
+    "role": "admin"
+  },
+  {
+    "event": "accessed",
+    "artifact": "kyc_mapping.csv",
+    "at_utc": "2026-09-12T09:48:44.336889+00:00",
+    "source": "integrity_view",
+    "sha256": "b1b0ab8c442de7b70f225463078cf9c990d85b149ab0f07c1858943ce00eef33",
+    "user_id": 1,
+    "username": "Soumyank",
+    "role": "admin"
+  },
+  {
+    "event": "exported_redacted",
+    "artifact": "visual_analysis.pdf",
+    "at_utc": "2026-09-12T09:51:28.445607+00:00",
+    "source": "chart_data_export",
+    "filters": {
+      "days": 60,
+      "risk": "HIGH",
+      "rail": "ALL",
+      "min_amount": 0.0,
+      "max_amount": null
+    },
+    "user_id": 1,
+    "username": "Soumyank",
+    "role": "admin"
+  },
+  {
+    "event": "exported_redacted",
+    "artifact": "visual_analysis.png",
+    "at_utc": "2026-09-12T09:51:39.867954+00:00",
+    "source": "chart_data_export",
+    "filters": {
+      "days": 60,
+      "risk": "HIGH",
+      "rail": "ALL",
+      "min_amount": 0.0,
+      "max_amount": null
+    },
+    "user_id": 1,
+    "username": "Soumyank",
+    "role": "admin"
+  },
+  {
+    "event": "exported_redacted",
+    "artifact": "visual_analysis.pdf",
+    "at_utc": "2026-09-12T09:53:31.536514+00:00",
+    "source": "chart_data_export",
+    "filters": {
+      "days": 60,
+      "risk": "ALL",
+      "rail": "ALL",
+      "min_amount": 0.0,
+      "max_amount": null
+    },
+    "user_id": 1,
+    "username": "Soumyank",
+    "role": "admin"
+  },
+  {
+    "event": "accessed",
+    "artifact": "telecom_cdr.csv",
+    "at_utc": "2026-09-12T09:54:06.999397+00:00",
+    "source": "integrity_view",
+    "sha256": "bf4497f61ee3a7d72a41ac63570217da057bd8f26376de5ea195025af4384f33",
+    "user_id": 1,
+    "username": "Soumyank",
+    "role": "admin"
+  },
+  {
+    "event": "accessed",
+    "artifact": "upi_settlement.csv",
+    "at_utc": "2026-09-12T09:54:07.000407+00:00",
+    "source": "integrity_view",
+    "sha256": "5b535d676cb67bed77829446dc4883ece5c6a77a417d1c6631f7ad1d962b4575",
+    "user_id": 1,
+    "username": "Soumyank",
+    "role": "admin"
+  },
+  {
+    "event": "accessed",
+    "artifact": "kyc_mapping.csv",
+    "at_utc": "2026-09-12T09:54:07.001143+00:00",
+    "source": "integrity_view",
+    "sha256": "b1b0ab8c442de7b70f225463078cf9c990d85b149ab0f07c1858943ce00eef33",
+    "user_id": 1,
+    "username": "Soumyank",
+    "role": "admin"
+  },
+  {
+    "event": "accessed",
+    "artifact": "telecom_cdr.csv",
+    "at_utc": "2026-09-12T10:08:45.021694+00:00",
+    "source": "integrity_view",
+    "sha256": "bf4497f61ee3a7d72a41ac63570217da057bd8f26376de5ea195025af4384f33",
+    "user_id": 1,
+    "username": "Soumyank",
+    "role": "admin"
+  },
+  {
+    "event": "accessed",
+    "artifact": "upi_settlement.csv",
+    "at_utc": "2026-09-12T10:08:45.023137+00:00",
+    "source": "integrity_view",
+    "sha256": "5b535d676cb67bed77829446dc4883ece5c6a77a417d1c6631f7ad1d962b4575",
+    "user_id": 1,
+    "username": "Soumyank",
+    "role": "admin"
+  },
+  {
+    "event": "accessed",
+    "artifact": "kyc_mapping.csv",
+    "at_utc": "2026-09-12T10:08:45.023965+00:00",
+    "source": "integrity_view",
+    "sha256": "b1b0ab8c442de7b70f225463078cf9c990d85b149ab0f07c1858943ce00eef33",
+    "user_id": 1,
+    "username": "Soumyank",
+    "role": "admin"
+  },
+  {
+    "event": "exported_redacted",
+    "artifact": "visual_analysis.pdf",
+    "at_utc": "2026-09-12T10:31:37.439249+00:00",
+    "source": "chart_data_export",
+    "filters": {
+      "days": 30,
+      "risk": "ALL",
+      "rail": "ALL",
+      "min_amount": 0.0,
+      "max_amount": null
+    },
+    "user_id": 1,
+    "username": "Soumyank",
+    "role": "admin"
+  },
+  {
+    "event": "exported_redacted",
+    "artifact": "visual_analysis.png",
+    "at_utc": "2026-09-12T11:00:28.514780+00:00",
+    "source": "chart_data_export",
+    "filters": {
+      "days": 30,
+      "risk": "ALL",
+      "rail": "ALL",
+      "min_amount": 0.0,
+      "max_amount": null
+    },
+    "user_id": 1,
+    "username": "Soumyank",
+    "role": "admin"
+  },
+  {
+    "event": "accessed",
+    "artifact": "telecom_cdr.csv",
+    "at_utc": "2026-09-12T11:00:43.357486+00:00",
+    "source": "integrity_view",
+    "sha256": "bf4497f61ee3a7d72a41ac63570217da057bd8f26376de5ea195025af4384f33",
+    "user_id": 1,
+    "username": "Soumyank",
+    "role": "admin"
+  },
+  {
+    "event": "accessed",
+    "artifact": "upi_settlement.csv",
+    "at_utc": "2026-09-12T11:00:43.358790+00:00",
+    "source": "integrity_view",
+    "sha256": "5b535d676cb67bed77829446dc4883ece5c6a77a417d1c6631f7ad1d962b4575",
+    "user_id": 1,
+    "username": "Soumyank",
+    "role": "admin"
+  },
+  {
+    "event": "accessed",
+    "artifact": "kyc_mapping.csv",
+    "at_utc": "2026-09-12T11:00:43.359651+00:00",
+    "source": "integrity_view",
+    "sha256": "b1b0ab8c442de7b70f225463078cf9c990d85b149ab0f07c1858943ce00eef33",
+    "user_id": 1,
+    "username": "Soumyank",
+    "role": "admin"
+  },
+  {
+    "event": "exported_redacted",
+    "artifact": "visual_analysis.pdf",
+    "at_utc": "2026-09-14T07:12:58.836127+00:00",
+    "source": "chart_data_export",
+    "filters": {
+      "days": 30,
+      "risk": "ALL",
+      "rail": "ALL",
+      "min_amount": 0.0,
+      "max_amount": null
+    },
+    "user_id": 1,
+    "username": "Soumyank",
+    "role": "admin"
+  },
+  {
+    "event": "accessed",
+    "artifact": "telecom_cdr.csv",
+    "at_utc": "2026-09-14T22:35:26.941896+00:00",
+    "source": "integrity_view",
+    "sha256": "798e232206445896ab7e9db268c2f9196f4ed078396a375149493460492479dd",
+    "user_id": 1,
+    "username": "Soumyank",
+    "role": "admin"
+  },
+  {
+    "event": "accessed",
+    "artifact": "upi_settlement.csv",
+    "at_utc": "2026-09-14T22:35:26.943617+00:00",
+    "source": "integrity_view",
+    "sha256": "25e286b65103942432718a22f827a5b422c881d073ea69ac8fa4732c6cac28ed",
+    "user_id": 1,
+    "username": "Soumyank",
+    "role": "admin"
+  },
+  {
+    "event": "accessed",
+    "artifact": "kyc_mapping.csv",
+    "at_utc": "2026-09-14T22:35:26.944662+00:00",
+    "source": "integrity_view",
+    "sha256": "bf782eee178469bf6aac49deb8c45022f6ee673307840db5df46ca92806a125d",
+    "user_id": 1,
+    "username": "Soumyank",
+    "role": "admin"
+  }
+]

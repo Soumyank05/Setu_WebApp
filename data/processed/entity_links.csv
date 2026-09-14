@@ -1,0 +1,2 @@
+entity_a,entity_b,relationship,evidence,confidence,match_basis,review_required
+9120560038,9889801878,shared_device,shared IMEI IMEI-3838943069,0.98,exact_device_identifier,True

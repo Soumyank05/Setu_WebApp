@@ -1,0 +1,8 @@
+source,intermediary,destinations,received_amount,forwarded_amount,retention_ratio,received_at,forwarded_until,forwarded_transactions,path_score,path_tier,path_reasons,scoring_model_version
+9127592756,9889801878,9120560038 | finalpoint.cashout@upi,48000.0,47000.0,0.979,2026-08-25T14:00:00,2026-08-25T14:04:00,2,100,HIGH,rapid value-retaining forwarding; split to multiple recipients,2026.09.1
+9889801878,9120560038,finalpoint.cashout@upi,22000.0,21000.0,0.955,2026-08-25T14:03:00,2026-08-25T14:09:00,1,70,HIGH,rapid value-retaining forwarding,2026.09.1
+9707711861,9453985457,9897114683,100.0,80.0,0.8,2026-08-20T14:48:00,2026-08-20T14:59:00,1,65,HIGH,rapid value-retaining forwarding,2026.09.1
+9797758127,9821259825,9967287288,305.0,335.0,1.098,2026-08-18T01:30:00,2026-08-18T01:41:00,1,55,HIGH,rapid value-retaining forwarding,2026.09.1
+9153514440,9257827965,9169655864,790.0,625.0,0.791,2026-07-15T15:55:00,2026-07-15T16:01:00,1,40,MEDIUM,rapid value-retaining forwarding,2026.09.1
+9892195305,9052116857,9971989169,655.0,525.0,0.802,2026-07-24T20:09:00,2026-07-24T20:22:00,1,40,MEDIUM,rapid value-retaining forwarding,2026.09.1
+9801970920,9998681300,9892195305,750.0,880.0,1.173,2026-08-09T16:31:00,2026-08-09T16:45:00,1,40,MEDIUM,rapid value-retaining forwarding,2026.09.1

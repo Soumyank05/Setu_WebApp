@@ -1,0 +1,14 @@
+{
+  "telecom_cdr.csv": {
+    "sha256": "798e232206445896ab7e9db268c2f9196f4ed078396a375149493460492479dd",
+    "size_bytes": 158443
+  },
+  "upi_settlement.csv": {
+    "sha256": "25e286b65103942432718a22f827a5b422c881d073ea69ac8fa4732c6cac28ed",
+    "size_bytes": 365577
+  },
+  "kyc_mapping.csv": {
+    "sha256": "bf782eee178469bf6aac49deb8c45022f6ee673307840db5df46ca92806a125d",
+    "size_bytes": 15920
+  }
+}
