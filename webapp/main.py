@@ -18,7 +18,7 @@ from typing import Optional
 
 import pandas as pd
 from fastapi import Cookie, Depends, FastAPI, File, Form, HTTPException, Request, Response, UploadFile
-from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.responses import FileResponse
 from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib import colors
 from reportlab.pdfgen import canvas
@@ -94,14 +94,6 @@ COOKIE_SECURE = os.getenv("SETU_COOKIE_SECURE", "false").lower() == "true"
 PRODUCTION_MODE = os.getenv("SETU_PRODUCTION", "false").lower() == "true"
 IDENTITY_PROVIDER = os.getenv("SETU_IDENTITY_PROVIDER", "")
 IMMUTABLE_AUDIT_URI = os.getenv("SETU_IMMUTABLE_AUDIT_URI", "")
-REQUIRE_AUTH = os.getenv("SETU_REQUIRE_AUTH", "false").lower() == "true"
-DEFAULT_DEMO_USER = {
-    "id": "operator",
-    "username": "Lead Investigator",
-    "role": "admin",
-    "is_active": 1,
-    "force_password_reset": False
-}
 STEPS = [
     ("Generate synthetic evidence", "data/generate_data.py"),
     ("Ingest and hash evidence", "parsers/ingest.py"),
@@ -437,21 +429,17 @@ def create_session(response: Response, user_id: int, request: Request) -> None:
 
 
 def get_current_user(session: Optional[str] = Cookie(default=None, alias=SESSION_COOKIE)) -> dict:
-    if session:
-        try:
-            with db() as connection:
-                row = connection.execute("""
-                    SELECT users.id, users.username, users.role FROM sessions
-                    JOIN users ON users.id = sessions.user_id
-                    WHERE sessions.token_hash = ? AND sessions.expires_at > ? AND users.is_active = 1
-                """, (session_token_hash(session), datetime.now(timezone.utc).isoformat())).fetchone()
-            if row:
-                return public_user(row)
-        except Exception:
-            pass
-    if not REQUIRE_AUTH:
-        return DEFAULT_DEMO_USER
-    raise HTTPException(status_code=401, detail="Sign in is required.")
+    if not session:
+        raise HTTPException(status_code=401, detail="Sign in is required.")
+    with db() as connection:
+        row = connection.execute("""
+            SELECT users.id, users.username, users.role FROM sessions
+            JOIN users ON users.id = sessions.user_id
+            WHERE sessions.token_hash = ? AND sessions.expires_at > ? AND users.is_active = 1
+        """, (session_token_hash(session), datetime.now(timezone.utc).isoformat())).fetchone()
+    if not row:
+        raise HTTPException(status_code=401, detail="Your session has expired. Please sign in again.")
+    return public_user(row)
 
 
 def require_admin(user: dict = Depends(get_current_user)) -> dict:
@@ -758,9 +746,7 @@ def home() -> FileResponse:
 
 
 @app.get("/login")
-def login_page() -> Response:
-    if not REQUIRE_AUTH:
-        return RedirectResponse(url="/", status_code=307)
+def login_page() -> FileResponse:
     return FileResponse(Path(__file__).parent / "static" / "login.html")
 
 
@@ -833,13 +819,9 @@ def logout(response: Response, session: Optional[str] = Cookie(default=None, ali
 
 @app.get("/api/auth/me")
 def current_user(user: dict = Depends(get_current_user)) -> dict:
-    try:
-        with db() as connection:
-            reset = connection.execute("SELECT force_password_reset FROM users WHERE id = ?", (user["id"],)).fetchone()
-        force_reset = bool(reset and reset["force_password_reset"])
-    except Exception:
-        force_reset = False
-    return {**user, "force_password_reset": force_reset}
+    with db() as connection:
+        reset = connection.execute("SELECT force_password_reset FROM users WHERE id = ?", (user["id"],)).fetchone()
+    return {**user, "force_password_reset": bool(reset and reset["force_password_reset"])}
 
 
 @app.get("/api/security/sessions")
